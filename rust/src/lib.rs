@@ -7,44 +7,17 @@
 //! This crate provides extern function implementations for GUI operations.
 //! VM management and event loop are handled by the caller (e.g., playground, studio).
 
-use std::cell::RefCell;
 use std::sync::OnceLock;
-use std::sync::atomic::{AtomicU64, Ordering};
 use vo_runtime::ffi::ExternRegistry;
 use vo_vm::bytecode::ExternDef;
 
 mod externs;
 
-// =============================================================================
-// Global State (for extern functions)
-// =============================================================================
-
-/// Pending event data: (handler_id, payload).
-/// Written by host before waking the fiber, read by waitForEvent extern on replay.
-pub struct PendingEvent {
-    pub handler_id: i32,
-    pub payload: String,
-}
-
-/// Monotonic token counter for HostEventWaitAndReplay.
-static EVENT_TOKEN_COUNTER: AtomicU64 = AtomicU64::new(1);
-
-/// Generate a unique host event token.
-pub fn next_event_token() -> u64 {
-    EVENT_TOKEN_COUNTER.fetch_add(1, Ordering::Relaxed)
-}
-
-thread_local! {
-    /// Pending render bytes (set by emitRenderBinary, consumed by caller)
-    pub static PENDING_RENDER: RefCell<Option<Vec<u8>>> = RefCell::new(None);
-
-    /// Pending event for the blocked main fiber (set by host, consumed by waitForEvent extern).
-    pub static PENDING_EVENT: RefCell<Option<PendingEvent>> = RefCell::new(None);
-
-    /// The host event token used by the main fiber's waitForEvent block.
-    /// Set when waitForEvent first blocks; used by send_event to wake the fiber.
-    pub static EVENT_WAIT_TOKEN: RefCell<Option<u64>> = RefCell::new(None);
-}
+// State management is in vo_runtime::gui_host — shared with the host (playground, studio).
+pub use vo_runtime::gui_host::{
+    next_event_token, set_pending_render, take_pending_render_bytes, clear_pending_render,
+    store_event_wait_token, take_pending_event, send_event, clear_event_state,
+};
 
 // =============================================================================
 // VoguiPlatform trait
@@ -205,26 +178,3 @@ pub fn register_externs(registry: &mut ExternRegistry, externs: &[ExternDef]) {
     externs::vo_ext_register(registry, externs);
 }
 
-/// Take the pending render bytes (if emitRenderBinary was called).
-pub fn take_pending_render_bytes() -> Option<Vec<u8>> {
-    PENDING_RENDER.with(|s| s.borrow_mut().take())
-}
-
-/// Clear any pending render bytes.
-pub fn clear_pending_render() {
-    PENDING_RENDER.with(|s| *s.borrow_mut() = None);
-}
-
-/// Store an event for the blocked main fiber and return the token to wake it.
-/// Returns None if waitForEvent hasn't been called yet (main fiber not blocking).
-pub fn send_event(handler_id: i32, payload: String) -> Option<u64> {
-    let token = EVENT_WAIT_TOKEN.with(|s| s.borrow().as_ref().copied())?;
-    PENDING_EVENT.with(|s| *s.borrow_mut() = Some(PendingEvent { handler_id, payload }));
-    Some(token)
-}
-
-/// Clear all event-loop state (for stop_gui).
-pub fn clear_event_state() {
-    PENDING_EVENT.with(|s| *s.borrow_mut() = None);
-    EVENT_WAIT_TOKEN.with(|s| *s.borrow_mut() = None);
-}

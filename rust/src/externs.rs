@@ -11,7 +11,7 @@ use vo_runtime::objects::string;
 pub fn wait_for_event(ctx: &mut ExternCallContext) -> ExternResult {
     // Replay path: host stored event data and woke us
     if let Some(_token) = ctx.take_resume_host_event_token() {
-        let event = crate::PENDING_EVENT.with(|s| s.borrow_mut().take())
+        let event = vo_runtime::gui_host::take_pending_event()
             .expect("waitForEvent woke but no PENDING_EVENT");
         ctx.ret_i64(slots::RET_0, event.handler_id as i64);
         let payload_ref = vo_runtime::objects::string::from_rust_str(ctx.gc(), &event.payload);
@@ -20,15 +20,15 @@ pub fn wait_for_event(ctx: &mut ExternCallContext) -> ExternResult {
     }
 
     // First call: generate token, store it, block fiber
-    let token = crate::next_event_token();
-    crate::EVENT_WAIT_TOKEN.with(|s| *s.borrow_mut() = Some(token));
+    let token = vo_runtime::gui_host::next_event_token();
+    vo_runtime::gui_host::store_event_wait_token(token);
     ExternResult::HostEventWaitAndReplay { token }
 }
 
 #[vo_fn("vogui", "emitRenderBinary")]
 pub fn emit_render_binary(ctx: &mut ExternCallContext) -> ExternResult {
     let data = ctx.arg_bytes(slots::ARG_DATA).to_vec();
-    crate::PENDING_RENDER.with(|s| *s.borrow_mut() = Some(data));
+    vo_runtime::gui_host::set_pending_render(data);
     ExternResult::Ok
 }
 
