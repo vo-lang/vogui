@@ -9,26 +9,28 @@ use vo_runtime::objects::string;
 
 #[vo_fn("vogui", "waitForEvent")]
 pub fn wait_for_event(ctx: &mut ExternCallContext) -> ExternResult {
-    // Replay path: host stored event data and woke us
+    // Replay path: host attached event data via wake_host_event_with_data
     if let Some(_token) = ctx.take_resume_host_event_token() {
-        let event = vo_runtime::gui_host::take_pending_event()
-            .expect("waitForEvent woke but no PENDING_EVENT");
-        ctx.ret_i64(slots::RET_0, event.handler_id as i64);
-        let payload_ref = vo_runtime::objects::string::from_rust_str(ctx.gc(), &event.payload);
+        let data = ctx.take_resume_host_event_data()
+            .expect("waitForEvent woke but no resume data");
+        // Decode: [i32 handler_id LE][UTF-8 payload]
+        let handler_id = i32::from_le_bytes(data[..4].try_into().unwrap());
+        let payload = std::str::from_utf8(&data[4..]).unwrap();
+        ctx.ret_i64(slots::RET_0, handler_id as i64);
+        let payload_ref = vo_runtime::objects::string::from_rust_str(ctx.gc(), payload);
         ctx.ret_ref(slots::RET_1, payload_ref);
         return ExternResult::Ok;
     }
 
-    // First call: generate token, store it, block fiber
-    let token = vo_runtime::gui_host::next_event_token();
-    vo_runtime::gui_host::store_event_wait_token(token);
+    // First call: generate token, block fiber
+    let token = ctx.next_host_event_token();
     ExternResult::HostEventWaitAndReplay { token }
 }
 
 #[vo_fn("vogui", "emitRenderBinary")]
 pub fn emit_render_binary(ctx: &mut ExternCallContext) -> ExternResult {
     let data = ctx.arg_bytes(slots::ARG_DATA).to_vec();
-    vo_runtime::gui_host::set_pending_render(data);
+    ctx.set_host_output(data);
     ExternResult::Ok
 }
 

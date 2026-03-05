@@ -13,12 +13,6 @@ use vo_vm::bytecode::ExternDef;
 
 mod externs;
 
-// State management is in vo_runtime::gui_host — shared with the host (playground, studio).
-pub use vo_runtime::gui_host::{
-    next_event_token, set_pending_render, take_pending_render_bytes, clear_pending_render,
-    store_event_wait_token, take_pending_event, send_event, clear_event_state,
-};
-
 // =============================================================================
 // VoguiPlatform trait
 // =============================================================================
