@@ -7,18 +7,17 @@
 //! This crate provides extern function implementations for GUI operations.
 //! VM management and event loop are handled by the caller (e.g., playground, studio).
 
+#[cfg(not(feature = "wasm-standalone"))]
 use std::sync::OnceLock;
+#[cfg(not(feature = "wasm-standalone"))]
 use vo_runtime::ffi::ExternRegistry;
+#[cfg(not(feature = "wasm-standalone"))]
 use vo_vm::bytecode::ExternDef;
 
+#[cfg(not(feature = "wasm-standalone"))]
 mod externs;
 
-// =============================================================================
-// VoguiPlatform trait
-// =============================================================================
-
-/// Platform abstraction for timer, navigation, and DOM operations.
-/// Implement this trait for different backends (WASM, Tauri, headless).
+#[cfg(not(feature = "wasm-standalone"))]
 pub trait VoguiPlatform: Send + Sync + 'static {
     fn start_timeout(&self, id: i32, ms: i32);
     fn clear_timeout(&self, id: i32);
@@ -42,20 +41,23 @@ pub trait VoguiPlatform: Send + Sync + 'static {
     fn stop_game_loop(&self, _id: i32) {}
 }
 
+#[cfg(not(feature = "wasm-standalone"))]
 static PLATFORM: OnceLock<Box<dyn VoguiPlatform>> = OnceLock::new();
 
-/// Set the active platform. Must be called before any VM starts.
+#[cfg(not(feature = "wasm-standalone"))]
 pub fn set_platform(platform: Box<dyn VoguiPlatform>) {
     let _ = PLATFORM.set(platform);
 }
 
-/// Get the active platform. Falls back to NoopPlatform if none set.
+#[cfg(not(feature = "wasm-standalone"))]
 pub fn platform() -> &'static dyn VoguiPlatform {
     PLATFORM.get().map(|b| b.as_ref()).unwrap_or(NoopPlatform::get())
 }
 
+#[cfg(not(feature = "wasm-standalone"))]
 struct NoopPlatform;
 
+#[cfg(not(feature = "wasm-standalone"))]
 impl NoopPlatform {
     fn get() -> &'static NoopPlatform {
         static NOOP: NoopPlatform = NoopPlatform;
@@ -63,6 +65,7 @@ impl NoopPlatform {
     }
 }
 
+#[cfg(not(feature = "wasm-standalone"))]
 impl VoguiPlatform for NoopPlatform {
     fn start_timeout(&self, _id: i32, _ms: i32) {}
     fn clear_timeout(&self, _id: i32) {}
@@ -76,10 +79,10 @@ impl VoguiPlatform for NoopPlatform {
 // WASM platform (JS imports via wasm_bindgen)
 // =============================================================================
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
 pub struct WasmPlatform;
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
 mod wasm_js {
     use wasm_bindgen::prelude::*;
 
@@ -141,7 +144,7 @@ mod wasm_js {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
 impl VoguiPlatform for WasmPlatform {
     fn start_timeout(&self, id: i32, ms: i32) { wasm_js::start_timeout(id, ms); }
     fn clear_timeout(&self, id: i32) { wasm_js::clear_timeout(id); }
@@ -167,8 +170,28 @@ impl VoguiPlatform for WasmPlatform {
 // Public API
 // =============================================================================
 
-/// Register all vogui extern functions into the registry.
+#[cfg(not(feature = "wasm-standalone"))]
 pub fn register_externs(registry: &mut ExternRegistry, externs: &[ExternDef]) {
     externs::vo_ext_register(registry, externs);
 }
+
+// =============================================================================
+// Standalone C-ABI WASM exports (feature = "wasm-standalone")
+// =============================================================================
+//
+// Follows the same ext_bridge calling convention as zip:
+//   vo_alloc(size) → ptr
+//   vo_dealloc(ptr, size)
+//   <extern_name>(input_ptr, input_len, out_len_ptr) → output_ptr
+//
+// For host side effects (timers, DOM, game loop), the module declares raw
+// WASM imports under the "env" namespace.  The host (voSetupExtModule)
+// provides these in the importObject during WebAssembly.instantiate.
+//
+// Control tags for VM-level operations:
+//   0x01 (TAG_SUSPEND)     → tells ext bridge to return HostEventWaitAndReplay
+//   0x02 (TAG_HOST_OUTPUT) → tells ext bridge to call set_host_output
+
+#[cfg(feature = "wasm-standalone")]
+mod standalone;
 

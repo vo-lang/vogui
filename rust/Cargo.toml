@@ -14,8 +14,8 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 vo-vm = { git = "https://github.com/vo-lang/volang", default-features = false }
-wasm-bindgen = "0.2"
-web-sys = { version = "0.3", features = ["console", "Window"] }
+wasm-bindgen = { version = "0.2", optional = true }
+web-sys = { version = "0.3", features = ["console", "Window"], optional = true }
 
 # Native-only dependencies (for cargo check on non-wasm targets)
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
@@ -30,7 +30,9 @@ vo-runtime = { git = "https://github.com/vo-lang/volang", default-features = fal
 vo-ext = { git = "https://github.com/vo-lang/volang", default-features = false, features = ["wasm"] }
 
 [features]
-default = []
+default = ["bindgen"]
+bindgen = ["dep:wasm-bindgen", "dep:web-sys"]
+wasm-standalone = []
 
 [workspace]
 
