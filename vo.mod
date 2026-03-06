@@ -32,5 +32,4 @@ files (
     unsafe.vo
     util.vo
     widget.vo
-    vo.ext.toml
 )
