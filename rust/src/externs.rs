@@ -49,14 +49,14 @@ pub fn float64_bits(ctx: &mut ExternCallContext) -> ExternResult {
 pub fn start_timeout(ctx: &mut ExternCallContext) -> ExternResult {
     let id = ctx.arg_i64(slots::ARG_ID) as i32;
     let delay_ms = ctx.arg_i64(slots::ARG_DELAY_MS) as i32;
-    crate::platform().start_timeout(id, delay_ms);
+    crate::with_platform(|p| p.start_timeout(id, delay_ms));
     ExternResult::Ok
 }
 
 #[vo_fn("vogui", "clearTimeout")]
 pub fn clear_timeout(ctx: &mut ExternCallContext) -> ExternResult {
     let id = ctx.arg_i64(slots::ARG_ID) as i32;
-    crate::platform().clear_timeout(id);
+    crate::with_platform(|p| p.clear_timeout(id));
     ExternResult::Ok
 }
 
@@ -64,14 +64,14 @@ pub fn clear_timeout(ctx: &mut ExternCallContext) -> ExternResult {
 pub fn start_interval(ctx: &mut ExternCallContext) -> ExternResult {
     let id = ctx.arg_i64(slots::ARG_ID) as i32;
     let interval_ms = ctx.arg_i64(slots::ARG_INTERVAL_MS) as i32;
-    crate::platform().start_interval(id, interval_ms);
+    crate::with_platform(|p| p.start_interval(id, interval_ms));
     ExternResult::Ok
 }
 
 #[vo_fn("vogui", "clearInterval")]
 pub fn clear_interval(ctx: &mut ExternCallContext) -> ExternResult {
     let id = ctx.arg_i64(slots::ARG_ID) as i32;
-    crate::platform().clear_interval(id);
+    crate::with_platform(|p| p.clear_interval(id));
     ExternResult::Ok
 }
 
@@ -82,13 +82,13 @@ pub fn clear_interval(ctx: &mut ExternCallContext) -> ExternResult {
 #[vo_fn("vogui", "navigate")]
 pub fn navigate(ctx: &mut ExternCallContext) -> ExternResult {
     let path = ctx.arg_str(slots::ARG_PATH).to_string();
-    crate::platform().navigate(&path);
+    crate::with_platform(|p| p.navigate(&path));
     ExternResult::Ok
 }
 
 #[vo_fn("vogui", "getCurrentPath")]
 pub fn get_current_path(ctx: &mut ExternCallContext) -> ExternResult {
-    let path = crate::platform().get_current_path();
+    let path = crate::with_platform(|p| p.get_current_path());
     let gc_ref = string::from_rust_str(ctx.gc(), &path);
     ctx.ret_ref(slots::RET_0, gc_ref);
     ExternResult::Ok
@@ -101,14 +101,14 @@ pub fn get_current_path(ctx: &mut ExternCallContext) -> ExternResult {
 #[vo_fn("vogui", "Focus")]
 pub fn focus(ctx: &mut ExternCallContext) -> ExternResult {
     let ref_name = ctx.arg_str(slots::ARG_REF_NAME).to_string();
-    crate::platform().focus(&ref_name);
+    crate::with_platform(|p| p.focus(&ref_name));
     ExternResult::Ok
 }
 
 #[vo_fn("vogui", "Blur")]
 pub fn blur(ctx: &mut ExternCallContext) -> ExternResult {
     let ref_name = ctx.arg_str(slots::ARG_REF_NAME).to_string();
-    crate::platform().blur(&ref_name);
+    crate::with_platform(|p| p.blur(&ref_name));
     ExternResult::Ok
 }
 
@@ -116,21 +116,21 @@ pub fn blur(ctx: &mut ExternCallContext) -> ExternResult {
 pub fn scroll_to(ctx: &mut ExternCallContext) -> ExternResult {
     let ref_name = ctx.arg_str(slots::ARG_REF_NAME).to_string();
     let top = ctx.arg_i64(slots::ARG_TOP) as i32;
-    crate::platform().scroll_to(&ref_name, top);
+    crate::with_platform(|p| p.scroll_to(&ref_name, top));
     ExternResult::Ok
 }
 
 #[vo_fn("vogui", "ScrollIntoView")]
 pub fn scroll_into_view(ctx: &mut ExternCallContext) -> ExternResult {
     let ref_name = ctx.arg_str(slots::ARG_REF_NAME).to_string();
-    crate::platform().scroll_into_view(&ref_name);
+    crate::with_platform(|p| p.scroll_into_view(&ref_name));
     ExternResult::Ok
 }
 
 #[vo_fn("vogui", "SelectText")]
 pub fn select_text(ctx: &mut ExternCallContext) -> ExternResult {
     let ref_name = ctx.arg_str(slots::ARG_REF_NAME).to_string();
-    crate::platform().select_text(&ref_name);
+    crate::with_platform(|p| p.select_text(&ref_name));
     ExternResult::Ok
 }
 
@@ -141,7 +141,7 @@ pub fn select_text(ctx: &mut ExternCallContext) -> ExternResult {
 #[vo_fn("vogui", "setDocTitle")]
 pub fn set_doc_title(ctx: &mut ExternCallContext) -> ExternResult {
     let title = ctx.arg_str(slots::ARG_TITLE).to_string();
-    crate::platform().set_title(&title);
+    crate::with_platform(|p| p.set_title(&title));
     ExternResult::Ok
 }
 
@@ -149,7 +149,7 @@ pub fn set_doc_title(ctx: &mut ExternCallContext) -> ExternResult {
 pub fn set_doc_meta(ctx: &mut ExternCallContext) -> ExternResult {
     let name = ctx.arg_str(slots::ARG_NAME).to_string();
     let content = ctx.arg_str(slots::ARG_CONTENT).to_string();
-    crate::platform().set_meta(&name, &content);
+    crate::with_platform(|p| p.set_meta(&name, &content));
     ExternResult::Ok
 }
 
@@ -160,28 +160,28 @@ pub fn set_doc_meta(ctx: &mut ExternCallContext) -> ExternResult {
 #[vo_fn("vogui", "startAnimFrame")]
 pub fn start_anim_frame(ctx: &mut ExternCallContext) -> ExternResult {
     let id = ctx.arg_i64(slots::ARG_ID) as i32;
-    crate::platform().start_anim_frame(id);
+    crate::with_platform(|p| p.start_anim_frame(id));
     ExternResult::Ok
 }
 
 #[vo_fn("vogui", "cancelAnimFrame")]
 pub fn cancel_anim_frame(ctx: &mut ExternCallContext) -> ExternResult {
     let id = ctx.arg_i64(slots::ARG_ID) as i32;
-    crate::platform().cancel_anim_frame(id);
+    crate::with_platform(|p| p.cancel_anim_frame(id));
     ExternResult::Ok
 }
 
 #[vo_fn("vogui", "startGameLoop")]
 pub fn start_game_loop(ctx: &mut ExternCallContext) -> ExternResult {
     let id = ctx.arg_i64(slots::ARG_ID) as i32;
-    crate::platform().start_game_loop(id);
+    crate::with_platform(|p| p.start_game_loop(id));
     ExternResult::Ok
 }
 
 #[vo_fn("vogui", "stopGameLoop")]
 pub fn stop_game_loop(ctx: &mut ExternCallContext) -> ExternResult {
     let id = ctx.arg_i64(slots::ARG_ID) as i32;
-    crate::platform().stop_game_loop(id);
+    crate::with_platform(|p| p.stop_game_loop(id));
     ExternResult::Ok
 }
 
@@ -194,7 +194,7 @@ pub fn toast_emit(ctx: &mut ExternCallContext) -> ExternResult {
     let message = ctx.arg_str(slots::ARG_MESSAGE).to_string();
     let typ = ctx.arg_str(slots::ARG_TYP).to_string();
     let duration_ms = ctx.arg_i64(slots::ARG_DURATION_MS) as i32;
-    crate::platform().toast(&message, &typ, duration_ms);
+    crate::with_platform(|p| p.toast(&message, &typ, duration_ms));
     ExternResult::Ok
 }
 

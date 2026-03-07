@@ -8,8 +8,6 @@
 //! VM management and event loop are handled by the caller (e.g., playground, studio).
 
 #[cfg(not(feature = "wasm-standalone"))]
-use std::sync::OnceLock;
-#[cfg(not(feature = "wasm-standalone"))]
 use vo_runtime::ffi::ExternRegistry;
 #[cfg(not(feature = "wasm-standalone"))]
 use vo_vm::bytecode::ExternDef;
@@ -42,16 +40,44 @@ pub trait VoguiPlatform: Send + Sync + 'static {
 }
 
 #[cfg(not(feature = "wasm-standalone"))]
-static PLATFORM: OnceLock<Box<dyn VoguiPlatform>> = OnceLock::new();
-
-#[cfg(not(feature = "wasm-standalone"))]
-pub fn set_platform(platform: Box<dyn VoguiPlatform>) {
-    let _ = PLATFORM.set(platform);
+thread_local! {
+    static PLATFORM: std::cell::RefCell<Option<Box<dyn VoguiPlatform>>> =
+        const { std::cell::RefCell::new(None) };
 }
 
+/// Install a platform for the current thread. Each guest VM thread should call
+/// this once at startup. The platform is thread-local so concurrent sessions
+/// never interfere.
 #[cfg(not(feature = "wasm-standalone"))]
-pub fn platform() -> &'static dyn VoguiPlatform {
-    PLATFORM.get().map(|b| b.as_ref()).unwrap_or(NoopPlatform::get())
+pub fn set_platform(platform: Box<dyn VoguiPlatform>) {
+    PLATFORM.with(|p| {
+        *p.borrow_mut() = Some(platform);
+    });
+}
+
+/// Clear the platform for the current thread. Call on shutdown to allow
+/// timer threads to detect disconnection and exit.
+#[cfg(not(feature = "wasm-standalone"))]
+pub fn clear_platform() {
+    PLATFORM.with(|p| {
+        *p.borrow_mut() = None;
+    });
+}
+
+/// Execute a closure with the current thread's platform.
+/// Falls back to NoopPlatform if none is set.
+#[cfg(not(feature = "wasm-standalone"))]
+pub fn with_platform<F, R>(f: F) -> R
+where
+    F: FnOnce(&dyn VoguiPlatform) -> R,
+{
+    PLATFORM.with(|p| {
+        let borrow = p.borrow();
+        match borrow.as_ref() {
+            Some(platform) => f(platform.as_ref()),
+            None => f(NoopPlatform::get()),
+        }
+    })
 }
 
 #[cfg(not(feature = "wasm-standalone"))]
@@ -173,6 +199,15 @@ impl VoguiPlatform for WasmPlatform {
 #[cfg(not(feature = "wasm-standalone"))]
 pub fn register_externs(registry: &mut ExternRegistry, externs: &[ExternDef]) {
     externs::vo_ext_register(registry, externs);
+}
+
+/// Force link this crate so that linkme distributed-slice entries survive
+/// dead-code elimination. Call from your binary's init path.
+#[cfg(all(not(target_arch = "wasm32"), not(feature = "wasm-standalone")))]
+pub fn ensure_linked() {
+    // Touch the register_externs function pointer to keep the crate (and its
+    // linkme-annotated statics) reachable from the linker's perspective.
+    let _ = std::hint::black_box(register_externs as fn(&mut ExternRegistry, &[ExternDef]));
 }
 
 // =============================================================================
