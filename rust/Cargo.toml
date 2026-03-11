@@ -1,6 +1,6 @@
 [package]
 name = "vogui"
-version = "0.2.0"
+version = "0.1.0"
 edition = "2021"
 
 [package.metadata.vo]
@@ -40,7 +40,3 @@ wasm-standalone = []
 [workspace]
 
 # Redirect git deps to local sibling repos for development
-[patch."https://github.com/vo-lang/volang"]
-vo-vm      = { path = "../../volang/lang/crates/vo-vm" }
-vo-runtime = { path = "../../volang/lang/crates/vo-runtime" }
-vo-ext     = { path = "../../volang/lang/crates/vo-ext" }

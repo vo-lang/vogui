@@ -24,6 +24,14 @@ const compCache = new Map<number, any>();
 
 const widgetRegistry = new Map<string, WidgetFactory>();
 const widgetInstances = new Map<string, WidgetInstance>();
+type CanvasResizeBinding = {
+    element: HTMLCanvasElement;
+    observer: ResizeObserver;
+    resizeId: number;
+    lastWidth: number;
+    lastHeight: number;
+};
+const canvasResizeBindings = new Map<string, CanvasResizeBinding>();
 
 /** Register an external widget factory. */
 export function registerWidget(type: string, factory: WidgetFactory): void {
@@ -297,6 +305,9 @@ function renderCanvas(props: Record<string, any>): any {
     const fullscreen = props.fullscreen;
     const pointerId = props.onPointer as number | undefined;
     const resizeId = props.onResize as number | undefined;
+    const resizeKey = resizeId != null
+        ? (refName ? `ref:${refName}` : `resize:${resizeId}`)
+        : null;
 
     const canvasStyle: Record<string, string> = {};
     if (fullscreen) {
@@ -323,24 +334,54 @@ function renderCanvas(props: Record<string, any>): any {
         pointerHandlers.onPointerLeave = (e: PointerEvent) => emitPointer('leave', e);
     }
 
-    // ResizeObserver callback bound via ref
     const combinedRef = (el: HTMLCanvasElement | null) => {
         if (refName) refCallback(refName)(el);
-        if (el && resizeId != null) {
-            const observer = new ResizeObserver((entries) => {
-                for (const entry of entries) {
-                    const cr = entry.contentRect;
-                    emit(resizeId, JSON.stringify({
-                        Width: Math.round(cr.width),
-                        Height: Math.round(cr.height),
-                    }));
-                }
-            });
-            observer.observe(el);
-            (el as any).__voResizeObserver = observer;
-        } else if (!el) {
-            // Cleanup on unmount — el is null
+        if (!resizeKey) {
+            return;
         }
+        if (!el) {
+            const binding = canvasResizeBindings.get(resizeKey);
+            if (binding) {
+                binding.observer.disconnect();
+                canvasResizeBindings.delete(resizeKey);
+            }
+            return;
+        }
+
+        const existing = canvasResizeBindings.get(resizeKey);
+        if (existing && existing.element === el && existing.resizeId === resizeId) {
+            return;
+        }
+        if (existing) {
+            existing.observer.disconnect();
+            canvasResizeBindings.delete(resizeKey);
+        }
+
+        let binding!: CanvasResizeBinding;
+        const observer = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                const width = Math.round(entry.contentRect.width);
+                const height = Math.round(entry.contentRect.height);
+                if (width === binding.lastWidth && height === binding.lastHeight) {
+                    continue;
+                }
+                binding.lastWidth = width;
+                binding.lastHeight = height;
+                emit(binding.resizeId, JSON.stringify({
+                    Width: width,
+                    Height: height,
+                }));
+            }
+        });
+        binding = {
+            element: el,
+            observer,
+            resizeId: resizeId!,
+            lastWidth: -1,
+            lastHeight: -1,
+        };
+        observer.observe(el);
+        canvasResizeBindings.set(resizeKey, binding);
     };
 
     return h('canvas', {

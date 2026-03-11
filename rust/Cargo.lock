@@ -1916,7 +1916,7 @@ dependencies = [
 
 [[package]]
 name = "vogui"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "linkme",
  "log",
@@ -2535,3 +2535,19 @@ dependencies = [
  "log",
  "simd-adler32",
 ]
+
+[[patch.unused]]
+name = "vo-analysis"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "vo-codegen"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "vo-engine"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "vo-jit"
+version = "0.1.0"
