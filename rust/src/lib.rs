@@ -12,6 +12,8 @@ use vo_runtime::ffi::ExternRegistry;
 #[cfg(not(feature = "wasm-standalone"))]
 use vo_vm::bytecode::ExternDef;
 
+pub mod audio;
+
 #[cfg(not(feature = "wasm-standalone"))]
 mod externs;
 

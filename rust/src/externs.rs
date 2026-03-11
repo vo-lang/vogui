@@ -3,6 +3,8 @@
 use vo_ext::prelude::*;
 use vo_runtime::objects::string;
 
+use crate::audio::{with_global_audio, with_global_audio_result};
+
 // =============================================================================
 // App Externs
 // =============================================================================
@@ -199,6 +201,160 @@ pub fn toast_emit(ctx: &mut ExternCallContext) -> ExternResult {
 }
 
 // =============================================================================
+// Audio Externs
+// =============================================================================
+
+fn write_u32_handle_result(
+    ctx: &mut ExternCallContext,
+    value_slot: u16,
+    error_slot: u16,
+    result: Result<u32, String>,
+) {
+    use vo_runtime::builtins::error_helper::{write_error_to, write_nil_error};
+    match result {
+        Ok(id) => {
+            ctx.ret_u64(value_slot, id as u64);
+            write_nil_error(ctx, error_slot);
+        }
+        Err(msg) => {
+            ctx.ret_u64(value_slot, 0);
+            write_error_to(ctx, error_slot, &msg);
+        }
+    }
+}
+
+#[vo_fn("vogui", "audioLoadBytes")]
+pub fn audio_load_bytes(ctx: &mut ExternCallContext) -> ExternResult {
+    let data = ctx.arg_bytes(0).to_vec();
+    write_u32_handle_result(ctx, 0, 1, with_global_audio_result(|engine| engine.load_bytes(data)));
+    ExternResult::Ok
+}
+
+#[vo_fn("vogui", "audioFree")]
+pub fn audio_free(ctx: &mut ExternCallContext) -> ExternResult {
+    let clip_id = ctx.arg_u64(0) as u32;
+    let _ = with_global_audio(|engine| engine.free_clip(clip_id));
+    ExternResult::Ok
+}
+
+#[vo_fn("vogui", "audioPlaySound")]
+pub fn audio_play_sound(ctx: &mut ExternCallContext) -> ExternResult {
+    let clip_id = ctx.arg_u64(0) as u32;
+    let volume = ctx.arg_f64(1) as f32;
+    let pitch = ctx.arg_f64(2) as f32;
+    let _ = with_global_audio(|engine| engine.play_sound(clip_id, volume, pitch));
+    ExternResult::Ok
+}
+
+#[vo_fn("vogui", "audioSetListener")]
+pub fn audio_set_listener(ctx: &mut ExternCallContext) -> ExternResult {
+    let px = ctx.arg_f64(0) as f32;
+    let py = ctx.arg_f64(1) as f32;
+    let pz = ctx.arg_f64(2) as f32;
+    let fx = ctx.arg_f64(3) as f32;
+    let fy = ctx.arg_f64(4) as f32;
+    let fz = ctx.arg_f64(5) as f32;
+    let ux = ctx.arg_f64(6) as f32;
+    let uy = ctx.arg_f64(7) as f32;
+    let uz = ctx.arg_f64(8) as f32;
+    let _ = with_global_audio(|engine| engine.set_listener([px, py, pz], [fx, fy, fz], [ux, uy, uz]));
+    ExternResult::Ok
+}
+
+#[vo_fn("vogui", "audioPlaySound3D")]
+pub fn audio_play_sound_3d(ctx: &mut ExternCallContext) -> ExternResult {
+    let clip_id = ctx.arg_u64(0) as u32;
+    let px = ctx.arg_f64(1) as f32;
+    let py = ctx.arg_f64(2) as f32;
+    let pz = ctx.arg_f64(3) as f32;
+    let volume = ctx.arg_f64(4) as f32;
+    let ref_distance = ctx.arg_f64(5) as f32;
+    let max_distance = ctx.arg_f64(6) as f32;
+    let _ = with_global_audio(|engine| {
+        engine.play_sound_3d(clip_id, [px, py, pz], volume, ref_distance, max_distance)
+    });
+    ExternResult::Ok
+}
+
+#[vo_fn("vogui", "audioCreateSource3D")]
+pub fn audio_create_source_3d(ctx: &mut ExternCallContext) -> ExternResult {
+    let clip_id = ctx.arg_u64(0) as u32;
+    let px = ctx.arg_f64(1) as f32;
+    let py = ctx.arg_f64(2) as f32;
+    let pz = ctx.arg_f64(3) as f32;
+    let volume = ctx.arg_f64(4) as f32;
+    let ref_distance = ctx.arg_f64(5) as f32;
+    let max_distance = ctx.arg_f64(6) as f32;
+    write_u32_handle_result(ctx, 0, 1, with_global_audio_result(|engine| {
+        engine.create_source_3d(clip_id, [px, py, pz], volume, ref_distance, max_distance)
+    }));
+    ExternResult::Ok
+}
+
+#[vo_fn("vogui", "audioUpdateSpatial")]
+pub fn audio_update_spatial(_ctx: &mut ExternCallContext) -> ExternResult {
+    let _ = with_global_audio(|engine| engine.update_spatial_sources());
+    ExternResult::Ok
+}
+
+#[vo_fn("vogui", "audioSetSource3DPos")]
+pub fn audio_set_source_3d_pos(ctx: &mut ExternCallContext) -> ExternResult {
+    let source_id = ctx.arg_u64(0) as u32;
+    let px = ctx.arg_f64(1) as f32;
+    let py = ctx.arg_f64(2) as f32;
+    let pz = ctx.arg_f64(3) as f32;
+    let _ = with_global_audio(|engine| engine.set_source_3d_position(source_id, [px, py, pz]));
+    ExternResult::Ok
+}
+
+#[vo_fn("vogui", "audioRemoveSource3D")]
+pub fn audio_remove_source_3d(ctx: &mut ExternCallContext) -> ExternResult {
+    let source_id = ctx.arg_u64(0) as u32;
+    let _ = with_global_audio(|engine| engine.remove_source_3d(source_id));
+    ExternResult::Ok
+}
+
+#[vo_fn("vogui", "audioPlayMusic")]
+pub fn audio_play_music(ctx: &mut ExternCallContext) -> ExternResult {
+    let clip_id = ctx.arg_u64(0) as u32;
+    let volume = ctx.arg_f64(1) as f32;
+    let _ = with_global_audio(|engine| engine.play_music(clip_id, volume));
+    ExternResult::Ok
+}
+
+#[vo_fn("vogui", "audioStopMusic")]
+pub fn audio_stop_music(_ctx: &mut ExternCallContext) -> ExternResult {
+    let _ = with_global_audio(|engine| engine.stop_music());
+    ExternResult::Ok
+}
+
+#[vo_fn("vogui", "audioPauseMusic")]
+pub fn audio_pause_music(_ctx: &mut ExternCallContext) -> ExternResult {
+    let _ = with_global_audio(|engine| engine.pause_music());
+    ExternResult::Ok
+}
+
+#[vo_fn("vogui", "audioResumeMusic")]
+pub fn audio_resume_music(_ctx: &mut ExternCallContext) -> ExternResult {
+    let _ = with_global_audio(|engine| engine.resume_music());
+    ExternResult::Ok
+}
+
+#[vo_fn("vogui", "audioSetSFXVolume")]
+pub fn audio_set_sfx_volume(ctx: &mut ExternCallContext) -> ExternResult {
+    let vol = ctx.arg_f64(0) as f32;
+    let _ = with_global_audio(|engine| engine.set_sfx_volume(vol));
+    ExternResult::Ok
+}
+
+#[vo_fn("vogui", "audioSetMusicVolume")]
+pub fn audio_set_music_volume(ctx: &mut ExternCallContext) -> ExternResult {
+    let vol = ctx.arg_f64(0) as f32;
+    let _ = with_global_audio(|engine| engine.set_music_volume(vol));
+    ExternResult::Ok
+}
+
+// =============================================================================
 // Export all entries for registration
 // =============================================================================
 
@@ -224,7 +380,23 @@ vo_ext::export_extensions!(
     __EXT_vogui_startAnimFrame,
     __EXT_vogui_cancelAnimFrame,
     __EXT_vogui_startGameLoop,
-    __EXT_vogui_stopGameLoop
+    __EXT_vogui_stopGameLoop,
+    // audio
+    __EXT_vogui_audioLoadBytes,
+    __EXT_vogui_audioFree,
+    __EXT_vogui_audioPlaySound,
+    __EXT_vogui_audioSetListener,
+    __EXT_vogui_audioPlaySound3D,
+    __EXT_vogui_audioCreateSource3D,
+    __EXT_vogui_audioUpdateSpatial,
+    __EXT_vogui_audioSetSource3DPos,
+    __EXT_vogui_audioRemoveSource3D,
+    __EXT_vogui_audioPlayMusic,
+    __EXT_vogui_audioStopMusic,
+    __EXT_vogui_audioPauseMusic,
+    __EXT_vogui_audioResumeMusic,
+    __EXT_vogui_audioSetSFXVolume,
+    __EXT_vogui_audioSetMusicVolume
 );
 
 // =============================================================================

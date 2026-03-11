@@ -1,0 +1,135 @@
+// Audio playback: load clips, play SFX/music, volume control, 3D spatial audio.
+//
+// This is the single audio API for the Vo ecosystem. Both vogui apps and
+// voplay games use it. voplay adds path-based loading on top via file_io.
+package vogui
+
+// ============ Extern Declarations ============
+
+func audioLoadBytes(data []byte) (int, error)
+func audioFree(clipID int)
+func audioPlaySound(clipID int, volume, pitch float64)
+func audioSetListener(px, py, pz, fx, fy, fz, ux, uy, uz float64)
+func audioPlaySound3D(clipID int, px, py, pz, volume, refDistance, maxDistance float64)
+func audioCreateSource3D(clipID int, px, py, pz, volume, refDistance, maxDistance float64) (int, error)
+func audioUpdateSpatial()
+func audioSetSource3DPos(sourceID int, px, py, pz float64)
+func audioRemoveSource3D(sourceID int)
+func audioPlayMusic(clipID int, volume float64)
+func audioStopMusic()
+func audioPauseMusic()
+func audioResumeMusic()
+func audioSetSFXVolume(vol float64)
+func audioSetMusicVolume(vol float64)
+
+// ============ Public Types ============
+
+// AudioClipID is a handle to a loaded audio resource (WAV, OGG, MP3).
+type AudioClipID int
+
+// AudioSourceID is a handle to a persistent 3D audio source.
+type AudioSourceID int
+
+// ============ Basic Audio ============
+
+// LoadAudioBytes loads an audio clip from encoded bytes (WAV, OGG, MP3).
+func LoadAudioBytes(data []byte) (AudioClipID, error) {
+	id := audioLoadBytes(data)?
+	return AudioClipID(id), nil
+}
+
+// Free releases a loaded audio clip.
+func (c AudioClipID) Free() {
+	audioFree(int(c))
+}
+
+// Play plays this clip as a one-shot sound effect at default volume and pitch.
+func (c AudioClipID) Play() {
+	audioPlaySound(int(c), 1.0, 1.0)
+}
+
+// PlayEx plays this clip as a sound effect with explicit parameters.
+// volume: amplitude scale (1.0 = normal).
+// pitch: playback speed (1.0 = normal, 2.0 = double speed/octave up).
+func (c AudioClipID) PlayEx(volume, pitch float64) {
+	audioPlaySound(int(c), volume, pitch)
+}
+
+// ============ Music ============
+
+// PlayMusic starts this clip as looping background music.
+// Stops any currently playing music. volume: 0.0–1.0.
+func (c AudioClipID) PlayMusic(volume float64) {
+	audioPlayMusic(int(c), volume)
+}
+
+// StopMusic stops the currently playing background music.
+func StopMusic() {
+	audioStopMusic()
+}
+
+// PauseMusic pauses the currently playing background music.
+func PauseMusic() {
+	audioPauseMusic()
+}
+
+// ResumeMusic resumes paused background music.
+func ResumeMusic() {
+	audioResumeMusic()
+}
+
+// ============ Volume Control ============
+
+// SetSFXVolume sets the global volume multiplier for sound effects (0.0–1.0).
+func SetSFXVolume(vol float64) {
+	audioSetSFXVolume(vol)
+}
+
+// SetMusicVolume sets the global volume multiplier for music (0.0–1.0).
+func SetMusicVolume(vol float64) {
+	audioSetMusicVolume(vol)
+}
+
+// ============ 3D Spatial Audio ============
+
+// Vec3 is a minimal 3D vector for audio positioning.
+// If the consumer already has its own Vec3 type (e.g. voplay), it can
+// convert or call the lower-level extern functions directly.
+type AudioVec3 struct {
+	X, Y, Z float64
+}
+
+// SetAudioListener sets the listener position and orientation for 3D audio.
+func SetAudioListener(position, forward, up AudioVec3) {
+	audioSetListener(
+		position.X, position.Y, position.Z,
+		forward.X, forward.Y, forward.Z,
+		up.X, up.Y, up.Z,
+	)
+}
+
+// PlaySound3D plays a one-shot 3D positional sound.
+func (c AudioClipID) PlaySound3D(pos AudioVec3, volume, refDistance, maxDistance float64) {
+	audioPlaySound3D(int(c), pos.X, pos.Y, pos.Z, volume, refDistance, maxDistance)
+}
+
+// CreateAudioSource3D creates a persistent looping 3D audio source.
+func CreateAudioSource3D(clip AudioClipID, pos AudioVec3, volume, refDistance, maxDistance float64) (AudioSourceID, error) {
+	id := audioCreateSource3D(int(clip), pos.X, pos.Y, pos.Z, volume, refDistance, maxDistance)?
+	return AudioSourceID(id), nil
+}
+
+// UpdateSpatialAudio updates all persistent 3D sources with current listener.
+func UpdateSpatialAudio() {
+	audioUpdateSpatial()
+}
+
+// SetPosition updates the world position of a persistent 3D source.
+func (s AudioSourceID) SetPosition(pos AudioVec3) {
+	audioSetSource3DPos(int(s), pos.X, pos.Y, pos.Z)
+}
+
+// Remove stops and removes a persistent 3D source.
+func (s AudioSourceID) Remove() {
+	audioRemoveSource3D(int(s))
+}

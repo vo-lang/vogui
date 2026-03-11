@@ -21,3 +21,4 @@ export { executeCanvasBatch } from './canvas';
 export { decodeBinaryRender } from './decoder';
 export { getRef } from './refs';
 export { emit, setRenderContext, setupKeyHandler } from './events';
+export { installAudioBridge } from './audio';

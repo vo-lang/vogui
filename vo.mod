@@ -4,6 +4,7 @@ vo 0.1
 
 files (
     app.vo
+    audio.vo
     canvas.vo
     component.vo
     constants.vo
