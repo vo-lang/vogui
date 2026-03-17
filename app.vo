@@ -154,3 +154,4 @@ func reportError(err error) {
 func waitForEvent() (int, string)
 
 func emitRenderBinary(data []byte)
+func HasHostCapability(name string) bool

@@ -25,6 +25,7 @@ pub trait VoguiPlatform: Send + Sync + 'static {
     fn clear_interval(&self, id: i32);
     fn navigate(&self, path: &str);
     fn get_current_path(&self) -> String;
+    fn has_host_capability(&self, _name: &str) -> bool { false }
     // v2 additions
     fn focus(&self, _ref_name: &str) {}
     fn blur(&self, _ref_name: &str) {}

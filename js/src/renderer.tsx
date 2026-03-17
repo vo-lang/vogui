@@ -23,7 +23,7 @@ const compCache = new Map<number, any>();
 // =============================================================================
 
 const widgetRegistry = new Map<string, WidgetFactory>();
-const widgetInstances = new Map<string, WidgetInstance>();
+const widgetInstances = new Set<WidgetInstance>();
 type CanvasResizeBinding = {
     element: HTMLCanvasElement;
     observer: ResizeObserver;
@@ -40,7 +40,7 @@ export function registerWidget(type: string, factory: WidgetFactory): void {
 
 /** Unregister and destroy all widget instances. */
 export function destroyWidgets(): void {
-    for (const [, instance] of widgetInstances) {
+    for (const instance of widgetInstances) {
         instance.destroy?.();
     }
     widgetInstances.clear();
@@ -395,10 +395,46 @@ function renderCanvas(props: Record<string, any>): any {
 }
 
 function renderExternalWidget(props: Record<string, any>): any {
+    return h(ExternalWidgetHost, { props });
+}
+
+function ExternalWidgetHost({ props }: { props: Record<string, any> }): any {
     const widgetType = props.widgetType as string;
-    const refName = `widget-${widgetType}-${Math.random().toString(36).slice(2, 8)}`;
     const common = buildCommonProps(props);
     const style = propsToStyle(props);
+    const hostRef = useRef<HTMLElement | null>(null);
+    const instanceRef = useRef<WidgetInstance | null>(null);
+    const propsRef = useRef<Record<string, any>>(props);
+
+    propsRef.current = props;
+
+    useEffect(() => {
+        const instance = instanceRef.current;
+        if (instance) {
+            instance.update?.(props);
+        }
+    }, [props]);
+
+    useEffect(() => {
+        const host = hostRef.current;
+        if (!host) return;
+        const factory = widgetRegistry.get(widgetType);
+        if (!factory) return;
+        const onWidgetEvent = (payload: string) => {
+            const currentProps = propsRef.current;
+            if (currentProps.onWidget != null) emit(currentProps.onWidget as number, payload);
+        };
+        const instance = factory.create(host, propsRef.current, onWidgetEvent);
+        instanceRef.current = instance;
+        widgetInstances.add(instance);
+        return () => {
+            widgetInstances.delete(instance);
+            if (instanceRef.current === instance) {
+                instanceRef.current = null;
+            }
+            instance.destroy?.();
+        };
+    }, [widgetType]);
 
     return h('div', {
         ...common,
@@ -406,22 +442,9 @@ function renderExternalWidget(props: Record<string, any>): any {
         style,
         'data-widget-type': widgetType,
         ref: (el: HTMLElement | null) => {
-            if (!el) {
-                const instance = widgetInstances.get(refName);
-                if (instance) {
-                    instance.destroy?.();
-                    widgetInstances.delete(refName);
-                }
-                return;
-            }
-            // Create widget on mount
-            const factory = widgetRegistry.get(widgetType);
-            if (factory && !widgetInstances.has(refName)) {
-                const onWidgetEvent = (payload: string) => {
-                    if (props.onWidget != null) emit(props.onWidget as number, payload);
-                };
-                const instance = factory.create(el, props, onWidgetEvent);
-                widgetInstances.set(refName, instance);
+            hostRef.current = el;
+            if (props.ref) {
+                refCallback(props.ref)(el);
             }
         },
     });

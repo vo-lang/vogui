@@ -96,6 +96,13 @@ pub fn get_current_path(ctx: &mut ExternCallContext) -> ExternResult {
     ExternResult::Ok
 }
 
+#[vo_fn("vogui", "HasHostCapability")]
+pub fn has_host_capability(ctx: &mut ExternCallContext) -> ExternResult {
+    let name = ctx.arg_str(slots::ARG_NAME).to_string();
+    ctx.ret_bool(slots::RET_0, crate::with_platform(|p| p.has_host_capability(&name)));
+    ExternResult::Ok
+}
+
 // =============================================================================
 // Ref / DOM Access Externs
 // =============================================================================
@@ -369,6 +376,7 @@ vo_ext::export_extensions!(
     __EXT_vogui_clearInterval,
     __EXT_vogui_navigate,
     __EXT_vogui_getCurrentPath,
+    __EXT_vogui_HasHostCapability,
     __EXT_vogui_Focus,
     __EXT_vogui_Blur,
     __EXT_vogui_ScrollTo,
