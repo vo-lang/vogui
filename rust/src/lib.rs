@@ -17,16 +17,14 @@ pub mod audio;
 #[cfg(not(feature = "wasm-standalone"))]
 mod externs;
 
-#[cfg(not(feature = "wasm-standalone"))]
-pub trait VoguiPlatform: Send + Sync + 'static {
-    fn start_timeout(&self, id: i32, ms: i32);
-    fn clear_timeout(&self, id: i32);
-    fn start_interval(&self, id: i32, ms: i32);
-    fn clear_interval(&self, id: i32);
-    fn navigate(&self, path: &str);
-    fn get_current_path(&self) -> String;
-    fn has_host_capability(&self, _name: &str) -> bool { false }
-    // v2 additions
+// =============================================================================
+// Native: GUI-specific GuiHost (generic host capabilities live in vo_ext::host)
+// =============================================================================
+
+#[cfg(not(target_arch = "wasm32"))]
+pub trait GuiHost: Send + Sync + 'static {
+    fn navigate(&self, _path: &str) {}
+    fn get_current_path(&self) -> String { "/".to_string() }
     fn focus(&self, _ref_name: &str) {}
     fn blur(&self, _ref_name: &str) {}
     fn scroll_to(&self, _ref_name: &str, _top: i32) {}
@@ -35,41 +33,90 @@ pub trait VoguiPlatform: Send + Sync + 'static {
     fn set_title(&self, _title: &str) {}
     fn set_meta(&self, _name: &str, _content: &str) {}
     fn toast(&self, _message: &str, _typ: &str, _duration_ms: i32) {}
-    // v3 additions: animation frame and game loop
     fn start_anim_frame(&self, _id: i32) {}
     fn cancel_anim_frame(&self, _id: i32) {}
-    fn start_game_loop(&self, _id: i32) {}
-    fn stop_game_loop(&self, _id: i32) {}
 }
 
-#[cfg(not(feature = "wasm-standalone"))]
+#[cfg(not(target_arch = "wasm32"))]
+thread_local! {
+    static GUI_HOST: std::cell::RefCell<Option<Box<dyn GuiHost>>> =
+        const { std::cell::RefCell::new(None) };
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn set_gui_host(host: Box<dyn GuiHost>) {
+    GUI_HOST.with(|p| { *p.borrow_mut() = Some(host); });
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn clear_gui_host() {
+    GUI_HOST.with(|p| { *p.borrow_mut() = None; });
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn with_gui_host<F, R>(f: F) -> R
+where
+    F: FnOnce(&dyn GuiHost) -> R,
+{
+    GUI_HOST.with(|p| {
+        let borrow = p.borrow();
+        match borrow.as_ref() {
+            Some(host) => f(host.as_ref()),
+            None => f(&NoopGuiHost),
+        }
+    })
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct NoopGuiHost;
+
+#[cfg(not(target_arch = "wasm32"))]
+impl GuiHost for NoopGuiHost {}
+
+// =============================================================================
+// WASM: monolithic VoguiPlatform (vo-ext wasm has no platform module)
+// =============================================================================
+
+#[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
+pub trait VoguiPlatform: Send + Sync + 'static {
+    fn start_timeout(&self, id: i32, ms: i32);
+    fn clear_timeout(&self, id: i32);
+    fn start_interval(&self, id: i32, ms: i32);
+    fn clear_interval(&self, id: i32);
+    fn has_host_capability(&self, _name: &str) -> bool { false }
+    fn start_tick_loop(&self, _id: i32) {}
+    fn stop_tick_loop(&self, _id: i32) {}
+    fn navigate(&self, _path: &str) {}
+    fn get_current_path(&self) -> String { "/".to_string() }
+    fn focus(&self, _ref_name: &str) {}
+    fn blur(&self, _ref_name: &str) {}
+    fn scroll_to(&self, _ref_name: &str, _top: i32) {}
+    fn scroll_into_view(&self, _ref_name: &str) {}
+    fn select_text(&self, _ref_name: &str) {}
+    fn set_title(&self, _title: &str) {}
+    fn set_meta(&self, _name: &str, _content: &str) {}
+    fn toast(&self, _message: &str, _typ: &str, _duration_ms: i32) {}
+    fn start_anim_frame(&self, _id: i32) {}
+    fn cancel_anim_frame(&self, _id: i32) {}
+}
+
+#[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
 thread_local! {
     static PLATFORM: std::cell::RefCell<Option<Box<dyn VoguiPlatform>>> =
         const { std::cell::RefCell::new(None) };
 }
 
-/// Install a platform for the current thread. Each guest VM thread should call
-/// this once at startup. The platform is thread-local so concurrent sessions
-/// never interfere.
-#[cfg(not(feature = "wasm-standalone"))]
+#[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
 pub fn set_platform(platform: Box<dyn VoguiPlatform>) {
-    PLATFORM.with(|p| {
-        *p.borrow_mut() = Some(platform);
-    });
+    PLATFORM.with(|p| { *p.borrow_mut() = Some(platform); });
 }
 
-/// Clear the platform for the current thread. Call on shutdown to allow
-/// timer threads to detect disconnection and exit.
-#[cfg(not(feature = "wasm-standalone"))]
+#[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
 pub fn clear_platform() {
-    PLATFORM.with(|p| {
-        *p.borrow_mut() = None;
-    });
+    PLATFORM.with(|p| { *p.borrow_mut() = None; });
 }
 
-/// Execute a closure with the current thread's platform.
-/// Falls back to NoopPlatform if none is set.
-#[cfg(not(feature = "wasm-standalone"))]
+#[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
 pub fn with_platform<F, R>(f: F) -> R
 where
     F: FnOnce(&dyn VoguiPlatform) -> R,
@@ -78,30 +125,20 @@ where
         let borrow = p.borrow();
         match borrow.as_ref() {
             Some(platform) => f(platform.as_ref()),
-            None => f(NoopPlatform::get()),
+            None => f(&NoopPlatform),
         }
     })
 }
 
-#[cfg(not(feature = "wasm-standalone"))]
+#[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
 struct NoopPlatform;
 
-#[cfg(not(feature = "wasm-standalone"))]
-impl NoopPlatform {
-    fn get() -> &'static NoopPlatform {
-        static NOOP: NoopPlatform = NoopPlatform;
-        &NOOP
-    }
-}
-
-#[cfg(not(feature = "wasm-standalone"))]
+#[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
 impl VoguiPlatform for NoopPlatform {
     fn start_timeout(&self, _id: i32, _ms: i32) {}
     fn clear_timeout(&self, _id: i32) {}
     fn start_interval(&self, _id: i32, _ms: i32) {}
     fn clear_interval(&self, _id: i32) {}
-    fn navigate(&self, _path: &str) {}
-    fn get_current_path(&self) -> String { "/".to_string() }
 }
 
 // =============================================================================
@@ -166,10 +203,10 @@ mod wasm_js {
         pub fn cancel_anim_frame(id: i32);
 
         #[wasm_bindgen(js_name = voguiStartGameLoop)]
-        pub fn start_game_loop(id: i32);
+        pub fn start_tick_loop(id: i32);
 
         #[wasm_bindgen(js_name = voguiStopGameLoop)]
-        pub fn stop_game_loop(id: i32);
+        pub fn stop_tick_loop(id: i32);
     }
 }
 
@@ -191,8 +228,8 @@ impl VoguiPlatform for WasmPlatform {
     fn toast(&self, message: &str, typ: &str, duration_ms: i32) { wasm_js::toast(message, typ, duration_ms); }
     fn start_anim_frame(&self, id: i32) { wasm_js::start_anim_frame(id); }
     fn cancel_anim_frame(&self, id: i32) { wasm_js::cancel_anim_frame(id); }
-    fn start_game_loop(&self, id: i32) { wasm_js::start_game_loop(id); }
-    fn stop_game_loop(&self, id: i32) { wasm_js::stop_game_loop(id); }
+    fn start_tick_loop(&self, id: i32) { wasm_js::start_tick_loop(id); }
+    fn stop_tick_loop(&self, id: i32) { wasm_js::stop_tick_loop(id); }
 }
 
 // =============================================================================

@@ -6,6 +6,24 @@ use vo_runtime::objects::string;
 use crate::audio::{with_global_audio, with_global_audio_result};
 
 // =============================================================================
+// Platform dispatch helpers
+// =============================================================================
+
+#[cfg(target_arch = "wasm32")]
+fn with_host<F, R>(f: F) -> R where F: FnOnce(&dyn crate::VoguiPlatform) -> R {
+    crate::with_platform(f)
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn with_gui<F, R>(f: F) -> R where F: FnOnce(&dyn crate::GuiHost) -> R {
+    crate::with_gui_host(f)
+}
+#[cfg(target_arch = "wasm32")]
+fn with_gui<F, R>(f: F) -> R where F: FnOnce(&dyn crate::VoguiPlatform) -> R {
+    crate::with_platform(f)
+}
+
+// =============================================================================
 // App Externs
 // =============================================================================
 
@@ -51,14 +69,20 @@ pub fn float64_bits(ctx: &mut ExternCallContext) -> ExternResult {
 pub fn start_timeout(ctx: &mut ExternCallContext) -> ExternResult {
     let id = ctx.arg_i64(slots::ARG_ID) as i32;
     let delay_ms = ctx.arg_i64(slots::ARG_DELAY_MS) as i32;
-    crate::with_platform(|p| p.start_timeout(id, delay_ms));
+    #[cfg(not(target_arch = "wasm32"))]
+    vo_ext::host::timer::start_timeout(id, delay_ms);
+    #[cfg(target_arch = "wasm32")]
+    with_host(|p| p.start_timeout(id, delay_ms));
     ExternResult::Ok
 }
 
 #[vo_fn("vogui", "clearTimeout")]
 pub fn clear_timeout(ctx: &mut ExternCallContext) -> ExternResult {
     let id = ctx.arg_i64(slots::ARG_ID) as i32;
-    crate::with_platform(|p| p.clear_timeout(id));
+    #[cfg(not(target_arch = "wasm32"))]
+    vo_ext::host::timer::clear_timeout(id);
+    #[cfg(target_arch = "wasm32")]
+    with_host(|p| p.clear_timeout(id));
     ExternResult::Ok
 }
 
@@ -66,14 +90,20 @@ pub fn clear_timeout(ctx: &mut ExternCallContext) -> ExternResult {
 pub fn start_interval(ctx: &mut ExternCallContext) -> ExternResult {
     let id = ctx.arg_i64(slots::ARG_ID) as i32;
     let interval_ms = ctx.arg_i64(slots::ARG_INTERVAL_MS) as i32;
-    crate::with_platform(|p| p.start_interval(id, interval_ms));
+    #[cfg(not(target_arch = "wasm32"))]
+    vo_ext::host::timer::start_interval(id, interval_ms);
+    #[cfg(target_arch = "wasm32")]
+    with_host(|p| p.start_interval(id, interval_ms));
     ExternResult::Ok
 }
 
 #[vo_fn("vogui", "clearInterval")]
 pub fn clear_interval(ctx: &mut ExternCallContext) -> ExternResult {
     let id = ctx.arg_i64(slots::ARG_ID) as i32;
-    crate::with_platform(|p| p.clear_interval(id));
+    #[cfg(not(target_arch = "wasm32"))]
+    vo_ext::host::timer::clear_interval(id);
+    #[cfg(target_arch = "wasm32")]
+    with_host(|p| p.clear_interval(id));
     ExternResult::Ok
 }
 
@@ -84,13 +114,13 @@ pub fn clear_interval(ctx: &mut ExternCallContext) -> ExternResult {
 #[vo_fn("vogui", "navigate")]
 pub fn navigate(ctx: &mut ExternCallContext) -> ExternResult {
     let path = ctx.arg_str(slots::ARG_PATH).to_string();
-    crate::with_platform(|p| p.navigate(&path));
+    with_gui(|p| p.navigate(&path));
     ExternResult::Ok
 }
 
 #[vo_fn("vogui", "getCurrentPath")]
 pub fn get_current_path(ctx: &mut ExternCallContext) -> ExternResult {
-    let path = crate::with_platform(|p| p.get_current_path());
+    let path = with_gui(|p| p.get_current_path());
     let gc_ref = string::from_rust_str(ctx.gc(), &path);
     ctx.ret_ref(slots::RET_0, gc_ref);
     ExternResult::Ok
@@ -99,7 +129,11 @@ pub fn get_current_path(ctx: &mut ExternCallContext) -> ExternResult {
 #[vo_fn("vogui", "HasHostCapability")]
 pub fn has_host_capability(ctx: &mut ExternCallContext) -> ExternResult {
     let name = ctx.arg_str(slots::ARG_NAME).to_string();
-    ctx.ret_bool(slots::RET_0, crate::with_platform(|p| p.has_host_capability(&name)));
+    #[cfg(not(target_arch = "wasm32"))]
+    let result = vo_ext::host::capability::has(&name);
+    #[cfg(target_arch = "wasm32")]
+    let result = with_host(|p| p.has_host_capability(&name));
+    ctx.ret_bool(slots::RET_0, result);
     ExternResult::Ok
 }
 
@@ -110,14 +144,14 @@ pub fn has_host_capability(ctx: &mut ExternCallContext) -> ExternResult {
 #[vo_fn("vogui", "Focus")]
 pub fn focus(ctx: &mut ExternCallContext) -> ExternResult {
     let ref_name = ctx.arg_str(slots::ARG_REF_NAME).to_string();
-    crate::with_platform(|p| p.focus(&ref_name));
+    with_gui(|p| p.focus(&ref_name));
     ExternResult::Ok
 }
 
 #[vo_fn("vogui", "Blur")]
 pub fn blur(ctx: &mut ExternCallContext) -> ExternResult {
     let ref_name = ctx.arg_str(slots::ARG_REF_NAME).to_string();
-    crate::with_platform(|p| p.blur(&ref_name));
+    with_gui(|p| p.blur(&ref_name));
     ExternResult::Ok
 }
 
@@ -125,21 +159,21 @@ pub fn blur(ctx: &mut ExternCallContext) -> ExternResult {
 pub fn scroll_to(ctx: &mut ExternCallContext) -> ExternResult {
     let ref_name = ctx.arg_str(slots::ARG_REF_NAME).to_string();
     let top = ctx.arg_i64(slots::ARG_TOP) as i32;
-    crate::with_platform(|p| p.scroll_to(&ref_name, top));
+    with_gui(|p| p.scroll_to(&ref_name, top));
     ExternResult::Ok
 }
 
 #[vo_fn("vogui", "ScrollIntoView")]
 pub fn scroll_into_view(ctx: &mut ExternCallContext) -> ExternResult {
     let ref_name = ctx.arg_str(slots::ARG_REF_NAME).to_string();
-    crate::with_platform(|p| p.scroll_into_view(&ref_name));
+    with_gui(|p| p.scroll_into_view(&ref_name));
     ExternResult::Ok
 }
 
 #[vo_fn("vogui", "SelectText")]
 pub fn select_text(ctx: &mut ExternCallContext) -> ExternResult {
     let ref_name = ctx.arg_str(slots::ARG_REF_NAME).to_string();
-    crate::with_platform(|p| p.select_text(&ref_name));
+    with_gui(|p| p.select_text(&ref_name));
     ExternResult::Ok
 }
 
@@ -150,7 +184,7 @@ pub fn select_text(ctx: &mut ExternCallContext) -> ExternResult {
 #[vo_fn("vogui", "setDocTitle")]
 pub fn set_doc_title(ctx: &mut ExternCallContext) -> ExternResult {
     let title = ctx.arg_str(slots::ARG_TITLE).to_string();
-    crate::with_platform(|p| p.set_title(&title));
+    with_gui(|p| p.set_title(&title));
     ExternResult::Ok
 }
 
@@ -158,7 +192,7 @@ pub fn set_doc_title(ctx: &mut ExternCallContext) -> ExternResult {
 pub fn set_doc_meta(ctx: &mut ExternCallContext) -> ExternResult {
     let name = ctx.arg_str(slots::ARG_NAME).to_string();
     let content = ctx.arg_str(slots::ARG_CONTENT).to_string();
-    crate::with_platform(|p| p.set_meta(&name, &content));
+    with_gui(|p| p.set_meta(&name, &content));
     ExternResult::Ok
 }
 
@@ -169,28 +203,34 @@ pub fn set_doc_meta(ctx: &mut ExternCallContext) -> ExternResult {
 #[vo_fn("vogui", "startAnimFrame")]
 pub fn start_anim_frame(ctx: &mut ExternCallContext) -> ExternResult {
     let id = ctx.arg_i64(slots::ARG_ID) as i32;
-    crate::with_platform(|p| p.start_anim_frame(id));
+    with_gui(|p| p.start_anim_frame(id));
     ExternResult::Ok
 }
 
 #[vo_fn("vogui", "cancelAnimFrame")]
 pub fn cancel_anim_frame(ctx: &mut ExternCallContext) -> ExternResult {
     let id = ctx.arg_i64(slots::ARG_ID) as i32;
-    crate::with_platform(|p| p.cancel_anim_frame(id));
+    with_gui(|p| p.cancel_anim_frame(id));
     ExternResult::Ok
 }
 
 #[vo_fn("vogui", "startGameLoop")]
 pub fn start_game_loop(ctx: &mut ExternCallContext) -> ExternResult {
     let id = ctx.arg_i64(slots::ARG_ID) as i32;
-    crate::with_platform(|p| p.start_game_loop(id));
+    #[cfg(not(target_arch = "wasm32"))]
+    vo_ext::host::tick::start_tick_loop(id);
+    #[cfg(target_arch = "wasm32")]
+    with_host(|p| p.start_tick_loop(id));
     ExternResult::Ok
 }
 
 #[vo_fn("vogui", "stopGameLoop")]
 pub fn stop_game_loop(ctx: &mut ExternCallContext) -> ExternResult {
     let id = ctx.arg_i64(slots::ARG_ID) as i32;
-    crate::with_platform(|p| p.stop_game_loop(id));
+    #[cfg(not(target_arch = "wasm32"))]
+    vo_ext::host::tick::stop_tick_loop(id);
+    #[cfg(target_arch = "wasm32")]
+    with_host(|p| p.stop_tick_loop(id));
     ExternResult::Ok
 }
 
@@ -203,7 +243,7 @@ pub fn toast_emit(ctx: &mut ExternCallContext) -> ExternResult {
     let message = ctx.arg_str(slots::ARG_MESSAGE).to_string();
     let typ = ctx.arg_str(slots::ARG_TYP).to_string();
     let duration_ms = ctx.arg_i64(slots::ARG_DURATION_MS) as i32;
-    crate::with_platform(|p| p.toast(&message, &typ, duration_ms));
+    with_gui(|p| p.toast(&message, &typ, duration_ms));
     ExternResult::Ok
 }
 
@@ -364,6 +404,9 @@ pub fn audio_set_music_volume(ctx: &mut ExternCallContext) -> ExternResult {
 // =============================================================================
 // Export all entries for registration
 // =============================================================================
+
+#[cfg(not(target_arch = "wasm32"))]
+vo_ext::export_extensions!();
 
 #[cfg(target_arch = "wasm32")]
 vo_ext::export_extensions!(

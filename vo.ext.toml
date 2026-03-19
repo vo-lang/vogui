@@ -1,0 +1,7 @@
+[extension]
+name = "vogui"
+path = "rust/target/{profile}/libvo_vogui"
+
+[extension.wasm]
+type = "standalone"
+wasm = "vogui.wasm"
