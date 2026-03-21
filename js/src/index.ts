@@ -19,6 +19,7 @@ export { render, voNodeToVNode, registerWidget, destroyWidgets } from './rendere
 export { injectStyles, applyTheme, injectDynamicStyles, toggleDarkMode, setDarkMode, isDarkMode } from './styles';
 export { executeCanvasBatch } from './canvas';
 export { decodeBinaryRender } from './decoder';
+export { findExternalWidgetHandlerId, findExternalWidgetHandlerIdInBytes } from './query';
 export { getRef } from './refs';
 export { emit, setRenderContext, setupKeyHandler } from './events';
 export { installAudioBridge } from './audio';

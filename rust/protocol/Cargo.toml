@@ -1,0 +1,7 @@
+[package]
+name = "vogui-protocol"
+version = "0.1.0"
+edition = "2021"
+description = "Binary render protocol decoder for VoGUI"
+
+[dependencies]

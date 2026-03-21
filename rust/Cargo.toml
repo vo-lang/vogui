@@ -1,44 +1,6 @@
-[package]
-name = "vogui"
-version = "0.1.0"
-edition = "2021"
-
-[package.metadata.vo]
-vomod = "../vo.mod"
-
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = false
-
-[lib]
-name = "vo_vogui"
-crate-type = ["cdylib", "rlib"]
-
-[dependencies]
-vo-vm = { git = "https://github.com/vo-lang/volang", default-features = false }
-wasm-bindgen = { version = "0.2", optional = true }
-web-sys = { version = "0.3", features = ["console", "Window"], optional = true }
-
-# Native-only dependencies (for cargo check on non-wasm targets)
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-vo-vm = { git = "https://github.com/vo-lang/volang", features = ["std"] }
-vo-runtime = { git = "https://github.com/vo-lang/volang" }
-vo-ext = { git = "https://github.com/vo-lang/volang" }
-linkme = "0.3"
-rodio = { version = "0.19", default-features = false, features = ["wav", "vorbis", "mp3"] }
-log = "0.4"
-
-# WASM-only dependencies
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-vo-runtime = { git = "https://github.com/vo-lang/volang", default-features = false }
-vo-ext = { git = "https://github.com/vo-lang/volang", default-features = false, features = ["wasm"] }
-log = "0.4"
-
-[features]
-default = ["bindgen"]
-bindgen = ["dep:wasm-bindgen", "dep:web-sys"]
-wasm-standalone = []
-
 [workspace]
+members = ["ext", "protocol"]
+resolver = "2"
 
 # Redirect git deps to local sibling repos for development
 [patch."https://github.com/vo-lang/volang"]
