@@ -97,6 +97,7 @@ jobs:
           path: module/.phase6-dist/*
 
       - name: Upload GitHub release assets
+        working-directory: module
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ steps.version.outputs.value }}" module/.phase6-dist/* --clobber
+        run: gh release upload "${{ steps.version.outputs.value }}" .phase6-dist/* --clobber
