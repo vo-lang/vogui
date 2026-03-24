@@ -1,3 +1,5 @@
 js/node_modules/
 js/dist/
 rust/target/
+/.dist/
+/.dist-v*/
