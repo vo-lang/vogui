@@ -35,6 +35,8 @@ pub trait GuiHost: Send + Sync + 'static {
     fn toast(&self, _message: &str, _typ: &str, _duration_ms: i32) {}
     fn start_anim_frame(&self, _id: i32) {}
     fn cancel_anim_frame(&self, _id: i32) {}
+    fn measure_text(&self, _text: &str, _font: &str, _max_width: f64, _line_height: f64, _white_space: i32) -> (f64, i32) { (0.0, 0) }
+    fn measure_text_lines(&self, _text: &str, _font: &str, _max_width: f64, _line_height: f64, _white_space: i32) -> Vec<u8> { Vec::new() }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -98,6 +100,8 @@ pub trait VoguiPlatform: Send + Sync + 'static {
     fn toast(&self, _message: &str, _typ: &str, _duration_ms: i32) {}
     fn start_anim_frame(&self, _id: i32) {}
     fn cancel_anim_frame(&self, _id: i32) {}
+    fn measure_text(&self, _text: &str, _font: &str, _max_width: f64, _line_height: f64, _white_space: i32) -> (f64, i32) { (0.0, 0) }
+    fn measure_text_lines(&self, _text: &str, _font: &str, _max_width: f64, _line_height: f64, _white_space: i32) -> Vec<u8> { Vec::new() }
 }
 
 #[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]

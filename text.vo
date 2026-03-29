@@ -1,0 +1,144 @@
+// Text measurement using Pretext — multiline text layout without DOM.
+// Provides precise text dimensions on the Vo side for virtualization,
+// Canvas multi-line text, and layout-aware UI components.
+package vogui
+
+// TextMetrics contains the result of text measurement.
+type TextMetrics struct {
+	Height    float64 // Total pixel height of the text block
+	LineCount int     // Number of lines after wrapping
+}
+
+// TextLine contains information about a single wrapped line.
+type TextLine struct {
+	Text  string  // The text content of this line
+	Width float64 // Measured pixel width of this line
+}
+
+// TextLineMetrics contains full line-level measurement results.
+type TextLineMetrics struct {
+	Height    float64    // Total pixel height
+	LineCount int        // Number of lines
+	Lines     []TextLine // Per-line text and width
+}
+
+// WhiteSpace mode constants for text measurement.
+const (
+	WhiteSpaceNormal  = 0 // Collapse whitespace, wrap on word boundaries (default)
+	WhiteSpacePreWrap = 1 // Preserve spaces/tabs/newlines, wrap on word boundaries
+)
+
+// MeasureText measures the height and line count of text wrapped to a given width.
+//
+// font is a CSS font shorthand string, e.g. "16px Inter", "bold 14px sans-serif".
+// maxWidth is the maximum line width in pixels.
+// lineHeight is the line height in pixels.
+func MeasureText(text string, font string, maxWidth float64, lineHeight float64) TextMetrics {
+	height, lineCount := measureText(text, font, maxWidth, lineHeight, WhiteSpaceNormal)
+	return TextMetrics{Height: height, LineCount: lineCount}
+}
+
+// MeasureTextPreWrap measures text in pre-wrap mode (preserves spaces, tabs, newlines).
+// Useful for textarea-like content where whitespace is significant.
+func MeasureTextPreWrap(text string, font string, maxWidth float64, lineHeight float64) TextMetrics {
+	height, lineCount := measureText(text, font, maxWidth, lineHeight, WhiteSpacePreWrap)
+	return TextMetrics{Height: height, LineCount: lineCount}
+}
+
+// MeasureTextLines measures text and returns per-line information.
+// Use this when you need to know each line's content and width.
+func MeasureTextLines(text string, font string, maxWidth float64, lineHeight float64) TextLineMetrics {
+	data := measureTextLinesRaw(text, font, maxWidth, lineHeight, WhiteSpaceNormal)
+	return decodeTextLineMetrics(data)
+}
+
+// MeasureTextLinesPreWrap measures text in pre-wrap mode and returns per-line information.
+func MeasureTextLinesPreWrap(text string, font string, maxWidth float64, lineHeight float64) TextLineMetrics {
+	data := measureTextLinesRaw(text, font, maxWidth, lineHeight, WhiteSpacePreWrap)
+	return decodeTextLineMetrics(data)
+}
+
+// MaxLineWidth returns the width of the widest line when text is wrapped to maxWidth.
+// This is the "shrink-wrap" width — the tightest container that still fits the text.
+func MaxLineWidth(text string, font string, maxWidth float64, lineHeight float64) float64 {
+	m := MeasureTextLines(text, font, maxWidth, lineHeight)
+	max := 0.0
+	for _, line := range m.Lines {
+		if line.Width > max {
+			max = line.Width
+		}
+	}
+	return max
+}
+
+// decodeTextLineMetrics decodes the binary response from measureTextLinesRaw.
+// Format: [f64 height][i32 lineCount][i32 numLines]
+//
+//	per line: [u16 textByteLen][text bytes][f64 width]
+func decodeTextLineMetrics(data []byte) TextLineMetrics {
+	r := &binReader{data: data}
+	height := r.readF64()
+	lineCount := r.readI32()
+	numLines := r.readI32()
+	lines := make([]TextLine, numLines)
+	for i := 0; i < numLines; i++ {
+		textLen := r.readU16()
+		text := string(data[r.pos : r.pos+textLen])
+		r.pos += textLen
+		width := r.readF64()
+		lines[i] = TextLine{Text: text, Width: width}
+	}
+	return TextLineMetrics{
+		Height:    height,
+		LineCount: lineCount,
+		Lines:     lines,
+	}
+}
+
+// binReader reads little-endian binary data.
+type binReader struct {
+	data []byte
+	pos  int
+}
+
+func (r *binReader) readF64() float64 {
+	v := float64frombits(
+		int64(r.data[r.pos]) |
+			int64(r.data[r.pos+1])<<8 |
+			int64(r.data[r.pos+2])<<16 |
+			int64(r.data[r.pos+3])<<24 |
+			int64(r.data[r.pos+4])<<32 |
+			int64(r.data[r.pos+5])<<40 |
+			int64(r.data[r.pos+6])<<48 |
+			int64(r.data[r.pos+7])<<56)
+	r.pos += 8
+	return v
+}
+
+func (r *binReader) readI32() int {
+	v := int(r.data[r.pos]) |
+		int(r.data[r.pos+1])<<8 |
+		int(r.data[r.pos+2])<<16 |
+		int(r.data[r.pos+3])<<24
+	r.pos += 4
+	return v
+}
+
+func (r *binReader) readU16() int {
+	v := int(r.data[r.pos]) | int(r.data[r.pos+1])<<8
+	r.pos += 2
+	return v
+}
+
+// ============ Extern Declarations ============
+
+// float64frombits converts raw int64 bits to float64 (inverse of float64bits).
+func float64frombits(bits int64) float64
+
+// measureText returns (height, lineCount) for text wrapped to maxWidth.
+// whiteSpace: 0=normal, 1=pre-wrap.
+func measureText(text string, font string, maxWidth float64, lineHeight float64, whiteSpace int) (float64, int)
+
+// measureTextLinesRaw returns binary line-level metrics.
+// whiteSpace: 0=normal, 1=pre-wrap.
+func measureTextLinesRaw(text string, font string, maxWidth float64, lineHeight float64, whiteSpace int) []byte

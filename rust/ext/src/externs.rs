@@ -61,6 +61,43 @@ pub fn float64_bits(ctx: &mut ExternCallContext) -> ExternResult {
     ExternResult::Ok
 }
 
+#[vo_fn("vogui", "float64frombits")]
+pub fn float64_from_bits(ctx: &mut ExternCallContext) -> ExternResult {
+    let bits = ctx.arg_i64(slots::ARG_BITS) as u64;
+    ctx.ret_f64(slots::RET_0, f64::from_bits(bits));
+    ExternResult::Ok
+}
+
+// =============================================================================
+// Text Measurement Externs
+// =============================================================================
+
+#[vo_fn("vogui", "measureText")]
+pub fn measure_text(ctx: &mut ExternCallContext) -> ExternResult {
+    let text = ctx.arg_str(slots::ARG_TEXT).to_string();
+    let font = ctx.arg_str(slots::ARG_FONT).to_string();
+    let max_width = ctx.arg_f64(slots::ARG_MAX_WIDTH);
+    let line_height = ctx.arg_f64(slots::ARG_LINE_HEIGHT);
+    let white_space = ctx.arg_i64(slots::ARG_WHITE_SPACE) as i32;
+    let (height, line_count) = with_gui(|p| p.measure_text(&text, &font, max_width, line_height, white_space));
+    ctx.ret_f64(slots::RET_0, height);
+    ctx.ret_i64(slots::RET_1, line_count as i64);
+    ExternResult::Ok
+}
+
+#[vo_fn("vogui", "measureTextLinesRaw")]
+pub fn measure_text_lines_raw(ctx: &mut ExternCallContext) -> ExternResult {
+    let text = ctx.arg_str(slots::ARG_TEXT).to_string();
+    let font = ctx.arg_str(slots::ARG_FONT).to_string();
+    let max_width = ctx.arg_f64(slots::ARG_MAX_WIDTH);
+    let line_height = ctx.arg_f64(slots::ARG_LINE_HEIGHT);
+    let white_space = ctx.arg_i64(slots::ARG_WHITE_SPACE) as i32;
+    let data = with_gui(|p| p.measure_text_lines(&text, &font, max_width, line_height, white_space));
+    let gc_ref = ctx.alloc_bytes(&data);
+    ctx.ret_ref(slots::RET_0, gc_ref);
+    ExternResult::Ok
+}
+
 // =============================================================================
 // Timer Externs
 // =============================================================================
@@ -413,6 +450,9 @@ vo_ext::export_extensions!(
     __EXT_vogui_waitForEvent,
     __EXT_vogui_emitRenderBinary,
     __EXT_vogui_float64bits,
+    __EXT_vogui_float64frombits,
+    __EXT_vogui_measureText,
+    __EXT_vogui_measureTextLinesRaw,
     __EXT_vogui_startTimeout,
     __EXT_vogui_clearTimeout,
     __EXT_vogui_startInterval,

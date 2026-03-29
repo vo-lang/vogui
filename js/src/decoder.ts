@@ -98,12 +98,24 @@ class BinReader {
         }
         if (tag === 4) {
             const cid = this.u32();
+            const propCount = this.u16();
+            const props: Record<string, any> = { _cid: cid };
+            for (let i = 0; i < propCount; i++) {
+                const k = this.str();
+                props[k] = this.value();
+            }
             const child = this.node();
-            return { type: '__comp__', props: { _cid: cid }, children: child ? [child] : [] };
+            return { type: '__comp__', props, children: child ? [child] : [] };
         }
         if (tag === 5) {
             const cid = this.u32();
-            return { type: '__cached__', props: { _cid: cid }, children: [] };
+            const propCount = this.u16();
+            const props: Record<string, any> = { _cid: cid };
+            for (let i = 0; i < propCount; i++) {
+                const k = this.str();
+                props[k] = this.value();
+            }
+            return { type: '__cached__', props, children: [] };
         }
         // tag === 1: element
         const type = this.str();

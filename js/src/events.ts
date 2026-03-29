@@ -149,6 +149,11 @@ function extractGenericPayload(e: Event): string {
     if ('detail' in e && typeof (e as any).detail === 'number') {
         payload.Detail = (e as any).detail;
     }
+    if (e.type === 'scroll' && target) {
+        if ('scrollTop' in target) payload.ScrollTop = target.scrollTop;
+        if ('scrollHeight' in target) payload.ScrollHeight = target.scrollHeight;
+        if ('clientHeight' in target) payload.ClientHeight = target.clientHeight;
+    }
     return JSON.stringify(payload);
 }
 

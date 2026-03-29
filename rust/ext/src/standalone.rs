@@ -35,6 +35,20 @@ extern "C" {
     fn host_cancel_anim_frame(id: i32);
     fn host_start_game_loop(id: i32);
     fn host_stop_game_loop(id: i32);
+    fn host_measure_text(
+        text_ptr: *const u8, text_len: u32,
+        font_ptr: *const u8, font_len: u32,
+        max_width: f64, line_height: f64,
+        white_space: i32,
+        out_len: *mut u32,
+    ) -> *const u8;
+    fn host_measure_text_lines(
+        text_ptr: *const u8, text_len: u32,
+        font_ptr: *const u8, font_len: u32,
+        max_width: f64, line_height: f64,
+        white_space: i32,
+        out_len: *mut u32,
+    ) -> *const u8;
 }
 
 // ── Memory management ────────────────────────────────────────────────────────
@@ -124,6 +138,80 @@ pub extern "C" fn float64bits(ptr: *const u8, len: u32, out_len: *mut u32) -> *m
     let input = raw_input(ptr, len);
     let (v, _) = read_value_arg(input, 0);
     output_tag_value(v, out_len)
+}
+
+// float64frombits(bits int64) -> float64
+#[no_mangle]
+pub extern "C" fn float64frombits(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
+    let input = raw_input(ptr, len);
+    let (v, _) = read_value_arg(input, 0);
+    // Input is i64 bits, output is the same bits reinterpreted as f64,
+    // but since we're just passing the raw u64 through, TAG_VALUE works.
+    output_tag_value(v, out_len)
+}
+
+// measureText(text string, font string, maxWidth float64, lineHeight float64, whiteSpace int) -> (float64, int)
+#[no_mangle]
+pub extern "C" fn measureText(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
+    let input = raw_input(ptr, len);
+    let (text, off) = read_bytes_arg(input, 0);
+    let (font, off) = read_bytes_arg(input, off);
+    let (max_width_bits, off) = read_value_arg(input, off);
+    let (line_height_bits, off) = read_value_arg(input, off);
+    let (white_space, _) = read_value_arg(input, off);
+    let max_width = f64::from_bits(max_width_bits);
+    let line_height = f64::from_bits(line_height_bits);
+
+    let mut result_len: u32 = 0;
+    let result_ptr = unsafe {
+        host_measure_text(
+            text.as_ptr(), text.len() as u32,
+            font.as_ptr(), font.len() as u32,
+            max_width, line_height,
+            white_space as i32,
+            &mut result_len,
+        )
+    };
+
+    // Result from host: [f64 LE height 8 bytes][i32 LE lineCount 4 bytes]
+    let result = unsafe { std::slice::from_raw_parts(result_ptr, result_len as usize) };
+    let height_bits = u64::from_le_bytes(result[0..8].try_into().unwrap());
+    let line_count = i32::from_le_bytes(result[8..12].try_into().unwrap());
+
+    // Encode as TAG_VALUE(height) + TAG_VALUE(lineCount)
+    let mut buf = Vec::with_capacity(18);
+    buf.push(TAG_VALUE);
+    buf.extend_from_slice(&height_bits.to_le_bytes());
+    buf.push(TAG_VALUE);
+    buf.extend_from_slice(&(line_count as u64).to_le_bytes());
+    alloc_output(&buf, out_len)
+}
+
+// measureTextLinesRaw(text string, font string, maxWidth float64, lineHeight float64, whiteSpace int) -> []byte
+#[no_mangle]
+pub extern "C" fn measureTextLinesRaw(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
+    let input = raw_input(ptr, len);
+    let (text, off) = read_bytes_arg(input, 0);
+    let (font, off) = read_bytes_arg(input, off);
+    let (max_width_bits, off) = read_value_arg(input, off);
+    let (line_height_bits, off) = read_value_arg(input, off);
+    let (white_space, _) = read_value_arg(input, off);
+    let max_width = f64::from_bits(max_width_bits);
+    let line_height = f64::from_bits(line_height_bits);
+
+    let mut result_len: u32 = 0;
+    let result_ptr = unsafe {
+        host_measure_text_lines(
+            text.as_ptr(), text.len() as u32,
+            font.as_ptr(), font.len() as u32,
+            max_width, line_height,
+            white_space as i32,
+            &mut result_len,
+        )
+    };
+
+    let result = unsafe { std::slice::from_raw_parts(result_ptr, result_len as usize) };
+    output_tag_bytes(result, out_len)
 }
 
 // startTimeout(id int, delayMs int)

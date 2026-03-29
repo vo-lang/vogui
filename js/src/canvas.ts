@@ -2,6 +2,7 @@
 // Receives batched draw commands from Vo and executes them on canvas contexts.
 
 import type { CanvasBatch, CanvasCommand } from './types';
+import { fillTextWrap } from './text';
 
 const imageCache = new Map<string, HTMLImageElement>();
 const imagePending = new Set<string>();
@@ -82,6 +83,7 @@ function executeCommand(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement
         case 'clip': ctx.clip(); break;
         case 'ft': ctx.fillText(a[0] as string, a[1], a[2]); break;
         case 'st': ctx.strokeText(a[0] as string, a[1], a[2]); break;
+        case 'ftw': fillTextWrap(ctx, a[0] as string, a[1], a[2], a[3], a[4]); break;
         case 'di': { const img = getImage(a[0]); if (img) ctx.drawImage(img, a[1], a[2]); break; }
         case 'dis': { const img = getImage(a[0]); if (img) ctx.drawImage(img, a[1], a[2], a[3], a[4]); break; }
         case 'disub': { const img = getImage(a[0]); if (img) ctx.drawImage(img, a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8]); break; }

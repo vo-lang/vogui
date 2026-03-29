@@ -32,6 +32,14 @@ type CanvasResizeBinding = {
     lastHeight: number;
 };
 const canvasResizeBindings = new Map<string, CanvasResizeBinding>();
+type ElementResizeBinding = {
+    element: HTMLElement;
+    observer: ResizeObserver;
+    resizeId: number;
+    lastWidth: number;
+    lastHeight: number;
+};
+const elementResizeBindings = new Map<string, ElementResizeBinding>();
 
 /** Register an external widget factory. */
 export function registerWidget(type: string, factory: WidgetFactory): void {
@@ -111,16 +119,13 @@ export function voNodeToVNode(node: VoNode | null | undefined): any {
     if (type === '__comp__') {
         const cid = props._cid as number;
         const childVNode = children[0] ? voNodeToVNode(children[0]) : null;
-        // Cache the rendered subtree
-        const vnode = h('div', { 'data-vcid': cid, style: { display: 'contents' } }, childVNode);
-        compCache.set(cid, vnode);
-        return vnode;
+        compCache.set(cid, childVNode);
+        return renderComponentWrapper(cid, props, childVNode);
     }
     if (type === '__cached__') {
         const cid = props._cid as number;
-        const cached = compCache.get(cid);
-        if (cached) return cached;
-        return h('div', { 'data-vcid': cid });
+        const cachedChild = compCache.get(cid) ?? null;
+        return renderComponentWrapper(cid, props, cachedChild);
     }
 
     // UnsafeHTML
@@ -165,6 +170,31 @@ function childrenToVNodes(children: VoNode[]): ComponentChildren[] {
     return children.map(voNodeToVNode);
 }
 
+function renderComponentWrapper(cid: number, props: Record<string, any>, childVNode: any): any {
+    const commonProps = buildCommonProps(props);
+    const style = propsToStyle(props) ?? {};
+    const eventHandlers = propsToHandlers(props);
+    const className = props.class || undefined;
+    const hasStyle = Object.keys(style).length > 0;
+    const hasHandlers = Object.keys(eventHandlers).length > 0;
+    const hasClassName = Boolean(className);
+    const wrapperProps: Record<string, any> = {
+        ...commonProps,
+        'data-vcid': cid,
+    };
+
+    if (!hasStyle && !hasHandlers && !hasClassName) {
+        return h('div', { ...wrapperProps, style: { display: 'contents' } }, childVNode);
+    }
+
+    return h('div', {
+        ...wrapperProps,
+        ...eventHandlers,
+        className,
+        style: hasStyle ? style : undefined,
+    }, childVNode);
+}
+
 // =============================================================================
 // Generic element rendering
 // =============================================================================
@@ -174,6 +204,11 @@ function renderGenericElement(type: string, props: Record<string, any>, children
     const baseClass = typeToBaseClass(type);
     const vClass = variantClass(type, props.variant, props.size);
     const userClass = props.class || '';
+    const refName = props.ref as string | undefined;
+    const resizeId = props.onResize as number | undefined;
+    const resizeKey = resizeId != null
+        ? (refName ? `ref:${refName}` : `resize:${resizeId}`)
+        : null;
 
     // Active state classes
     const activeClass = props.active ? getActiveClass(type) : '';
@@ -236,6 +271,61 @@ function renderGenericElement(type: string, props: Record<string, any>, children
         elementProps.onSubmit = (e: Event) => {
             e.preventDefault();
             emit(props.onSubmit, '{}');
+        };
+    }
+
+    if (resizeId != null) {
+        const baseRef = refName ? refCallback(refName) : undefined;
+        elementProps.ref = (el: HTMLElement | null) => {
+            if (baseRef) {
+                baseRef(el);
+            }
+            if (!resizeKey) {
+                return;
+            }
+            if (!el) {
+                const binding = elementResizeBindings.get(resizeKey);
+                if (binding) {
+                    binding.observer.disconnect();
+                    elementResizeBindings.delete(resizeKey);
+                }
+                return;
+            }
+
+            const existing = elementResizeBindings.get(resizeKey);
+            if (existing && existing.element === el && existing.resizeId === resizeId) {
+                return;
+            }
+            if (existing) {
+                existing.observer.disconnect();
+                elementResizeBindings.delete(resizeKey);
+            }
+
+            let binding!: ElementResizeBinding;
+            const observer = new ResizeObserver((entries) => {
+                for (const entry of entries) {
+                    const width = Math.round(entry.contentRect.width);
+                    const height = Math.round(entry.contentRect.height);
+                    if (width === binding.lastWidth && height === binding.lastHeight) {
+                        continue;
+                    }
+                    binding.lastWidth = width;
+                    binding.lastHeight = height;
+                    emit(binding.resizeId, JSON.stringify({
+                        Width: width,
+                        Height: height,
+                    }));
+                }
+            });
+            binding = {
+                element: el,
+                observer,
+                resizeId,
+                lastWidth: -1,
+                lastHeight: -1,
+            };
+            observer.observe(el);
+            elementResizeBindings.set(resizeKey, binding);
         };
     }
 

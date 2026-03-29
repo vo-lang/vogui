@@ -318,6 +318,11 @@ func (n Node) On(event string, h Handler) Node {
 	return n
 }
 
+// ObserveResize attaches a ResizeObserver-backed handler to this node.
+func (n Node) ObserveResize(h Handler) Node {
+	return n.setProp("onResize", h.ID)
+}
+
 // ============ Content & Semantic Props ============
 
 // Text sets the text content of a node. Use to add labels to components:

@@ -221,6 +221,14 @@ func (c *CanvasCtx) FillText(text string, x, y float64) { c.cmd("ft", text, x, y
 // StrokeText draws stroked text.
 func (c *CanvasCtx) StrokeText(text string, x, y float64) { c.cmd("st", text, x, y) }
 
+// FillTextWrap draws text with automatic word wrapping using Pretext.
+// The current font (set via SetFont) is used for measurement.
+// maxWidth: maximum line width in pixels.
+// lineHeight: vertical distance between line baselines in pixels.
+func (c *CanvasCtx) FillTextWrap(text string, x, y, maxWidth, lineHeight float64) {
+	c.cmd("ftw", text, x, y, maxWidth, lineHeight)
+}
+
 // ============ Image Commands ============
 
 // DrawImage draws an image at position. The image is identified by URL.

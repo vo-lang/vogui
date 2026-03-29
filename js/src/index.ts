@@ -23,3 +23,4 @@ export { findExternalWidgetHandlerId, findExternalWidgetHandlerIdInBytes } from 
 export { getRef } from './refs';
 export { emit, setRenderContext, setupKeyHandler } from './events';
 export { installAudioBridge } from './audio';
+export { measureText, measureTextLines, fillTextWrap } from './text';

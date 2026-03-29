@@ -140,11 +140,39 @@ func (w *BinWriter) writeNode(n Node) {
 	if n.Type == "__cached__" {
 		w.u8(binNodeCached)
 		w.u32(n.Props["_cid"].(int))
+		propCount := 0
+		for k := range n.Props {
+			if k != "_cid" {
+				propCount++
+			}
+		}
+		w.u16(propCount)
+		for k, v := range n.Props {
+			if k == "_cid" {
+				continue
+			}
+			w.str(k)
+			w.writeValue(v)
+		}
 		return
 	}
 	if n.Type == "__comp__" {
 		w.u8(binNodeComponent)
 		w.u32(n.Props["_cid"].(int))
+		propCount := 0
+		for k := range n.Props {
+			if k != "_cid" {
+				propCount++
+			}
+		}
+		w.u16(propCount)
+		for k, v := range n.Props {
+			if k == "_cid" {
+				continue
+			}
+			w.str(k)
+			w.writeValue(v)
+		}
 		if len(n.Children) > 0 {
 			w.writeNode(n.Children[0])
 		} else {
