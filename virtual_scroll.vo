@@ -117,6 +117,22 @@ func (vs *VirtualScroll) ScrollToIndex(index int) {
 	}
 }
 
+// ScrollToBottom scrolls to the end of all content.
+func (vs *VirtualScroll) ScrollToBottom() {
+	vs.ensureInit()
+	vs.scrollTop = vs.totalHeight
+	ScrollTo(vs.scrollRef, int(vs.totalHeight))
+}
+
+// Recompute forces a full rebuild of the cumulative offset table.
+// Call this when item heights change without a change in item count.
+func (vs *VirtualScroll) Recompute() {
+	vs.recomputeOffsets()
+	if vs.scrollTop > vs.totalHeight {
+		vs.scrollTop = vs.totalHeight
+	}
+}
+
 // recomputeOffsets rebuilds the cumulative offset table.
 func (vs *VirtualScroll) recomputeOffsets() {
 	n := vs.config.ItemCount
