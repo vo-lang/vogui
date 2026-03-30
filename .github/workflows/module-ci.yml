@@ -36,6 +36,9 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
 
+      - name: Install system dependencies
+        run: sudo apt-get install -y libasound2-dev
+
       - name: Verify release state
         working-directory: volang
         run: cargo run -p vo --release -- release verify ../module
@@ -68,6 +71,9 @@ jobs:
           path: volang
 
       - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies
+        run: sudo apt-get install -y libasound2-dev
 
       - name: Determine release version
         id: version
