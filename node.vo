@@ -323,6 +323,21 @@ func (n Node) ObserveResize(h Handler) Node {
 	return n.setProp("onResize", h.ID)
 }
 
+// ObserveScroll attaches a scroll-state handler to a scroll container.
+// The handler receives a ScrollEvent with real DOM values (scrollTop,
+// scrollHeight, clientHeight, AtBottom, BottomGap) — no Vo-side height
+// prediction. Use with OnScrollState to drive followTail patterns.
+func (n Node) ObserveScroll(h Handler) Node {
+	return n.setProp("onScrollState", h.ID)
+}
+
+// ObserveIntersect attaches an IntersectionObserver-backed handler to this
+// node. Fires with IntersectEvent when the node enters or leaves the viewport.
+// Useful for infinite-scroll sentinels, lazy loading, and sticky headers.
+func (n Node) ObserveIntersect(h Handler) Node {
+	return n.setProp("onIntersect", h.ID)
+}
+
 // ============ Content & Semantic Props ============
 
 // Text sets the text content of a node. Use to add labels to components:

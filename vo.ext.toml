@@ -5,3 +5,8 @@ path = "rust/target/{profile}/libvo_vogui"
 [extension.wasm]
 type = "standalone"
 wasm = "vogui.wasm"
+
+[studio]
+renderer = "js/dist/studio_renderer.js"
+protocol = "js/dist/studio_protocol.js"
+host_bridge = "js/dist/studio_host_bridge.js"

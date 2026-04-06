@@ -1896,6 +1896,7 @@ dependencies = [
  "quote",
  "syn",
  "vo-common",
+ "vo-module",
  "vo-syntax",
 ]
 
@@ -1932,7 +1933,6 @@ dependencies = [
  "regex",
  "vo-common-core",
  "vo-ffi-macro",
- "vo-module",
 ]
 
 [[package]]

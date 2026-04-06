@@ -98,6 +98,10 @@ func processEvent(event Event) {
 			return
 		}
 		invokeGameLoopHandler(currentState, p.Dt)
+	case eventIDMeasure:
+		if err := invokeMeasureCallback(currentState, event.Payload); err != nil {
+			reportError(err)
+		}
 	default:
 		err := invokeHandler(currentState, event.HandlerID, event.Payload)
 		if err != nil {
@@ -135,7 +139,8 @@ func render() {
 	styles := flushPendingStyles()
 	canvasCmds := flushPendingCanvasCommands()
 	themeVars := themeToCSSVars()
-	data := encodeRender(renderGen, tree, styles, canvasCmds, themeVars)
+	refActions := flushPendingRefActions()
+	data := encodeRender(renderGen, tree, styles, canvasCmds, themeVars, refActions)
 	emitRenderBinary(data)
 }
 

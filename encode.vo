@@ -214,7 +214,7 @@ func (w *BinWriter) writeHandlerMeta(h Handler) {
 }
 
 // encodeRender encodes the full render message to a binary byte slice.
-func encodeRender(gen int, tree Node, styles []string, canvasCmds []map[string]any, themeVars map[string]string) []byte {
+func encodeRender(gen int, tree Node, styles []string, canvasCmds []map[string]any, themeVars map[string]string, refActions []refAction) []byte {
 	w := &BinWriter{}
 
 	w.u32(gen)
@@ -228,6 +228,9 @@ func encodeRender(gen int, tree Node, styles []string, canvasCmds []map[string]a
 	}
 	if len(themeVars) > 0 {
 		flags |= 4
+	}
+	if len(refActions) > 0 {
+		flags |= 8
 	}
 	w.u8(flags)
 
@@ -267,6 +270,26 @@ func encodeRender(gen int, tree Node, styles []string, canvasCmds []map[string]a
 		for k, v := range themeVars {
 			w.str(k)
 			w.str(v)
+		}
+	}
+
+	if len(refActions) > 0 {
+		w.u16(len(refActions))
+		for _, action := range refActions {
+			w.str(action.Ref)
+			w.str(action.Cmd)
+			if action.HasTop {
+				w.u8(1)
+				w.i32(action.Top)
+			} else {
+				w.u8(0)
+			}
+			if action.HasMeasureID {
+				w.u8(1)
+				w.i32(action.MeasureID)
+			} else {
+				w.u8(0)
+			}
 		}
 	}
 

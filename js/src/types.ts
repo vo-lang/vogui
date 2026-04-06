@@ -29,6 +29,15 @@ export interface CanvasBatch {
     cmds: CanvasCommand[];
 }
 
+export type RefActionCommand = 'focus' | 'blur' | 'scrollTo' | 'scrollToSmooth' | 'scrollToBottom' | 'scrollToBottomSmooth' | 'scrollIntoView' | 'scrollIntoViewSmooth' | 'selectText' | 'measure';
+
+export interface RefAction {
+    ref: string;
+    cmd: RefActionCommand;
+    top?: number;
+    measureId?: number;
+}
+
 /** Render message from Vo. */
 export interface RenderMessage {
     type: 'render';
@@ -38,6 +47,7 @@ export interface RenderMessage {
     styles?: string[];
     canvas?: CanvasBatch[];
     theme?: Record<string, string>;
+    refActions?: RefAction[];
 }
 
 /** Event callback signature. */

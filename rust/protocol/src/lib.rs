@@ -19,6 +19,7 @@ pub struct RenderFrame {
     pub styles: Vec<String>,
     pub canvas: Vec<CanvasBatch>,
     pub theme: BTreeMap<String, String>,
+    pub ref_actions: Vec<RefAction>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -70,6 +71,13 @@ pub struct CanvasBatch {
 pub struct CanvasCommand {
     pub command: String,
     pub args: Vec<RenderValue>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct RefAction {
+    pub reference: String,
+    pub command: String,
+    pub top: Option<i32>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -208,6 +216,28 @@ impl<'a> RenderDecoder<'a> {
             BTreeMap::new()
         };
 
+        let ref_actions = if flags & 8 != 0 {
+            let count = self.read_u16()? as usize;
+            let mut actions = Vec::with_capacity(count);
+            for _ in 0..count {
+                let reference = self.read_str()?;
+                let command = self.read_str()?;
+                let top = if self.read_u8()? != 0 {
+                    Some(self.read_i32()?)
+                } else {
+                    None
+                };
+                actions.push(RefAction {
+                    reference,
+                    command,
+                    top,
+                });
+            }
+            actions
+        } else {
+            Vec::new()
+        };
+
         let remaining = self.remaining();
         if remaining != 0 {
             return Err(RenderDecodeError::TrailingBytes(remaining));
@@ -221,6 +251,7 @@ impl<'a> RenderDecoder<'a> {
             styles,
             canvas,
             theme,
+            ref_actions,
         })
     }
 
@@ -367,14 +398,14 @@ impl<'a> RenderDecoder<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::{decode_binary_render, query, CanvasBatch, CanvasCommand, RenderDecodeError, RenderElement, RenderFrame, RenderHandler, RenderNode, RenderValue};
+    use super::{decode_binary_render, query, CanvasBatch, CanvasCommand, RefAction, RenderDecodeError, RenderElement, RenderFrame, RenderHandler, RenderNode, RenderValue};
     use std::collections::BTreeMap;
 
     #[test]
     fn decode_binary_render_round_trips_full_frame() {
         let frame = RenderFrame {
             generation: 7,
-            flags: 7,
+            flags: 15,
             tree: RenderNode::Element(RenderElement {
                 node_type: "vo-external-widget".to_string(),
                 props: BTreeMap::from([
@@ -406,6 +437,11 @@ mod tests {
                 ],
             }],
             theme: BTreeMap::from([("fg".to_string(), "#fff".to_string())]),
+            ref_actions: vec![RefAction {
+                reference: "chat-scroll".to_string(),
+                command: "scrollTo".to_string(),
+                top: Some(120),
+            }],
         };
 
         let bytes = encode_frame(&frame);
@@ -439,6 +475,7 @@ mod tests {
             styles: vec![],
             canvas: vec![],
             theme: BTreeMap::new(),
+            ref_actions: vec![],
         };
 
         assert_eq!(query::find_external_widget_handler_id(&frame), Some(99));
@@ -466,6 +503,9 @@ mod tests {
         }
         if !frame.theme.is_empty() {
             flags |= 4;
+        }
+        if !frame.ref_actions.is_empty() {
+            flags |= 8;
         }
         push_u8(&mut bytes, flags);
         encode_node(&mut bytes, &frame.tree);
@@ -510,6 +550,21 @@ mod tests {
             for (key, value) in &frame.theme {
                 push_str(&mut bytes, key);
                 push_str(&mut bytes, value);
+            }
+        }
+
+        if !frame.ref_actions.is_empty() {
+            push_u16(&mut bytes, frame.ref_actions.len() as u16);
+            for action in &frame.ref_actions {
+                push_str(&mut bytes, &action.reference);
+                push_str(&mut bytes, &action.command);
+                match action.top {
+                    Some(top) => {
+                        push_u8(&mut bytes, 1);
+                        push_i32(&mut bytes, top);
+                    }
+                    None => push_u8(&mut bytes, 0),
+                }
             }
         }
 

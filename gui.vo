@@ -49,6 +49,9 @@
 //   OnEvent(func(s *S, payload string))               generic DOM event (JSON: Type/Value/Key/ClientX/Y/…)
 //   OnPointer(func(s *S, e PointerEvent))             canvas mouse/touch (Kind/X/Y/Button/Buttons)
 //   OnResize(func(s *S, e ResizeEvent))               canvas resize (Width/Height)
+//   OnScrollState(func(s *S, e ScrollEvent))          real browser scroll state (AtBottom/BottomGap/…)
+//   OnIntersect(func(s *S, e IntersectEvent))         IntersectionObserver (IsIntersecting/Ratio)
+//   OnWidget(func(s *S, payload string))              host widget event (raw JSON from JS factory)
 //   OnInt(func(s *S, n int), n)                       click + pre-bound integer (list items)
 //   OnIntValue(func(s *S, n int, v string), n)        value change + pre-bound integer
 //   OnIntChecked(func(s *S, n int, b bool), n)        checked change + pre-bound integer
@@ -79,9 +82,32 @@
 //              .Attr(k,v)  .Side(s)  .Icon(s)  .Text(s)  .Active(b)
 //              .AnimateWith(name)
 //   Events:    .On("eventName", handler)
+//   Observe:   .ObserveResize(h)   ResizeObserver — fires on element dimension change
+//              .ObserveScroll(h)   scroll state — fires on scroll, delivers ScrollEvent
+//              .ObserveIntersect(h) IntersectionObserver — fires on viewport entry/exit
+//              .ObserveWidget(h)   host widget events — receives structured payloads
 //   Styles:    .Style(key, val)  .Styles(map)  .ApplyStyle(style)  .ApplyStyles(styles...)
 //
 // Integer values are treated as px. Strings pass through as CSS ("50%", "1fr", "var(--vo-primary)").
+//
+// # Imperative Commands
+//
+// These functions queue commands executed after the next render commit:
+//
+//   Focus(refName)              focus a named element
+//   Blur(refName)               blur a named element
+//   ScrollTo(refName, top)      scroll to pixel offset
+//   ScrollToBottomRef(refName)  scroll to true DOM bottom
+//   ScrollIntoView(refName)     scroll element into viewport
+//   SelectText(refName)         select input/textarea text
+//   RequestMeasure(refName, fn) one-shot getBoundingClientRect → Rect callback
+//
+// # Host Widgets
+//
+// JS-native components that Vo configures and observes:
+//
+//   HostWidget(type, config, children...)   create a JS widget with typed config
+//   ExternalWidget(type, props, handler)    legacy API — prefer HostWidget
 //
 // # Constants
 //
@@ -215,10 +241,16 @@
 //   timer.vo       SetTimeout(fn, ms) int  ClearTimeout(id)
 //                  SetInterval(fn, ms) int  ClearInterval(id)
 //   router.vo      Route{Path, View}  Navigate(path)  GetCurrentPath() string
-//   ref.vo         Focus  Blur  ScrollTo  ScrollIntoView  SelectText  — bind via .Ref("name")
+//   ref.vo         Focus  Blur  ScrollTo  ScrollToSmooth  ScrollToBottom[Smooth]
+//                  ScrollIntoView[Smooth]  SelectText  — bind via .Ref("name")
+//   measure.vo     Rect  RequestMeasure(ref, fn)  — one-shot getBoundingClientRect
 //   portal.vo      Portal(name, children…)  Toast(msg, ToastXxx, durationMs)
 //   head.vo        SetTitle(s)  SetMeta(name, content)
 //   unsafe.vo      UnsafeHTML(html string)
-//   widget.vo      ExternalWidget(widgetType, handler, props…)
+//   virtual_list.vo VirtualList(config, children…)  OnRange(h)  OnVirtualRange(fn)
+//                  VirtualListConfig{TotalCount, ItemHeight, VisibleStart, Overscan}
+//                  RangeEvent{Start, End, ScrollTop}
+//   widget.vo      HostWidget(type, config, children…)  ObserveWidget(h)
+//                  ExternalWidget(type, props, handler)  — legacy compat
 //   explorer.vo    FileExplorer widget
 package vogui

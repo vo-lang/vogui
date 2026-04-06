@@ -456,7 +456,7 @@ pub use native::NativeAudioEngine;
 // WASM backend (WebAudio via JS bridge)
 // =============================================================================
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
 mod wasm {
     use super::*;
 
@@ -648,8 +648,77 @@ mod wasm {
     }
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
 pub use wasm::WasmAudioEngine;
+
+#[cfg(all(target_arch = "wasm32", feature = "wasm-standalone"))]
+mod standalone_wasm {
+    use super::*;
+
+    pub struct StandaloneWasmAudioEngine;
+
+    unsafe impl Send for StandaloneWasmAudioEngine {}
+    unsafe impl Sync for StandaloneWasmAudioEngine {}
+
+    impl StandaloneWasmAudioEngine {
+        pub fn new() -> Option<Self> {
+            Some(Self)
+        }
+    }
+
+    impl AudioEngine for StandaloneWasmAudioEngine {
+        fn load_bytes(&mut self, _data: Vec<u8>) -> Result<u32, String> {
+            Err("vogui standalone wasm audio is not supported yet".to_string())
+        }
+
+        fn free_clip(&mut self, _id: u32) {}
+
+        fn play_sound(&mut self, _clip_id: u32, _volume: f32, _pitch: f32) {}
+
+        fn play_music(&mut self, _clip_id: u32, _volume: f32) {}
+
+        fn stop_music(&mut self) {}
+
+        fn pause_music(&mut self) {}
+
+        fn resume_music(&mut self) {}
+
+        fn set_sfx_volume(&mut self, _vol: f32) {}
+
+        fn set_music_volume(&mut self, _vol: f32) {}
+
+        fn set_listener(&mut self, _position: [f32; 3], _forward: [f32; 3], _up: [f32; 3]) {}
+
+        fn play_sound_3d(
+            &mut self,
+            _clip_id: u32,
+            _source_pos: [f32; 3],
+            _volume: f32,
+            _ref_distance: f32,
+            _max_distance: f32,
+        ) {}
+
+        fn create_source_3d(
+            &mut self,
+            _clip_id: u32,
+            _position: [f32; 3],
+            _volume: f32,
+            _ref_distance: f32,
+            _max_distance: f32,
+        ) -> Result<u32, String> {
+            Err("vogui standalone wasm audio is not supported yet".to_string())
+        }
+
+        fn update_spatial_sources(&mut self) {}
+
+        fn set_source_3d_position(&mut self, _source_id: u32, _position: [f32; 3]) {}
+
+        fn remove_source_3d(&mut self, _source_id: u32) {}
+    }
+}
+
+#[cfg(all(target_arch = "wasm32", feature = "wasm-standalone"))]
+pub use standalone_wasm::StandaloneWasmAudioEngine;
 
 // =============================================================================
 // Global singleton
@@ -707,9 +776,13 @@ pub fn create_audio_engine() -> Option<Box<dyn AudioEngine>> {
     {
         NativeAudioEngine::new().map(|e| Box::new(e) as Box<dyn AudioEngine>)
     }
-    #[cfg(target_arch = "wasm32")]
+    #[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
     {
         WasmAudioEngine::new().map(|e| Box::new(e) as Box<dyn AudioEngine>)
+    }
+    #[cfg(all(target_arch = "wasm32", feature = "wasm-standalone"))]
+    {
+        StandaloneWasmAudioEngine::new().map(|e| Box::new(e) as Box<dyn AudioEngine>)
     }
 }
 

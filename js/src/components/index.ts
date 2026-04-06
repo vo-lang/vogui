@@ -21,6 +21,9 @@ import { VgRadio } from './VgRadio';
 import { VgBreadcrumb } from './VgBreadcrumb';
 import { VgPagination } from './VgPagination';
 import { VgSteps } from './VgSteps';
+import { VgVirtualList } from './VgVirtualList';
+import { VgTransition } from './VgTransition';
+import { VgTransitionGroup } from './VgTransitionGroup';
 
 export const componentMap: Record<string, FunctionComponent<any>> = {
     'button':             VgButton,
@@ -43,4 +46,7 @@ export const componentMap: Record<string, FunctionComponent<any>> = {
     'vo-breadcrumb':      VgBreadcrumb,
     'vo-pagination':      VgPagination,
     'vo-steps':           VgSteps,
+    'vo-virtual-list':    VgVirtualList,
+    'vo-transition':       VgTransition,
+    'vo-transition-group': VgTransitionGroup,
 };

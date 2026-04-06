@@ -7,6 +7,7 @@ export type {
     VoNode,
     VoHandler,
     RenderMessage,
+    RefAction,
     EventCallback,
     RendererConfig,
     WidgetFactory,
@@ -20,7 +21,7 @@ export { injectStyles, applyTheme, injectDynamicStyles, toggleDarkMode, setDarkM
 export { executeCanvasBatch } from './canvas';
 export { decodeBinaryRender } from './decoder';
 export { findExternalWidgetHandlerId, findExternalWidgetHandlerIdInBytes } from './query';
-export { getRef } from './refs';
+export { executeRefAction, getRef } from './refs';
 export { emit, setRenderContext, setupKeyHandler } from './events';
 export { installAudioBridge } from './audio';
 export { measureText, measureTextLines, fillTextWrap } from './text';

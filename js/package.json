@@ -16,8 +16,13 @@
     "src"
   ],
   "scripts": {
-    "build": "vite build",
-    "dev": "vite build --watch"
+    "build": "vite build && vite build --config vite.renderer.config.ts && vite build --config vite.protocol.config.ts && vite build --config vite.bridge.config.ts",
+    "build:lib": "vite build",
+    "build:renderer": "vite build --config vite.renderer.config.ts",
+    "build:protocol": "vite build --config vite.protocol.config.ts",
+    "build:bridge": "vite build --config vite.bridge.config.ts",
+    "dev": "vite build --watch",
+    "test:smoke": "node --experimental-strip-types ./tests/ref_actions_smoke.ts"
   },
   "dependencies": {
     "@chenglou/pretext": "^0.0.3",

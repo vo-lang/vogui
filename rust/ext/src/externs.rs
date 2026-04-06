@@ -178,42 +178,6 @@ pub fn has_host_capability(ctx: &mut ExternCallContext) -> ExternResult {
 // Ref / DOM Access Externs
 // =============================================================================
 
-#[vo_fn("vogui", "Focus")]
-pub fn focus(ctx: &mut ExternCallContext) -> ExternResult {
-    let ref_name = ctx.arg_str(slots::ARG_REF_NAME).to_string();
-    with_gui(|p| p.focus(&ref_name));
-    ExternResult::Ok
-}
-
-#[vo_fn("vogui", "Blur")]
-pub fn blur(ctx: &mut ExternCallContext) -> ExternResult {
-    let ref_name = ctx.arg_str(slots::ARG_REF_NAME).to_string();
-    with_gui(|p| p.blur(&ref_name));
-    ExternResult::Ok
-}
-
-#[vo_fn("vogui", "ScrollTo")]
-pub fn scroll_to(ctx: &mut ExternCallContext) -> ExternResult {
-    let ref_name = ctx.arg_str(slots::ARG_REF_NAME).to_string();
-    let top = ctx.arg_i64(slots::ARG_TOP) as i32;
-    with_gui(|p| p.scroll_to(&ref_name, top));
-    ExternResult::Ok
-}
-
-#[vo_fn("vogui", "ScrollIntoView")]
-pub fn scroll_into_view(ctx: &mut ExternCallContext) -> ExternResult {
-    let ref_name = ctx.arg_str(slots::ARG_REF_NAME).to_string();
-    with_gui(|p| p.scroll_into_view(&ref_name));
-    ExternResult::Ok
-}
-
-#[vo_fn("vogui", "SelectText")]
-pub fn select_text(ctx: &mut ExternCallContext) -> ExternResult {
-    let ref_name = ctx.arg_str(slots::ARG_REF_NAME).to_string();
-    with_gui(|p| p.select_text(&ref_name));
-    ExternResult::Ok
-}
-
 // =============================================================================
 // Head Management Externs
 // =============================================================================
@@ -460,11 +424,6 @@ vo_ext::export_extensions!(
     __EXT_vogui_navigate,
     __EXT_vogui_getCurrentPath,
     __EXT_vogui_HasHostCapability,
-    __EXT_vogui_Focus,
-    __EXT_vogui_Blur,
-    __EXT_vogui_ScrollTo,
-    __EXT_vogui_ScrollIntoView,
-    __EXT_vogui_SelectText,
     __EXT_vogui_setDocTitle,
     __EXT_vogui_setDocMeta,
     __EXT_vogui_toastEmit,

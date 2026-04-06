@@ -2,12 +2,12 @@
 // Converts VoNode tree → Preact VNode tree → DOM via Preact reconciler.
 
 import { h, render as preactRender, type ComponentChildren } from 'preact';
-import { useRef, useEffect } from 'preact/hooks';
+import { useRef, useEffect, useLayoutEffect } from 'preact/hooks';
 
-import type { VoNode, RenderMessage, RendererConfig, CanvasBatch, WidgetFactory, WidgetInstance } from './types';
+import type { VoNode, RenderMessage, RendererConfig, CanvasBatch, RefAction, WidgetFactory, WidgetInstance } from './types';
 import { setRenderContext, propsToHandlers, emit } from './events';
 import { typeToTag, typeToBaseClass, variantClass, propsToStyle } from './mapping';
-import { refCallback, refRegistry } from './refs';
+import { executeRefAction, refCallback, refRegistry } from './refs';
 import { applyTheme, injectDynamicStyles } from './styles';
 import { executeCanvasBatch } from './canvas';
 import { componentMap } from './components/index';
@@ -40,6 +40,12 @@ type ElementResizeBinding = {
     lastHeight: number;
 };
 const elementResizeBindings = new Map<string, ElementResizeBinding>();
+type ElementIntersectBinding = {
+    element: HTMLElement;
+    observer: IntersectionObserver;
+    intersectId: number;
+};
+const elementIntersectBindings = new Map<string, ElementIntersectBinding>();
 
 /** Register an external widget factory. */
 export function registerWidget(type: string, factory: WidgetFactory): void {
@@ -73,7 +79,7 @@ export function render(container: HTMLElement, msg: RenderMessage, config: Rende
     }
 
     preactRender(
-        h(VoTreeRoot, { tree: msg.tree, canvas: msg.canvas }),
+        h(VoTreeRoot, { tree: msg.tree, canvas: msg.canvas, refActions: msg.refActions }),
         container,
     );
 }
@@ -82,7 +88,7 @@ export function render(container: HTMLElement, msg: RenderMessage, config: Rende
 // Root component
 // =============================================================================
 
-function VoTreeRoot({ tree, canvas }: { tree: VoNode; canvas?: CanvasBatch[] }): any {
+function VoTreeRoot({ tree, canvas, refActions }: { tree: VoNode; canvas?: CanvasBatch[]; refActions?: RefAction[] }): any {
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -92,6 +98,14 @@ function VoTreeRoot({ tree, canvas }: { tree: VoNode; canvas?: CanvasBatch[] }):
             }
         }
     }, [canvas]);
+
+    useLayoutEffect(() => {
+        if (refActions && containerRef.current) {
+            for (const action of refActions) {
+                executeRefAction(action);
+            }
+        }
+    }, [refActions]);
 
     return h('div', { ref: containerRef, style: { display: 'contents' } }, voNodeToVNode(tree));
 }
@@ -148,9 +162,9 @@ export function voNodeToVNode(node: VoNode | null | undefined): any {
         return renderCanvas(props);
     }
 
-    // External widget
+    // External widget (HostWidget / ExternalWidget)
     if (type === 'vo-external-widget') {
-        return renderExternalWidget(props);
+        return renderExternalWidget(props, children);
     }
 
     // Check component registry for managed components
@@ -208,6 +222,10 @@ function renderGenericElement(type: string, props: Record<string, any>, children
     const resizeId = props.onResize as number | undefined;
     const resizeKey = resizeId != null
         ? (refName ? `ref:${refName}` : `resize:${resizeId}`)
+        : null;
+    const intersectId = props.onIntersect as number | undefined;
+    const intersectKey = intersectId != null
+        ? (refName ? `iref:${refName}` : `intersect:${intersectId}`)
         : null;
 
     // Active state classes
@@ -274,58 +292,75 @@ function renderGenericElement(type: string, props: Record<string, any>, children
         };
     }
 
-    if (resizeId != null) {
+    if (resizeId != null || intersectId != null) {
         const baseRef = refName ? refCallback(refName) : undefined;
         elementProps.ref = (el: HTMLElement | null) => {
             if (baseRef) {
                 baseRef(el);
             }
-            if (!resizeKey) {
-                return;
-            }
-            if (!el) {
-                const binding = elementResizeBindings.get(resizeKey);
-                if (binding) {
-                    binding.observer.disconnect();
-                    elementResizeBindings.delete(resizeKey);
-                }
-                return;
-            }
 
-            const existing = elementResizeBindings.get(resizeKey);
-            if (existing && existing.element === el && existing.resizeId === resizeId) {
-                return;
-            }
-            if (existing) {
-                existing.observer.disconnect();
-                elementResizeBindings.delete(resizeKey);
-            }
-
-            let binding!: ElementResizeBinding;
-            const observer = new ResizeObserver((entries) => {
-                for (const entry of entries) {
-                    const width = Math.round(entry.contentRect.width);
-                    const height = Math.round(entry.contentRect.height);
-                    if (width === binding.lastWidth && height === binding.lastHeight) {
-                        continue;
+            // ResizeObserver binding
+            if (resizeKey) {
+                if (!el) {
+                    const binding = elementResizeBindings.get(resizeKey);
+                    if (binding) {
+                        binding.observer.disconnect();
+                        elementResizeBindings.delete(resizeKey);
                     }
-                    binding.lastWidth = width;
-                    binding.lastHeight = height;
-                    emit(binding.resizeId, JSON.stringify({
-                        Width: width,
-                        Height: height,
-                    }));
+                } else {
+                    const existing = elementResizeBindings.get(resizeKey);
+                    if (!existing || existing.element !== el || existing.resizeId !== resizeId) {
+                        if (existing) {
+                            existing.observer.disconnect();
+                            elementResizeBindings.delete(resizeKey);
+                        }
+                        let binding!: ElementResizeBinding;
+                        const observer = new ResizeObserver((entries) => {
+                            for (const entry of entries) {
+                                const width = Math.round(entry.contentRect.width);
+                                const height = Math.round(entry.contentRect.height);
+                                if (width === binding.lastWidth && height === binding.lastHeight) continue;
+                                binding.lastWidth = width;
+                                binding.lastHeight = height;
+                                emit(binding.resizeId, JSON.stringify({ Width: width, Height: height }));
+                            }
+                        });
+                        binding = { element: el, observer, resizeId: resizeId!, lastWidth: -1, lastHeight: -1 };
+                        observer.observe(el);
+                        elementResizeBindings.set(resizeKey, binding);
+                    }
                 }
-            });
-            binding = {
-                element: el,
-                observer,
-                resizeId,
-                lastWidth: -1,
-                lastHeight: -1,
-            };
-            observer.observe(el);
-            elementResizeBindings.set(resizeKey, binding);
+            }
+
+            // IntersectionObserver binding
+            if (intersectKey) {
+                if (!el) {
+                    const binding = elementIntersectBindings.get(intersectKey);
+                    if (binding) {
+                        binding.observer.disconnect();
+                        elementIntersectBindings.delete(intersectKey);
+                    }
+                } else {
+                    const existing = elementIntersectBindings.get(intersectKey);
+                    if (!existing || existing.element !== el || existing.intersectId !== intersectId) {
+                        if (existing) {
+                            existing.observer.disconnect();
+                            elementIntersectBindings.delete(intersectKey);
+                        }
+                        const id = intersectId!;
+                        const observer = new IntersectionObserver((entries) => {
+                            for (const entry of entries) {
+                                emit(id, JSON.stringify({
+                                    IsIntersecting: entry.isIntersecting,
+                                    IntersectionRatio: entry.intersectionRatio,
+                                }));
+                            }
+                        });
+                        observer.observe(el);
+                        elementIntersectBindings.set(intersectKey, { element: el, observer, intersectId: id });
+                    }
+                }
+            }
         };
     }
 
@@ -484,11 +519,12 @@ function renderCanvas(props: Record<string, any>): any {
     });
 }
 
-function renderExternalWidget(props: Record<string, any>): any {
-    return h(ExternalWidgetHost, { props });
+function renderExternalWidget(props: Record<string, any>, children: VoNode[]): any {
+    const voChildren = children.length > 0 ? childrenToVNodes(children) : undefined;
+    return h(ExternalWidgetHost, { props, voChildren });
 }
 
-function ExternalWidgetHost({ props }: { props: Record<string, any> }): any {
+function ExternalWidgetHost({ props, voChildren }: { props: Record<string, any>; voChildren?: any }): any {
     const widgetType = props.widgetType as string;
     const common = buildCommonProps(props);
     const style = propsToStyle(props);
@@ -537,7 +573,7 @@ function ExternalWidgetHost({ props }: { props: Record<string, any> }): any {
                 refCallback(props.ref)(el);
             }
         },
-    });
+    }, voChildren);
 }
 
 function renderProgress(elementProps: Record<string, any>, props: Record<string, any>): any {

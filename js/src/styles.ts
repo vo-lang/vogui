@@ -98,7 +98,10 @@ export function applyTheme(container: HTMLElement, theme?: Record<string, string
     for (const [key, value] of Object.entries(vars)) {
         container.style.setProperty(key, value);
     }
+    container.style.backgroundColor = vars['--vo-background'];
     container.style.color = vars['--vo-text'];
+    container.style.borderColor = vars['--vo-border'];
+    container.style.caretColor = vars['--vo-text'];
     container.style.fontFamily = vars['--vo-font-family'];
     container.style.fontSize = '14px';
 }

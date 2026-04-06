@@ -3,18 +3,70 @@
 // (focus, scroll, select) on named elements.
 package vogui
 
+type refAction struct {
+	Ref          string
+	Cmd          string
+	Top          int
+	HasTop       bool
+	MeasureID    int
+	HasMeasureID bool
+}
+
+var pendingRefActions []refAction
+
 // Focus sets focus on the element with the given ref name.
 // Must be called in an action function (after render).
-func Focus(refName string)
+func Focus(refName string) {
+	pendingRefActions = append(pendingRefActions, refAction{Ref: refName, Cmd: "focus"})
+}
 
 // Blur removes focus from the element with the given ref name.
-func Blur(refName string)
+func Blur(refName string) {
+	pendingRefActions = append(pendingRefActions, refAction{Ref: refName, Cmd: "blur"})
+}
 
-// ScrollTo scrolls the element to the given position.
-func ScrollTo(refName string, top int)
+// ScrollTo scrolls the element to the given position (instant).
+func ScrollTo(refName string, top float64) {
+	rounded := int(top + 0.5)
+	pendingRefActions = append(pendingRefActions, refAction{Ref: refName, Cmd: "scrollTo", Top: rounded, HasTop: true})
+}
+
+// ScrollToSmooth scrolls the element to the given position with smooth animation.
+func ScrollToSmooth(refName string, top float64) {
+	rounded := int(top + 0.5)
+	pendingRefActions = append(pendingRefActions, refAction{Ref: refName, Cmd: "scrollToSmooth", Top: rounded, HasTop: true})
+}
+
+// ScrollToBottomRef scrolls the element to the true DOM bottom (instant).
+func ScrollToBottomRef(refName string) {
+	pendingRefActions = append(pendingRefActions, refAction{Ref: refName, Cmd: "scrollToBottom"})
+}
+
+// ScrollToBottomSmooth scrolls the element to the true DOM bottom with smooth animation.
+func ScrollToBottomSmooth(refName string) {
+	pendingRefActions = append(pendingRefActions, refAction{Ref: refName, Cmd: "scrollToBottomSmooth"})
+}
 
 // ScrollIntoView scrolls the element into the visible area.
-func ScrollIntoView(refName string)
+func ScrollIntoView(refName string) {
+	pendingRefActions = append(pendingRefActions, refAction{Ref: refName, Cmd: "scrollIntoView"})
+}
+
+// ScrollIntoViewSmooth scrolls the element into the visible area with smooth animation.
+func ScrollIntoViewSmooth(refName string) {
+	pendingRefActions = append(pendingRefActions, refAction{Ref: refName, Cmd: "scrollIntoViewSmooth"})
+}
 
 // SelectText selects all text in the input element.
-func SelectText(refName string)
+func SelectText(refName string) {
+	pendingRefActions = append(pendingRefActions, refAction{Ref: refName, Cmd: "selectText"})
+}
+
+func flushPendingRefActions() []refAction {
+	if len(pendingRefActions) == 0 {
+		return nil
+	}
+	result := pendingRefActions
+	pendingRefActions = nil
+	return result
+}

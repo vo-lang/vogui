@@ -149,10 +149,12 @@ function extractGenericPayload(e: Event): string {
     if ('detail' in e && typeof (e as any).detail === 'number') {
         payload.Detail = (e as any).detail;
     }
-    if (e.type === 'scroll' && target) {
-        if ('scrollTop' in target) payload.ScrollTop = target.scrollTop;
-        if ('scrollHeight' in target) payload.ScrollHeight = target.scrollHeight;
-        if ('clientHeight' in target) payload.ClientHeight = target.clientHeight;
+    const currentTarget = e.currentTarget as any;
+    const scrollTarget = currentTarget || target;
+    if (e.type === 'scroll' && scrollTarget) {
+        if ('scrollTop' in scrollTarget) payload.ScrollTop = scrollTarget.scrollTop;
+        if ('scrollHeight' in scrollTarget) payload.ScrollHeight = scrollTarget.scrollHeight;
+        if ('clientHeight' in scrollTarget) payload.ClientHeight = scrollTarget.clientHeight;
     }
     return JSON.stringify(payload);
 }
@@ -234,6 +236,27 @@ export function propsToHandlers(props: Record<string, any>): Record<string, any>
     // onSelect (combobox)
     if (props.onSelect != null) {
         handlers['data-vo-select'] = props.onSelect;
+    }
+
+    // onScrollState — rich scroll state backed by real DOM values
+    // The JS side computes AtBottom and BottomGap so Vo never predicts heights.
+    if (props.onScrollState != null) {
+        const id = props.onScrollState as number;
+        handlers.onScroll = (e: Event) => {
+            const t = e.currentTarget as HTMLElement;
+            const scrollTop = t.scrollTop;
+            const scrollHeight = t.scrollHeight;
+            const clientHeight = t.clientHeight;
+            const browserMax = Math.max(0, scrollHeight - clientHeight);
+            const bottomGap = Math.max(0, browserMax - scrollTop);
+            emit(id, JSON.stringify({
+                ScrollTop: scrollTop,
+                ScrollHeight: scrollHeight,
+                ClientHeight: clientHeight,
+                AtBottom: bottomGap <= 1.0,
+                BottomGap: bottomGap,
+            }));
+        };
     }
 
     // Generic DOM event bindings via node.On("eventName", handler)

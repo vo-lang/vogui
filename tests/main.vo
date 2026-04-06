@@ -1,0 +1,149 @@
+package main
+
+import (
+	"encoding/json"
+	"fmt"
+	"github.com/vo-lang/vogui"
+)
+
+func main() {
+	testScrollEventStruct()
+	testIntersectEventStruct()
+	testRangeEventStruct()
+	testRectStruct()
+	testVirtualListConfig()
+	testVirtualListNodeCreation()
+	testNodeObserveChaining()
+	testHostWidgetCreation()
+	testHostWidgetWithChildren()
+	fmt.Println("all tests passed")
+}
+
+// --- ScrollEvent ---
+
+func testScrollEventStruct() {
+	raw := `{"ScrollTop":123.5,"ClientHeight":600,"ScrollHeight":2000,"AtBottom":false,"BottomGap":1276.5}`
+	var e vogui.ScrollEvent
+	err := json.Unmarshal([]byte(raw), &e)
+	assert(err == nil, "ScrollEvent unmarshal should succeed")
+	assert(e.ScrollTop == 123.5, "ScrollTop")
+	assert(e.ClientHeight == 600.0, "ClientHeight")
+	assert(e.ScrollHeight == 2000.0, "ScrollHeight")
+	assert(e.AtBottom == false, "AtBottom")
+	assert(e.BottomGap == 1276.5, "BottomGap")
+}
+
+// --- IntersectEvent ---
+
+func testIntersectEventStruct() {
+	raw := `{"IsIntersecting":true,"IntersectionRatio":0.75}`
+	var e vogui.IntersectEvent
+	err := json.Unmarshal([]byte(raw), &e)
+	assert(err == nil, "IntersectEvent unmarshal should succeed")
+	assert(e.IsIntersecting == true, "IsIntersecting")
+	assert(e.IntersectionRatio == 0.75, "IntersectionRatio")
+}
+
+// --- RangeEvent ---
+
+func testRangeEventStruct() {
+	raw := `{"Start":10,"End":30,"ScrollTop":400.0}`
+	var e vogui.RangeEvent
+	err := json.Unmarshal([]byte(raw), &e)
+	assert(err == nil, "RangeEvent unmarshal should succeed")
+	assert(e.Start == 10, "Start")
+	assert(e.End == 30, "End")
+	assert(e.ScrollTop == 400.0, "ScrollTop")
+}
+
+// --- Rect ---
+
+func testRectStruct() {
+	raw := `{"X":10,"Y":20,"Width":100,"Height":50,"Top":20,"Right":110,"Bottom":70,"Left":10}`
+	var r vogui.Rect
+	err := json.Unmarshal([]byte(raw), &r)
+	assert(err == nil, "Rect unmarshal should succeed")
+	assert(r.X == 10.0, "X")
+	assert(r.Y == 20.0, "Y")
+	assert(r.Width == 100.0, "Width")
+	assert(r.Height == 50.0, "Height")
+	assert(r.Top == 20.0, "Top")
+	assert(r.Right == 110.0, "Right")
+	assert(r.Bottom == 70.0, "Bottom")
+	assert(r.Left == 10.0, "Left")
+}
+
+// --- VirtualListConfig ---
+
+func testVirtualListConfig() {
+	cfg := vogui.VirtualListConfig{
+		TotalCount:   1000,
+		ItemHeight:   40.0,
+		VisibleStart: 5,
+		Overscan:     3,
+	}
+	assert(cfg.TotalCount == 1000, "TotalCount")
+	assert(cfg.ItemHeight == 40.0, "ItemHeight")
+	assert(cfg.VisibleStart == 5, "VisibleStart")
+	assert(cfg.Overscan == 3, "Overscan")
+}
+
+// --- VirtualList Node ---
+
+func testVirtualListNodeCreation() {
+	items := []vogui.Node{
+		vogui.Text("item 0"),
+		vogui.Text("item 1"),
+		vogui.Text("item 2"),
+	}
+	node := vogui.VirtualList(vogui.VirtualListConfig{
+		TotalCount:   100,
+		ItemHeight:   40,
+		VisibleStart: 10,
+	}, items...)
+	assert(node.Type == "vo-virtual-list", "VirtualList node type")
+	assert(len(node.Children) == 3, "VirtualList should pass children through")
+	assert(node.Props["totalCount"] == 100, "totalCount prop")
+	assert(node.Props["itemHeight"] == 40.0, "itemHeight prop")
+	assert(node.Props["visibleStart"] == 10, "visibleStart prop")
+}
+
+// --- Node observe chaining ---
+
+type dummyState struct {
+	v int
+}
+
+func testNodeObserveChaining() {
+	// ObserveScroll, ObserveIntersect, ObserveResize should all be chainable
+	node := vogui.Div().
+		ObserveScroll(vogui.OnScrollState(func(s *dummyState, e vogui.ScrollEvent) {})).
+		ObserveIntersect(vogui.OnIntersect(func(s *dummyState, e vogui.IntersectEvent) {})).
+		ObserveResize(vogui.OnResize(func(s *dummyState, e vogui.ResizeEvent) {}))
+	assert(node.Props["onScrollState"] != nil, "ObserveScroll should set onScrollState prop")
+	assert(node.Props["onIntersect"] != nil, "ObserveIntersect should set onIntersect prop")
+	assert(node.Props["onResize"] != nil, "ObserveResize should set onResize prop")
+}
+
+// --- HostWidget ---
+
+func testHostWidgetCreation() {
+	node := vogui.HostWidget("markdown", map[string]any{
+		"content": "# Hello",
+	})
+	assert(node.Type == "vo-external-widget", "HostWidget node type")
+	assert(node.Props["widgetType"] == "markdown", "widgetType prop")
+	assert(node.Props["content"] == "# Hello", "content prop")
+	assert(len(node.Children) == 0, "no children")
+}
+
+func testHostWidgetWithChildren() {
+	child := vogui.Text("slot content")
+	node := vogui.HostWidget("layout", map[string]any{
+		"columns": 2,
+	}, child)
+	assert(node.Type == "vo-external-widget", "HostWidget node type")
+	assert(node.Props["widgetType"] == "layout", "widgetType prop")
+	assert(node.Props["columns"] == 2, "columns prop")
+	assert(len(node.Children) == 1, "should have 1 child")
+}

@@ -1,0 +1,85 @@
+// VirtualList — a JS-native virtualized list component.
+//
+// Unlike VirtualScroll (which predicts heights in Vo), VirtualList delegates
+// all scroll physics and viewport management to the browser/JS side. Vo only
+// provides the visible window of items as children.
+//
+// Flow:
+//   1. JS computes which items are visible based on scroll position
+//   2. JS emits a RangeEvent with Start/End indices
+//   3. Vo re-renders with only the visible items
+//   4. JS positions them at the correct offset inside a spacer
+//
+// Usage:
+//
+//   type State struct {
+//       items      []string
+//       rangeStart int
+//       rangeEnd   int
+//   }
+//
+//   func (s *State) view() vogui.Node {
+//       visible := make([]vogui.Node, 0, s.rangeEnd-s.rangeStart)
+//       for i := s.rangeStart; i < s.rangeEnd && i < len(s.items); i++ {
+//           visible = append(visible, vogui.Text(s.items[i]).Key(fmt.Sprint(i)))
+//       }
+//       return vogui.VirtualList(vogui.VirtualListConfig{
+//           TotalCount:   len(s.items),
+//           ItemHeight:   40,
+//           VisibleStart: s.rangeStart,
+//       }, visible...).
+//           Flex(1).
+//           OnRange(vogui.OnVirtualRange(func(st *State, e vogui.RangeEvent) {
+//               st.rangeStart = e.Start
+//               st.rangeEnd = e.End
+//           }))
+//   }
+package vogui
+
+import "encoding/json"
+
+const (
+	handlerVirtualRange = 18
+)
+
+// VirtualListConfig configures the JS-native virtual list component.
+type VirtualListConfig struct {
+	TotalCount   int     // total number of items in the data set
+	ItemHeight   float64 // estimated or fixed height per item (px)
+	VisibleStart int     // index of the first visible item (matches children[0])
+	Overscan     int     // extra items above/below viewport (default 3 in JS)
+}
+
+// RangeEvent is emitted by the JS virtual list when the visible range changes.
+type RangeEvent struct {
+	Start     int     // first visible item index (inclusive)
+	End       int     // last visible item index (exclusive)
+	ScrollTop float64 // current scroll position
+}
+
+// VirtualList creates a JS-native virtualized list node.
+// children should contain only the items for [config.VisibleStart, config.VisibleStart+len).
+// Chain .OnRange(handler) to receive RangeEvent when the visible window changes.
+func VirtualList(config VirtualListConfig, children ...Node) Node {
+	p := map[string]any{
+		"totalCount":   config.TotalCount,
+		"itemHeight":   config.ItemHeight,
+		"visibleStart": config.VisibleStart,
+	}
+	if config.Overscan > 0 {
+		p["overscan"] = config.Overscan
+	}
+	return Node{Type: "vo-virtual-list", Props: p, Children: children}
+}
+
+// OnRange sets the visible range change handler on a VirtualList node.
+func (n Node) OnRange(h Handler) Node {
+	return n.setProp("onRange", h.ID)
+}
+
+// OnVirtualRange creates a handler that receives RangeEvent from a VirtualList.
+//   Action: func(s *YourState, e RangeEvent)
+func OnVirtualRange(action any) Handler {
+	return registerHandler(action, handlerVirtualRange, 0)
+}
+

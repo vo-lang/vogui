@@ -92,10 +92,6 @@ export function typeToTag(type: string): string {
         // VoGUI combobox sub-parts
         case 'vo-combobox-option': return 'div';
 
-        // VoGUI transitions
-        case 'vo-transition': return 'div';
-        case 'vo-transition-group': return 'div';
-
         default: return 'div';
     }
 }
@@ -153,10 +149,6 @@ export function typeToBaseClass(type: string): string {
 
         // Combobox option
         case 'vo-combobox-option': return 'relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent';
-
-        // Transitions (CSS-based)
-        case 'vo-transition': return 'transition-all';
-        case 'vo-transition-group': return '';
 
         default: return '';
     }

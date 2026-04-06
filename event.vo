@@ -43,6 +43,8 @@ const (
 	handlerResize     = 13
 	handlerWidget     = 14
 	handlerGeneric    = 15
+	handlerScroll     = 16
+	handlerIntersect  = 17
 )
 
 // Handler represents an event handler binding.
@@ -61,6 +63,23 @@ type Event struct {
 	Gen       int
 	HandlerID int
 	Payload   string
+}
+
+// ScrollEvent is the browser-reported scroll state of a scroll container.
+// All fields are real DOM values — no predictions, no Vo-side estimation.
+type ScrollEvent struct {
+	ScrollTop    float64
+	ClientHeight float64
+	ScrollHeight float64
+	AtBottom     bool    // true when BottomGap <= 1px
+	BottomGap    float64 // pixels from current scrollTop to the true DOM bottom
+}
+
+// IntersectEvent is reported by an IntersectionObserver when a sentinel
+// element enters or leaves the viewport.
+type IntersectEvent struct {
+	IsIntersecting    bool
+	IntersectionRatio float64
 }
 
 // FileInfo holds file upload data.
@@ -144,6 +163,17 @@ func OnIndex(action any) Handler { return registerHandler(action, handlerIndex, 
 // OnFiles creates a handler for file input changes.
 //   Action: func(s *YourState, files []FileInfo)
 func OnFiles(action any) Handler { return registerHandler(action, handlerFiles, 0) }
+
+// OnScrollState creates a handler that receives real browser scroll state.
+// Backed by a DOM scroll listener; the JS side computes AtBottom and BottomGap
+// from true scrollHeight/clientHeight so Vo never needs to predict heights.
+//   Action: func(s *YourState, e ScrollEvent)
+func OnScrollState(action any) Handler { return registerHandler(action, handlerScroll, 0) }
+
+// OnIntersect creates a handler backed by IntersectionObserver.
+// Fires when the node enters or leaves the viewport.
+//   Action: func(s *YourState, e IntersectEvent)
+func OnIntersect(action any) Handler { return registerHandler(action, handlerIntersect, 0) }
 
 // OnEvent creates a generic handler for arbitrary DOM events.
 // Bind with node.On(eventName, handler) for events not covered above.
@@ -282,6 +312,24 @@ func invokeHandler(state any, idx int, payload string) error {
 		return handler~>(target, payload)
 	case handlerGeneric:
 		return handler~>(target, payload)
+	case handlerScroll:
+		var p ScrollEvent
+		if err := json.Unmarshal([]byte(payload), &p); err != nil {
+			return errors.Wrap(err, "vogui: unmarshal ScrollEvent payload")
+		}
+		return handler~>(target, p)
+	case handlerIntersect:
+		var p IntersectEvent
+		if err := json.Unmarshal([]byte(payload), &p); err != nil {
+			return errors.Wrap(err, "vogui: unmarshal IntersectEvent payload")
+		}
+		return handler~>(target, p)
+	case handlerVirtualRange:
+		var p RangeEvent
+		if err := json.Unmarshal([]byte(payload), &p); err != nil {
+			return errors.Wrap(err, "vogui: unmarshal RangeEvent payload")
+		}
+		return handler~>(target, p)
 	}
 	return handler~>(target)
 }

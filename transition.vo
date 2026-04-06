@@ -11,8 +11,7 @@ package vogui
 //   - "slide-up"    translateY(10px)→0 / reverse
 //   - "slide-left"  translateX(10px)→0 / reverse
 //   - "slide-right" translateX(-10px)→0 / reverse
-//   - "scale"       scale(0.95)→1 / reverse
-//   - "collapse"    max-height 0→auto / reverse
+//   - "scale"       scale(0.95)+opacity→1 / reverse
 //
 // Custom transitions are defined via CSS classes:
 //   .vo-enter-from-{name} { ... }

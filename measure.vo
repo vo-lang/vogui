@@ -1,0 +1,79 @@
+// Post-layout measurement bridge.
+//
+// RequestMeasure queues a one-shot getBoundingClientRect on a named ref
+// element. After the next render, JS measures the real DOM element and
+// delivers the result back as a Rect via the callback.
+//
+// This is the mechanism for Vo to read browser layout truth without
+// predicting or estimating anything — popover positioning, tooltip
+// alignment, FLIP animations, and scroll-anchoring all use this.
+//
+// Example:
+//
+//   func onOpenTooltip(s *State) {
+//       RequestMeasure("anchor-btn", func(s *State, r Rect) {
+//           s.tooltipX = r.X + r.Width/2
+//           s.tooltipY = r.Bottom + 8
+//       })
+//   }
+package vogui
+
+import "encoding/json"
+
+const eventIDMeasure = -6
+
+// Rect is the browser-reported bounding rectangle of a DOM element.
+// All coordinates are relative to the viewport (same as getBoundingClientRect).
+type Rect struct {
+	X      float64
+	Y      float64
+	Width  float64
+	Height float64
+	Top    float64
+	Right  float64
+	Bottom float64
+	Left   float64
+}
+
+// measurePayload wraps the callback ID + rect for the event round-trip.
+type measurePayload struct {
+	ID   int
+	Rect Rect
+}
+
+// Persistent measure callback registry — NOT reset between renders.
+var measureCallbacks = map[int]any{}
+var nextMeasureID = 1
+
+// RequestMeasure queues a one-shot measurement of the named ref element.
+// After the next render commit, JS calls getBoundingClientRect() and
+// delivers the result to the callback. The callback is automatically
+// removed after one invocation.
+//
+//   Action: func(s *YourState, r Rect)
+func RequestMeasure(refName string, action any) {
+	id := nextMeasureID
+	nextMeasureID++
+	measureCallbacks[id] = action
+	pendingRefActions = append(pendingRefActions, refAction{
+		Ref:          refName,
+		Cmd:          "measure",
+		MeasureID:    id,
+		HasMeasureID: true,
+	})
+}
+
+// invokeMeasureCallback is called by processEvent when JS reports a
+// measurement result (event ID = eventIDMeasure).
+func invokeMeasureCallback(state any, payload string) error {
+	var p measurePayload
+	if err := json.Unmarshal([]byte(payload), &p); err != nil {
+		return err
+	}
+	cb, ok := measureCallbacks[p.ID]
+	if !ok {
+		return nil
+	}
+	delete(measureCallbacks, p.ID)
+	return cb~>(state, p.Rect)
+}

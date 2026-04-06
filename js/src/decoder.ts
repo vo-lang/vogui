@@ -4,9 +4,27 @@
 // Node tags: 0=null 1=element 2=text 3=fragment 4=component 5=cached
 // Value tags: 0=null 1=bool 2=int 3=float64 4=string 5=map 6=array 7=node
 
-import type { VoNode, VoHandler, RenderMessage, CanvasBatch, CanvasCommand } from './types';
+import type { VoNode, VoHandler, RenderMessage, CanvasBatch, CanvasCommand, RefAction, RefActionCommand } from './types';
 
 const utf8Dec = new TextDecoder('utf-8');
+
+function decodeRefActionCommand(cmd: string): RefActionCommand {
+    switch (cmd) {
+        case 'focus':
+        case 'blur':
+        case 'scrollTo':
+        case 'scrollToSmooth':
+        case 'scrollToBottom':
+        case 'scrollToBottomSmooth':
+        case 'scrollIntoView':
+        case 'scrollIntoViewSmooth':
+        case 'selectText':
+        case 'measure':
+            return cmd;
+        default:
+            throw new Error(`unsupported ref action command: ${cmd}`);
+    }
+}
 
 class BinReader {
     private view: DataView;
@@ -210,5 +228,23 @@ export function decodeBinaryRender(data: Uint8Array): RenderMessage {
         }
     }
 
-    return { type: 'render', gen, tree, handlers, styles, canvas, theme };
+    let refActions: RefAction[] | undefined;
+    if (flags & 8) {
+        const n = r.u16();
+        refActions = new Array(n);
+        for (let i = 0; i < n; i++) {
+            const ref = r.str();
+            const cmd = decodeRefActionCommand(r.str());
+            const hasTop = r.u8() !== 0;
+            const top = hasTop ? r.i32() : undefined;
+            const hasMeasureId = r.u8() !== 0;
+            const measureId = hasMeasureId ? r.i32() : undefined;
+            const action: RefAction = { ref, cmd };
+            if (top !== undefined) action.top = top;
+            if (measureId !== undefined) action.measureId = measureId;
+            refActions[i] = action;
+        }
+    }
+
+    return { type: 'render', gen, tree, handlers, styles, canvas, theme, refActions };
 }

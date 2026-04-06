@@ -1,13 +1,41 @@
-// ExternalWidget provides an escape hatch for integrating JS-native components.
-// Use this for components that need direct DOM access (CodeMirror, charts, etc.).
+// Host Widgets — JS-native components that Vo configures and observes.
+//
+// Use HostWidget for components that need direct DOM access: rich text
+// editors, charts, maps, code editors, virtual lists, etc. Vo owns the
+// configuration; JS owns the rendering and DOM lifecycle.
+//
+// Flow:
+//   1. Vo calls HostWidget("chart", config, children...)  →  config + children serialized
+//   2. JS widget factory receives container + props + onEvent callback
+//   3. Factory creates DOM, observes config changes, emits events
+//   4. Vo receives events via ObserveWidget handler
+//
+// Children passed to HostWidget are rendered as Preact-managed nodes
+// inside the widget container. The JS factory can coexist with them
+// or reposition/wrap them as needed.
 package vogui
 
-// ExternalWidget renders a JS-managed widget.
-// widgetType identifies the widget factory registered in JS.
-// props are passed to the widget factory.
-// handler receives events from the widget.
+// HostWidget creates a JS-native widget node with optional child slot content.
+// widgetType identifies the registered JS widget factory.
+// config is a map of configuration values passed to the factory as props.
+// children are rendered inside the widget container alongside factory DOM.
+//
+// Chain .ObserveWidget(handler) to receive structured events from the widget.
+//
+//   HostWidget("markdown", map[string]any{"content": text})
+//   HostWidget("virtual-list", listConfig, renderedItems...).ObserveWidget(h)
+func HostWidget(widgetType string, config map[string]any, children ...Node) Node {
+	p := make(map[string]any, len(config)+1)
+	for k, v := range config {
+		p[k] = v
+	}
+	p["widgetType"] = widgetType
+	return Node{Type: "vo-external-widget", Props: p, Children: children}
+}
+
+// ExternalWidget is the legacy API — prefer HostWidget for new code.
+// Renders a JS-managed widget with explicit handler.
 func ExternalWidget(widgetType string, props map[string]any, handler Handler) Node {
-	// Copy props to avoid mutating the caller's map.
 	p := make(map[string]any, len(props)+2)
 	for k, v := range props {
 		p[k] = v
@@ -15,6 +43,13 @@ func ExternalWidget(widgetType string, props map[string]any, handler Handler) No
 	p["widgetType"] = widgetType
 	p["onWidget"] = handler.ID
 	return Node{Type: "vo-external-widget", Props: p}
+}
+
+// ObserveWidget attaches an event handler to a HostWidget node.
+// The handler receives structured events emitted by the JS widget factory.
+//   Action: func(s *YourState, payload string)
+func (n Node) ObserveWidget(h Handler) Node {
+	return n.setProp("onWidget", h.ID)
 }
 
 // OnWidget wraps an action that receives widget events.

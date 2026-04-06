@@ -6,6 +6,7 @@ package vogui
 type TimerHandler = any
 
 var timerHandlers = map[int]TimerHandler{}
+var timerRepeats = map[int]bool{}
 var nextTimerID int = 1
 
 func registerTimerHandler(handler TimerHandler) int {
@@ -20,6 +21,10 @@ func invokeTimerHandler(id int, state any) {
 	if !ok {
 		return
 	}
+	if !timerRepeats[id] {
+		delete(timerHandlers, id)
+		delete(timerRepeats, id)
+	}
 	err := handler~>(state)
 	if err != nil {
 		println("VoGUI: timer handler error:", err)
@@ -30,6 +35,7 @@ func invokeTimerHandler(id int, state any) {
 // Returns a timer ID that can be used with ClearTimeout.
 func SetTimeout(handler TimerHandler, delayMs int) int {
 	id := registerTimerHandler(handler)
+	timerRepeats[id] = false
 	startTimeout(id, delayMs)
 	return id
 }
@@ -37,6 +43,7 @@ func SetTimeout(handler TimerHandler, delayMs int) int {
 // ClearTimeout cancels a scheduled timeout.
 func ClearTimeout(id int) {
 	delete(timerHandlers, id)
+	delete(timerRepeats, id)
 	clearTimeout(id)
 }
 
@@ -44,6 +51,7 @@ func ClearTimeout(id int) {
 // Returns a timer ID that can be used with ClearInterval.
 func SetInterval(handler TimerHandler, intervalMs int) int {
 	id := registerTimerHandler(handler)
+	timerRepeats[id] = true
 	startInterval(id, intervalMs)
 	return id
 }
@@ -51,6 +59,7 @@ func SetInterval(handler TimerHandler, intervalMs int) int {
 // ClearInterval cancels a repeating timer.
 func ClearInterval(id int) {
 	delete(timerHandlers, id)
+	delete(timerRepeats, id)
 	clearInterval(id)
 }
 
