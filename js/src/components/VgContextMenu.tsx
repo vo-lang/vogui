@@ -1,12 +1,13 @@
 import { h } from 'preact';
 import * as ContextMenu from '@radix-ui/react-context-menu';
 import { emit } from '../events';
-import { voNodeToVNode } from '../renderer';
+import { voNodeToVNode, usePortalContainer } from '../renderer';
 import type { VoNode } from '../types';
 
 export function VgContextMenu(props: any) {
     const { voChildren } = props;
     const children = (voChildren || []) as VoNode[];
+    const portalContainer = usePortalContainer();
     // First child is the trigger area, rest are menu items
     const trigger = children[0];
     const items = children.slice(1);
@@ -15,7 +16,7 @@ export function VgContextMenu(props: any) {
         h(ContextMenu.Trigger, { asChild: true },
             trigger ? voNodeToVNode(trigger) : h('div', null),
         ),
-        h(ContextMenu.Portal, null,
+        h(ContextMenu.Portal, { container: portalContainer ?? undefined },
             h(ContextMenu.Content, {
                 className: [
                     'z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md',

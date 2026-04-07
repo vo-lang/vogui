@@ -1,12 +1,13 @@
 import { h } from 'preact';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { emit } from '../events';
-import { voNodeToVNode } from '../renderer';
+import { voNodeToVNode, usePortalContainer } from '../renderer';
 import type { VoNode } from '../types';
 
 export function VgDropdownMenu(props: any) {
     const { voChildren } = props;
     const children = (voChildren || []) as VoNode[];
+    const portalContainer = usePortalContainer();
     // First child is the trigger, rest are menu items
     const trigger = children[0];
     const items = children.slice(1);
@@ -15,7 +16,7 @@ export function VgDropdownMenu(props: any) {
         h(DropdownMenu.Trigger, { asChild: true },
             trigger ? voNodeToVNode(trigger) : h('button', null, '...'),
         ),
-        h(DropdownMenu.Portal, null,
+        h(DropdownMenu.Portal, { container: portalContainer ?? undefined },
             h(DropdownMenu.Content, {
                 className: [
                     'z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md',

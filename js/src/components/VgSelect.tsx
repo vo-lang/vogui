@@ -2,12 +2,14 @@ import { h } from 'preact';
 import * as Select from '@radix-ui/react-select';
 import { emit } from '../events';
 import { propsToStyle } from '../mapping';
+import { usePortalContainer } from '../renderer';
 
 export function VgSelect(props: any): any {
     const { value, options, onChange, placeholder, disabled } = props;
     const items = (options || []) as Array<{ label: string; value: string }>;
     const userClass = props.class || '';
     const userStyle = propsToStyle(props);
+    const portalContainer = usePortalContainer();
 
     return h(Select.Root, {
         value: value != null ? String(value) : undefined,
@@ -32,7 +34,7 @@ export function VgSelect(props: any): any {
                 ),
             ),
         ),
-        h(Select.Portal, null,
+        h(Select.Portal, { container: portalContainer ?? undefined },
             h(Select.Content, {
                 className: [
                     'relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md',

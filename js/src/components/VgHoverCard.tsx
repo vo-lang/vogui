@@ -1,11 +1,12 @@
 import { h } from 'preact';
 import * as HoverCard from '@radix-ui/react-hover-card';
-import { voNodeToVNode } from '../renderer';
+import { voNodeToVNode, usePortalContainer } from '../renderer';
 import type { VoNode } from '../types';
 
 export function VgHoverCard(props: any) {
     const { voChildren } = props;
     const children = (voChildren || []) as VoNode[];
+    const portalContainer = usePortalContainer();
     // First child is trigger, rest is card content
     const trigger = children[0];
     const content = children.slice(1);
@@ -14,7 +15,7 @@ export function VgHoverCard(props: any) {
         h(HoverCard.Trigger, { asChild: true },
             trigger ? voNodeToVNode(trigger) : h('span', null),
         ),
-        h(HoverCard.Portal, null,
+        h(HoverCard.Portal, { container: portalContainer ?? undefined },
             h(HoverCard.Content, {
                 className: [
                     'z-50 w-64 rounded-md border bg-popover p-4 text-popover-foreground shadow-md outline-none',

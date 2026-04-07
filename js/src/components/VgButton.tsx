@@ -1,4 +1,5 @@
 import { h } from 'preact';
+import { forwardRef } from 'preact/compat';
 import { emit } from '../events';
 import { propsToStyle } from '../mapping';
 
@@ -23,10 +24,22 @@ const sizeClasses: Record<string, string> = {
     icon: 'h-9 w-9 rounded-md',
 };
 
-export function VgButton(props: any) {
-    const { textContent, onClick, variant, size, disabled, icon } = props;
-    const userClass = props.class || '';
+export const VgButton = forwardRef<HTMLButtonElement, any>(function VgButton(props: any, ref) {
+    const {
+        textContent,
+        onClick,
+        variant,
+        size,
+        disabled,
+        icon,
+        class: voClass,
+        className,
+        ...domProps
+    } = props;
+    const userClass = voClass || '';
     const userStyle = propsToStyle(props);
+    const domOnClick = typeof onClick === 'function' ? onClick : undefined;
+    const voOnClick = typeof onClick === 'number' ? onClick : undefined;
 
     const cls = [
         'inline-flex items-center justify-center font-medium',
@@ -34,13 +47,24 @@ export function VgButton(props: any) {
         'disabled:pointer-events-none disabled:opacity-50',
         variantClasses[variant || 'default'],
         sizeClasses[size || 'md'],
+        className,
         userClass,
     ].filter(Boolean).join(' ');
 
     return h('button', {
+        ...domProps,
+        ref,
         className: cls,
         style: userStyle,
         disabled: disabled || false,
-        onClick: onClick != null ? () => emit(onClick, '{}') : undefined,
+        onClick: (event: MouseEvent) => {
+            domOnClick?.(event);
+            if (event.defaultPrevented) {
+                return;
+            }
+            if (voOnClick != null) {
+                emit(voOnClick, '{}');
+            }
+        },
     }, icon ? h('span', { className: 'vo-icon' }, icon) : null, textContent != null ? String(textContent) : null);
-}
+});

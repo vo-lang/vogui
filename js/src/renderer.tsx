@@ -1,8 +1,9 @@
 // VoGUI v4 Preact Renderer — core rendering engine.
 // Converts VoNode tree → Preact VNode tree → DOM via Preact reconciler.
 
-import { h, render as preactRender, type ComponentChildren } from 'preact';
-import { useRef, useEffect, useLayoutEffect } from 'preact/hooks';
+import { h, render as preactRender, createContext, type ComponentChildren } from 'preact';
+import { createPortal } from 'preact/compat';
+import { useRef, useEffect, useLayoutEffect, useContext } from 'preact/hooks';
 
 import type { VoNode, RenderMessage, RendererConfig, CanvasBatch, RefAction, WidgetFactory, WidgetInstance } from './types';
 import { setRenderContext, propsToHandlers, emit } from './events';
@@ -64,6 +65,58 @@ export function destroyWidgets(): void {
 // Public API
 // =============================================================================
 
+const PortalContainerContext = createContext<HTMLElement | null>(null);
+
+function ensureOverlayRoot(host: HTMLElement): HTMLElement {
+    for (const child of Array.from(host.children)) {
+        if (child instanceof HTMLElement && child.dataset.voguiOverlayRoot === 'true') {
+            return child;
+        }
+    }
+
+    const currentPosition = window.getComputedStyle(host).position;
+    if (!currentPosition || currentPosition === 'static') {
+        host.style.position = 'relative';
+    }
+
+    const root = document.createElement('div');
+    root.dataset.voguiOverlayRoot = 'true';
+    root.style.position = 'absolute';
+    root.style.inset = '0';
+    root.style.zIndex = '200';
+    root.style.pointerEvents = 'none';
+    root.style.overflow = 'visible';
+    host.appendChild(root);
+    return root;
+}
+
+function ensureNamedPortalContainer(root: HTMLElement, name: string): HTMLElement {
+    for (const child of Array.from(root.children)) {
+        if (child instanceof HTMLElement && child.dataset.voguiPortalName === name) {
+            return child;
+        }
+    }
+
+    const mount = document.createElement('div');
+    mount.dataset.voguiPortalName = name;
+    mount.style.position = 'absolute';
+    mount.style.inset = '0';
+    mount.style.pointerEvents = 'none';
+    mount.style.overflow = 'visible';
+    if (name === 'toast') {
+        mount.style.display = 'flex';
+        mount.style.alignItems = 'flex-start';
+        mount.style.justifyContent = 'flex-end';
+        mount.style.padding = '12px';
+    }
+    root.appendChild(mount);
+    return mount;
+}
+
+export function usePortalContainer(): HTMLElement | null {
+    return useContext(PortalContainerContext);
+}
+
 /** Render a decoded VoNode tree into a container element. */
 export function render(container: HTMLElement, msg: RenderMessage, config: RendererConfig): void {
     if (!msg?.tree) {
@@ -78,8 +131,15 @@ export function render(container: HTMLElement, msg: RenderMessage, config: Rende
         injectDynamicStyles(msg.styles);
     }
 
+    const portalHost = container.parentElement instanceof HTMLElement
+        ? container.parentElement
+        : container;
+    const portalContainer = ensureOverlayRoot(portalHost);
+
     preactRender(
-        h(VoTreeRoot, { tree: msg.tree, canvas: msg.canvas, refActions: msg.refActions }),
+        h(PortalContainerContext.Provider, { value: portalContainer },
+            h(VoTreeRoot, { tree: msg.tree, canvas: msg.canvas, refActions: msg.refActions }),
+        ),
         container,
     );
 }
@@ -153,8 +213,10 @@ export function voNodeToVNode(node: VoNode | null | undefined): any {
 
     // Portal
     if (type === 'vo-portal') {
-        // For now, render inline. Full createPortal support can be added later.
-        return h('div', { style: { display: 'contents' } }, childrenToVNodes(children));
+        return h(VoPortalNode, {
+            portalName: props.portalName as string | undefined,
+            portalChildren: children,
+        });
     }
 
     // Canvas
@@ -170,9 +232,18 @@ export function voNodeToVNode(node: VoNode | null | undefined): any {
     // Check component registry for managed components
     const Component = componentMap[type];
     if (Component) {
-        return h(Component, {
+        const managedProps: Record<string, any> = {
             ...props,
             voChildren: children,
+        };
+        if (typeof props.onClick === 'number') {
+            const eventHandlers = propsToHandlers(props);
+            if (typeof eventHandlers.onClick === 'function') {
+                managedProps.onClick = eventHandlers.onClick;
+            }
+        }
+        return h(Component, {
+            ...managedProps,
         });
     }
 
@@ -182,6 +253,18 @@ export function voNodeToVNode(node: VoNode | null | undefined): any {
 
 function childrenToVNodes(children: VoNode[]): ComponentChildren[] {
     return children.map(voNodeToVNode);
+}
+
+function VoPortalNode({ portalName, portalChildren }: { portalName?: string; portalChildren: VoNode[] }): any {
+    const portalRoot = usePortalContainer();
+    if (!portalRoot) {
+        return h('div', { style: { display: 'contents' } }, childrenToVNodes(portalChildren));
+    }
+    const mount = ensureNamedPortalContainer(portalRoot, portalName || 'default');
+    return createPortal(
+        h('div', { style: { display: 'contents' } }, childrenToVNodes(portalChildren)),
+        mount,
+    );
 }
 
 function renderComponentWrapper(cid: number, props: Record<string, any>, childVNode: any): any {
