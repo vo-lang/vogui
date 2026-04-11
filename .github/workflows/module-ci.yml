@@ -59,14 +59,24 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.event_name == 'release' && github.event.release.tag_name || github.ref }}
 
+      - name: Install system deps
+        run: sudo apt-get install -y libasound2-dev
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
       - name: Install vo
         run: curl -fsSL "https://github.com/vo-lang/volang/releases/latest/download/vo-x86_64-unknown-linux-gnu.tar.gz" | tar -xz -C /usr/local/bin vo
+
+      - name: Build native extension
+        run: cargo build --manifest-path rust/Cargo.toml --lib --release
 
       - name: Stage release assets
         run: |
           vo release stage . \
             --version "${{ inputs.version || github.event.release.tag_name || github.ref_name }}" \
             --artifact extension-wasm wasm32-unknown-unknown vogui.wasm ./vogui.wasm \
+            --artifact extension-native x86_64-unknown-linux-gnu libvo_vogui.so ./rust/target/release/libvo_vogui.so \
             --out-dir release-dist
 
       - name: Upload release assets
