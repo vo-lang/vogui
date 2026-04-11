@@ -2,13 +2,3 @@
 members = ["ext", "protocol"]
 resolver = "2"
 
-# Redirect git deps to local sibling repos for development
-[patch."https://github.com/vo-lang/volang"]
-vo-common-core = { path = "../../volang/lang/crates/vo-common-core" }
-vo-common    = { path = "../../volang/lang/crates/vo-common" }
-vo-ext       = { path = "../../volang/lang/crates/vo-ext" }
-vo-ffi-macro = { path = "../../volang/lang/crates/vo-ffi-macro" }
-vo-module    = { path = "../../volang/lang/crates/vo-module" }
-vo-runtime   = { path = "../../volang/lang/crates/vo-runtime" }
-vo-syntax    = { path = "../../volang/lang/crates/vo-syntax" }
-vo-vm        = { path = "../../volang/lang/crates/vo-vm" }
