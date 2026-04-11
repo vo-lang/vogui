@@ -406,7 +406,7 @@ pub fn audio_set_music_volume(ctx: &mut ExternCallContext) -> ExternResult {
 // Export all entries for registration
 // =============================================================================
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(all(not(target_arch = "wasm32"), feature = "standalone"))]
 vo_ext::export_extensions!();
 
 #[cfg(target_arch = "wasm32")]
