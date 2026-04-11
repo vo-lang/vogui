@@ -22,7 +22,7 @@ web-sys = { version = "0.3", features = ["console", "Window"], optional = true }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 vo-vm = { git = "https://github.com/vo-lang/volang", features = ["std"] }
 vo-runtime = { git = "https://github.com/vo-lang/volang" }
-vo-ext = { git = "https://github.com/vo-lang/volang" }
+vo-ext = { git = "https://github.com/vo-lang/volang", default-features = false }
 linkme = "0.3"
 rodio = { version = "0.19", default-features = false, features = ["wav", "vorbis", "mp3"] }
 log = "0.4"
@@ -34,7 +34,10 @@ vo-ext = { git = "https://github.com/vo-lang/volang", default-features = false, 
 log = "0.4"
 
 [features]
-default = ["bindgen"]
+default = ["bindgen", "standalone"]
 bindgen = ["dep:wasm-bindgen", "dep:web-sys"]
 wasm-standalone = []
+# standalone: enable native entry-point symbols (vo_ext_get_entries etc.)
+# disable when used as rlib dep inside another extension (e.g. voplay)
+standalone = ["vo-ext/native"]
 
