@@ -48,9 +48,15 @@ type ElementIntersectBinding = {
 };
 const elementIntersectBindings = new Map<string, ElementIntersectBinding>();
 
+function logStudioWidget(message: string): void {
+    const logger = (globalThis as Record<string, unknown>).__voguiStudioLog as ((message: string) => void) | undefined;
+    logger?.(message);
+}
+
 /** Register an external widget factory. */
 export function registerWidget(type: string, factory: WidgetFactory): void {
     widgetRegistry.set(type, factory);
+    logStudioWidget(`[vogui] widgetRegistry.set type=${type}`);
 }
 
 /** Unregister and destroy all widget instances. */
@@ -628,15 +634,18 @@ function ExternalWidgetHost({ props, voChildren }: { props: Record<string, any>;
         const host = hostRef.current;
         if (!host) return;
         const factory = widgetRegistry.get(widgetType);
+        logStudioWidget(`[vogui] externalWidget effect type=${widgetType} hasFactory=${factory ? 'yes' : 'no'}`);
         if (!factory) return;
         const onWidgetEvent = (payload: string) => {
             const currentProps = propsRef.current;
             if (currentProps.onWidget != null) emit(currentProps.onWidget as number, payload);
         };
+        logStudioWidget(`[vogui] externalWidget create type=${widgetType}`);
         const instance = factory.create(host, propsRef.current, onWidgetEvent);
         instanceRef.current = instance;
         widgetInstances.add(instance);
         return () => {
+            logStudioWidget(`[vogui] externalWidget destroy type=${widgetType}`);
             widgetInstances.delete(instance);
             if (instanceRef.current === instance) {
                 instanceRef.current = null;

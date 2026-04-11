@@ -21,6 +21,7 @@ extern "C" {
     fn host_clear_timeout(id: i32);
     fn host_start_interval(id: i32, ms: i32);
     fn host_clear_interval(id: i32);
+    fn host_has_host_capability(ptr: *const u8, len: u32) -> i32;
     fn host_navigate(ptr: *const u8, len: u32);
     fn host_get_current_path(out_len: *mut u32) -> *const u8;
     fn host_focus(ptr: *const u8, len: u32);
@@ -129,6 +130,13 @@ pub extern "C" fn emitRenderBinary(ptr: *const u8, len: u32, out_len: *mut u32) 
     buf.push(TAG_HOST_OUTPUT);
     buf.extend_from_slice(data);
     alloc_output(&buf, out_len)
+}
+#[no_mangle]
+pub extern "C" fn HasHostCapability(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
+    let input = raw_input(ptr, len);
+    let (name, _) = read_bytes_arg(input, 0);
+    let supported = unsafe { host_has_host_capability(name.as_ptr(), name.len() as u32) } != 0;
+    output_tag_value(supported as u64, out_len)
 }
 
 // float64bits(f float64) -> int64

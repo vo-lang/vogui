@@ -4,12 +4,12 @@
 // Contract: { init, render, stop }
 
 import { decodeBinaryRender } from './decoder';
-import { render as renderGui } from './renderer';
+import { destroyWidgets, registerWidget as registerWidgetImpl, render as renderGui } from './renderer';
 import { injectStyles } from './styles';
 import { setupKeyHandler } from './events';
 import { installAudioBridge } from './audio';
 import { refRegistry } from './refs';
-import type { RendererConfig } from './types';
+import type { RendererConfig, WidgetFactory } from './types';
 
 // Expose ref registry globally so the host bridge (loaded as a separate blob module)
 // can access DOM refs created by this renderer.
@@ -35,6 +35,8 @@ function config(): RendererConfig {
 
 export async function init(incoming: RendererHost): Promise<void> {
   host = incoming;
+  (globalThis as Record<string, unknown>).__voguiStudioLog = (message: string) => host?.log(message);
+  host.log('[vogui] init');
   injectStyles();
   installAudioBridge();
   cleanupKeyHandler = setupKeyHandler(config());
@@ -46,7 +48,17 @@ export function render(container: HTMLElement, bytes: Uint8Array): void {
 }
 
 export function stop(): void {
+  host?.log('[vogui] stop');
+  destroyWidgets();
   cleanupKeyHandler?.();
   cleanupKeyHandler = null;
+  delete (globalThis as Record<string, unknown>).__voguiStudioLog;
   host = null;
 }
+
+export function registerWidget(type: string, factory: WidgetFactory): void {
+  host?.log(`[vogui] registerWidget type=${type}`);
+  registerWidgetImpl(type, factory);
+}
+
+export { destroyWidgets };
