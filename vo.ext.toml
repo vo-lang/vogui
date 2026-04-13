@@ -2,9 +2,7 @@
 name = "vogui"
 path = "rust/target/{profile}/libvo_vogui"
 include = [
-  "js/dist/studio_renderer.js",
-  "js/dist/studio_protocol.js",
-  "js/dist/studio_host_bridge.js",
+  "js/dist",
 ]
 
 [extension.wasm]
