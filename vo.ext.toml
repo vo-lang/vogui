@@ -1,9 +1,23 @@
 [extension]
 name = "vogui"
-path = "rust/target/{profile}/libvo_vogui"
 include = [
   "js/dist",
 ]
+
+[extension.native]
+path = "rust/target/{profile}/libvo_vogui"
+
+[[extension.native.targets]]
+target = "aarch64-apple-darwin"
+library = "libvo_vogui.dylib"
+
+[[extension.native.targets]]
+target = "x86_64-unknown-linux-gnu"
+library = "libvo_vogui.so"
+
+[[extension.native.targets]]
+target = "x86_64-pc-windows-msvc"
+library = "vo_vogui.dll"
 
 [extension.wasm]
 type = "standalone"
