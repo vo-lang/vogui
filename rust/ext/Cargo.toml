@@ -14,23 +14,23 @@ name = "vo_vogui"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-vo-vm = { git = "https://github.com/vo-lang/volang", default-features = false }
+vo-vm = { git = "https://github.com/vo-lang/volang", rev = "bb8f7887e37b4a4d4b00eb1e118c8d64b6971984", default-features = false }
 wasm-bindgen = { version = "0.2", optional = true }
 web-sys = { version = "0.3", features = ["console", "Window"], optional = true }
 
 # Native-only dependencies (for cargo check on non-wasm targets)
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
-vo-vm = { git = "https://github.com/vo-lang/volang", features = ["std"] }
-vo-runtime = { git = "https://github.com/vo-lang/volang" }
-vo-ext = { git = "https://github.com/vo-lang/volang", default-features = false }
+vo-vm = { git = "https://github.com/vo-lang/volang", rev = "bb8f7887e37b4a4d4b00eb1e118c8d64b6971984", features = ["std"] }
+vo-runtime = { git = "https://github.com/vo-lang/volang", rev = "bb8f7887e37b4a4d4b00eb1e118c8d64b6971984" }
+vo-ext = { git = "https://github.com/vo-lang/volang", rev = "bb8f7887e37b4a4d4b00eb1e118c8d64b6971984", default-features = false }
 linkme = "0.3"
 rodio = { version = "0.19", default-features = false, features = ["wav", "vorbis", "mp3"] }
 log = "0.4"
 
 # WASM-only dependencies
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-vo-runtime = { git = "https://github.com/vo-lang/volang", default-features = false }
-vo-ext = { git = "https://github.com/vo-lang/volang", default-features = false, features = ["wasm"] }
+vo-runtime = { git = "https://github.com/vo-lang/volang", rev = "bb8f7887e37b4a4d4b00eb1e118c8d64b6971984", default-features = false }
+vo-ext = { git = "https://github.com/vo-lang/volang", rev = "bb8f7887e37b4a4d4b00eb1e118c8d64b6971984", default-features = false, features = ["wasm"] }
 log = "0.4"
 
 [features]
