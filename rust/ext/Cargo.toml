@@ -36,7 +36,8 @@ log = "0.4"
 [features]
 default = ["bindgen", "standalone"]
 bindgen = ["dep:wasm-bindgen", "dep:web-sys"]
+native = ["vo-ext/native"]
 wasm-standalone = []
 # standalone: enable native entry-point symbols (vo_ext_get_entries etc.)
 # disable when used as rlib dep inside another extension (e.g. voplay)
-standalone = ["vo-ext/native"]
+standalone = ["native"]

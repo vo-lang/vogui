@@ -1,4 +1,2 @@
 version = 1
 
-[[use]]
-path = "."
