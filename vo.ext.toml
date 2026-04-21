@@ -23,9 +23,7 @@ library = "vo_vogui.dll"
 type = "standalone"
 wasm = "vogui.wasm"
 
-[extension.web]
-
-[extension.web.js]
+[studio]
 renderer = "js/dist/studio_renderer.js"
 protocol = "js/dist/studio_protocol.js"
 host_bridge = "js/dist/studio_host_bridge.js"
