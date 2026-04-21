@@ -23,7 +23,7 @@ permissions:
   packages: write
 
 env:
-  VO_VERSION: v0.1.3
+  VOLANG_REF: 598545d1925ef677bfbf30a2c5a4249a12bec21d
 
 jobs:
   validate:
@@ -38,8 +38,21 @@ jobs:
       - name: Install system deps
         run: sudo apt-get install -y libasound2-dev
 
-      - name: Install vo
-        run: curl -fsSL "https://github.com/vo-lang/volang/releases/download/${VO_VERSION}/vo-x86_64-unknown-linux-gnu.tar.gz" | tar -xz -C /usr/local/bin vo
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Checkout volang toolchain
+        uses: actions/checkout@v4
+        with:
+          repository: vo-lang/volang
+          ref: ${{ env.VOLANG_REF }}
+          path: volang
+
+      - name: Build vo
+        run: cargo build --manifest-path volang/cmd/vo/Cargo.toml --release
+
+      - name: Expose vo on PATH
+        run: echo "$GITHUB_WORKSPACE/volang/target/release" >> "$GITHUB_PATH"
 
       - name: Verify release state
         run: vo release verify .
@@ -143,8 +156,21 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || github.event_name == 'release' && github.event.release.tag_name || github.ref }}
 
-      - name: Install vo
-        run: curl -fsSL "https://github.com/vo-lang/volang/releases/download/${VO_VERSION}/vo-x86_64-unknown-linux-gnu.tar.gz" | tar -xz -C /usr/local/bin vo
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Checkout volang toolchain
+        uses: actions/checkout@v4
+        with:
+          repository: vo-lang/volang
+          ref: ${{ env.VOLANG_REF }}
+          path: volang
+
+      - name: Build vo
+        run: cargo build --manifest-path volang/cmd/vo/Cargo.toml --release
+
+      - name: Expose vo on PATH
+        run: echo "$GITHUB_WORKSPACE/volang/target/release" >> "$GITHUB_PATH"
 
       - uses: actions/setup-node@v4
         with:
