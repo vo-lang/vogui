@@ -9,6 +9,10 @@ on:
     inputs:
       version:
         description: "Release tag (e.g. v0.1.0)"
+        required: true
+        type: string
+      source_ref:
+        description: "Git ref to build from (defaults to the triggering ref)"
         required: false
         type: string
   release:
@@ -29,7 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.event_name == 'release' && github.event.release.tag_name || github.ref }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || github.event_name == 'release' && github.event.release.tag_name || github.ref }}
 
       - name: Install system deps
         run: sudo apt-get install -y libasound2-dev
@@ -51,7 +55,50 @@ jobs:
             echo "no tests directory"
           fi
 
-  release_assets:
+  build_native_release_artifacts:
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+    needs: validate
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            target: aarch64-apple-darwin
+            library: libvo_vogui.dylib
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            library: libvo_vogui.so
+          - os: windows-2022
+            target: x86_64-pc-windows-msvc
+            library: vo_vogui.dll
+    env:
+      VOWORK: off
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || github.event_name == 'release' && github.event.release.tag_name || github.ref }}
+
+      - name: Install Linux system deps
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y libasound2-dev
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Rust target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Build native extension
+        run: cargo build --manifest-path rust/ext/Cargo.toml --lib --release --target ${{ matrix.target }}
+
+      - name: Upload native artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: native-${{ matrix.target }}
+          path: rust/target/${{ matrix.target }}/release/${{ matrix.library }}
+
+  build_wasm_release_artifact:
     if: github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
     needs: validate
     runs-on: ubuntu-latest
@@ -60,13 +107,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.event_name == 'release' && github.event.release.tag_name || github.ref }}
-
-      - name: Install system deps
-        run: sudo apt-get install -y libasound2-dev
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || github.event_name == 'release' && github.event.release.tag_name || github.ref }}
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Rust target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Build standalone WASM extension
+        run: cargo build --manifest-path rust/ext/Cargo.toml --release --target wasm32-unknown-unknown --no-default-features --features wasm-standalone
+
+      - name: Prepare WASM artifact
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/vogui-wasm"
+          cp rust/target/wasm32-unknown-unknown/release/vo_vogui.wasm "$RUNNER_TEMP/vogui-wasm/vogui.wasm"
+
+      - name: Upload WASM artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: wasm-standalone
+          path: ${{ runner.temp }}/vogui-wasm/vogui.wasm
+
+  release_assets:
+    if: github.event_name == 'release' || github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+    needs:
+      - build_native_release_artifacts
+      - build_wasm_release_artifact
+    runs-on: ubuntu-latest
+    env:
+      VOWORK: off
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.source_ref || github.event_name == 'release' && github.event.release.tag_name || github.ref }}
 
       - name: Install vo
         run: curl -fsSL "https://github.com/vo-lang/volang/releases/download/${VO_VERSION}/vo-x86_64-unknown-linux-gnu.tar.gz" | tar -xz -C /usr/local/bin vo
@@ -83,26 +158,41 @@ jobs:
         working-directory: js
         run: npm run build
 
-      - name: Build native extension
-        run: cargo build --manifest-path rust/Cargo.toml --lib --release
+      - name: Download staged release artifacts
+        uses: actions/download-artifact@v7
+        with:
+          path: ${{ runner.temp }}/release-artifacts
+          merge-multiple: true
 
       - name: Stage release assets
+        shell: bash
         run: |
+          version="${{ inputs.version || github.event.release.tag_name || github.ref_name }}"
           vo release stage . \
-            --version "${{ inputs.version || github.event.release.tag_name || github.ref_name }}" \
-            --artifact extension-native x86_64-unknown-linux-gnu libvo_vogui.so ./rust/target/release/libvo_vogui.so \
-            --artifact extension-wasm wasm32-unknown-unknown vogui.wasm ./vogui.wasm \
-            --out-dir release-dist
+            --version "$version" \
+            --artifact extension-native aarch64-apple-darwin libvo_vogui.dylib "$RUNNER_TEMP/release-artifacts/libvo_vogui.dylib" \
+            --artifact extension-native x86_64-unknown-linux-gnu libvo_vogui.so "$RUNNER_TEMP/release-artifacts/libvo_vogui.so" \
+            --artifact extension-native x86_64-pc-windows-msvc vo_vogui.dll "$RUNNER_TEMP/release-artifacts/vo_vogui.dll" \
+            --artifact extension-wasm wasm32-unknown-unknown vogui.wasm "$RUNNER_TEMP/release-artifacts/vogui.wasm" \
+            --out-dir "$RUNNER_TEMP/release-dist"
 
       - name: Upload release assets
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ inputs.version || github.event.release.tag_name || github.ref_name }}
-          files: release-dist/*
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="${{ inputs.version || github.event.release.tag_name || github.ref_name }}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$RUNNER_TEMP/release-dist"/* --clobber
+          else
+            gh release create "$tag" "$RUNNER_TEMP/release-dist"/* --title "vogui $tag"
+          fi
 
   publish_npm:
     if: github.event_name == 'release'
-    needs: validate
+    needs:
+      - validate
+      - release_assets
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
