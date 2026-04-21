@@ -23,7 +23,7 @@ permissions:
   packages: write
 
 env:
-  VOLANG_REF: bb8f7887e37b4a4d4b00eb1e118c8d64b6971984
+  VOLANG_REF: 1d32a90e61f1ffbca8e3a15cbd2d28028594d2fa
 
 jobs:
   validate:
