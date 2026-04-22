@@ -61,4 +61,13 @@ export function registerWidget(type: string, factory: WidgetFactory): void {
   registerWidgetImpl(type, factory);
 }
 
+const renderer = {
+  init,
+  render,
+  stop,
+  registerWidget,
+  destroyWidgets,
+};
+
+export default renderer;
 export { destroyWidgets };
