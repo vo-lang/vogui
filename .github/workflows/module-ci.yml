@@ -23,7 +23,7 @@ permissions:
   packages: write
 
 env:
-  VOLANG_REF: 6069a0cc066062649460d3c409ee227f8b8cb1f6
+  VOLANG_REF: 89d93f42839409aab0a9f781c1f78aff62176a6a
 
 jobs:
   validate:
@@ -135,7 +135,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p "$RUNNER_TEMP/vogui-wasm"
-          cp rust/target/wasm32-unknown-unknown/release/vo_vogui.wasm "$RUNNER_TEMP/vogui-wasm/vogui.wasm"
+          cp web-artifacts/vogui.wasm "$RUNNER_TEMP/vogui-wasm/vogui.wasm"
 
       - name: Upload WASM artifact
         uses: actions/upload-artifact@v6

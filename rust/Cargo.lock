@@ -1884,7 +1884,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 [[package]]
 name = "vo-common"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=6069a0cc066062649460d3c409ee227f8b8cb1f6#6069a0cc066062649460d3c409ee227f8b8cb1f6"
+source = "git+https://github.com/vo-lang/volang?rev=89d93f42839409aab0a9f781c1f78aff62176a6a#89d93f42839409aab0a9f781c1f78aff62176a6a"
 dependencies = [
  "codespan-reporting",
  "rustc-hash 1.1.0",
@@ -1899,7 +1899,7 @@ dependencies = [
 [[package]]
 name = "vo-common-core"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=6069a0cc066062649460d3c409ee227f8b8cb1f6#6069a0cc066062649460d3c409ee227f8b8cb1f6"
+source = "git+https://github.com/vo-lang/volang?rev=89d93f42839409aab0a9f781c1f78aff62176a6a#89d93f42839409aab0a9f781c1f78aff62176a6a"
 dependencies = [
  "hashbrown 0.15.5",
  "num_enum",
@@ -1909,7 +1909,7 @@ dependencies = [
 [[package]]
 name = "vo-ext"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=6069a0cc066062649460d3c409ee227f8b8cb1f6#6069a0cc066062649460d3c409ee227f8b8cb1f6"
+source = "git+https://github.com/vo-lang/volang?rev=89d93f42839409aab0a9f781c1f78aff62176a6a#89d93f42839409aab0a9f781c1f78aff62176a6a"
 dependencies = [
  "linkme",
  "vo-ffi-macro",
@@ -1919,7 +1919,7 @@ dependencies = [
 [[package]]
 name = "vo-ffi-macro"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=6069a0cc066062649460d3c409ee227f8b8cb1f6#6069a0cc066062649460d3c409ee227f8b8cb1f6"
+source = "git+https://github.com/vo-lang/volang?rev=89d93f42839409aab0a9f781c1f78aff62176a6a#89d93f42839409aab0a9f781c1f78aff62176a6a"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1932,7 +1932,7 @@ dependencies = [
 [[package]]
 name = "vo-module"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=6069a0cc066062649460d3c409ee227f8b8cb1f6#6069a0cc066062649460d3c409ee227f8b8cb1f6"
+source = "git+https://github.com/vo-lang/volang?rev=89d93f42839409aab0a9f781c1f78aff62176a6a#89d93f42839409aab0a9f781c1f78aff62176a6a"
 dependencies = [
  "flate2",
  "js-sys",
@@ -1952,7 +1952,7 @@ dependencies = [
 [[package]]
 name = "vo-runtime"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=6069a0cc066062649460d3c409ee227f8b8cb1f6#6069a0cc066062649460d3c409ee227f8b8cb1f6"
+source = "git+https://github.com/vo-lang/volang?rev=89d93f42839409aab0a9f781c1f78aff62176a6a#89d93f42839409aab0a9f781c1f78aff62176a6a"
 dependencies = [
  "dirs",
  "hashbrown 0.15.5",
@@ -1970,7 +1970,7 @@ dependencies = [
 [[package]]
 name = "vo-stdlib"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=6069a0cc066062649460d3c409ee227f8b8cb1f6#6069a0cc066062649460d3c409ee227f8b8cb1f6"
+source = "git+https://github.com/vo-lang/volang?rev=89d93f42839409aab0a9f781c1f78aff62176a6a#89d93f42839409aab0a9f781c1f78aff62176a6a"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -1998,7 +1998,7 @@ dependencies = [
 [[package]]
 name = "vo-syntax"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=6069a0cc066062649460d3c409ee227f8b8cb1f6#6069a0cc066062649460d3c409ee227f8b8cb1f6"
+source = "git+https://github.com/vo-lang/volang?rev=89d93f42839409aab0a9f781c1f78aff62176a6a#89d93f42839409aab0a9f781c1f78aff62176a6a"
 dependencies = [
  "logos",
  "num-bigint",
@@ -2011,7 +2011,7 @@ dependencies = [
 [[package]]
 name = "vo-vm"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=6069a0cc066062649460d3c409ee227f8b8cb1f6#6069a0cc066062649460d3c409ee227f8b8cb1f6"
+source = "git+https://github.com/vo-lang/volang?rev=89d93f42839409aab0a9f781c1f78aff62176a6a#89d93f42839409aab0a9f781c1f78aff62176a6a"
 dependencies = [
  "fastrand",
  "hashbrown 0.15.5",

@@ -22,6 +22,7 @@ library = "vo_vogui.dll"
 [extension.wasm]
 type = "standalone"
 wasm = "vogui.wasm"
+local_wasm = "web-artifacts/vogui.wasm"
 
 [extension.web.js]
 renderer = "js/dist/studio_renderer.js"
