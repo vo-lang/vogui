@@ -131,7 +131,7 @@ func testHostWidgetCreation() {
 	node := vogui.HostWidget("markdown", map[string]any{
 		"content": "# Hello",
 	})
-	assert(node.Type == "vo-external-widget", "HostWidget node type")
+	assert(node.Type == "vo-host-widget", "HostWidget node type")
 	assert(node.Props["widgetType"] == "markdown", "widgetType prop")
 	assert(node.Props["content"] == "# Hello", "content prop")
 	assert(len(node.Children) == 0, "no children")
@@ -142,7 +142,7 @@ func testHostWidgetWithChildren() {
 	node := vogui.HostWidget("layout", map[string]any{
 		"columns": 2,
 	}, child)
-	assert(node.Type == "vo-external-widget", "HostWidget node type")
+	assert(node.Type == "vo-host-widget", "HostWidget node type")
 	assert(node.Props["widgetType"] == "layout", "widgetType prop")
 	assert(node.Props["columns"] == 2, "columns prop")
 	assert(len(node.Children) == 1, "should have 1 child")

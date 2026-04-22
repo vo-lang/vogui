@@ -1,19 +1,19 @@
 import { decodeBinaryRender } from './decoder';
 import type { RenderMessage, VoNode } from './types';
 
-export function findExternalWidgetHandlerId(message: RenderMessage): number | null {
+export function findHostWidgetHandlerId(message: RenderMessage): number | null {
     return findInNode(message.tree);
 }
 
-export function findExternalWidgetHandlerIdInBytes(bytes: Uint8Array): number | null {
-    return findExternalWidgetHandlerId(decodeBinaryRender(bytes));
+export function findHostWidgetHandlerIdInBytes(bytes: Uint8Array): number | null {
+    return findHostWidgetHandlerId(decodeBinaryRender(bytes));
 }
 
 function findInNode(node: VoNode | null | undefined): number | null {
     if (!node) {
         return null;
     }
-    if (node.type === 'vo-external-widget') {
+    if (node.type === 'vo-host-widget') {
         const handlerId = node.props?.onWidget;
         if (typeof handlerId === 'number') {
             return handlerId;

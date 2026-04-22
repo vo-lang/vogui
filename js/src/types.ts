@@ -58,12 +58,12 @@ export interface RendererConfig {
     onEvent?: EventCallback;
 }
 
-/** External widget factory interface. */
+/** Host widget factory interface. */
 export interface WidgetFactory {
     create(container: HTMLElement, props: Record<string, any>, onEvent: (payload: string) => void): WidgetInstance;
 }
 
-/** External widget instance interface. */
+/** Host widget instance interface. */
 export interface WidgetInstance {
     update?(props: Record<string, any>): void;
     destroy?(): void;

@@ -1,11 +1,11 @@
 // VoGUI Studio Protocol — lightweight render bytes parser for metadata extraction.
 // Loaded by Studio via blob URL. Bundles only the binary decoder and query logic.
 //
-// Contract: { findExternalWidgetHandlerId }
+// Contract: { findHostWidgetHandlerId }
 
 import { decodeBinaryRender } from './decoder';
-import { findExternalWidgetHandlerId as findInMessage } from './query';
+import { findHostWidgetHandlerId as findInMessage } from './query';
 
-export function findExternalWidgetHandlerId(bytes: Uint8Array): number | null {
+export function findHostWidgetHandlerId(bytes: Uint8Array): number | null {
   return findInMessage(decodeBinaryRender(bytes));
 }

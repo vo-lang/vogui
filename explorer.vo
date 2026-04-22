@@ -1,5 +1,5 @@
 // FileExplorer provides a VS Code-style file explorer sidebar widget.
-// The widget implementation lives in TypeScript (ExternalWidget "file-explorer"),
+// The widget implementation lives in TypeScript (HostWidget "file-explorer"),
 // so the host application must register the factory via registerWidget().
 // This file provides the clean Vo API wrapper.
 package vogui
@@ -82,7 +82,7 @@ func FileExplorer(activePath string, handler Handler) Node {
 //	    Filter:     "*.vo",
 //	}, vogui.OnWidget(onExplorerEvent))
 func FileExplorerWith(opts FileExplorerProps, handler Handler) Node {
-	return ExternalWidget(
+	return HostWidget(
 		"file-explorer",
 		map[string]any{
 			"activePath": opts.ActivePath,
@@ -90,6 +90,5 @@ func FileExplorerWith(opts FileExplorerProps, handler Handler) Node {
 			"showHidden": opts.ShowHidden,
 			"filter":     opts.Filter,
 		},
-		handler,
-	)
+	).ObserveWidget(handler)
 }

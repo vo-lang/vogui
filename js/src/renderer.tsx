@@ -20,7 +20,7 @@ import { componentMap } from './components/index';
 const compCache = new Map<number, any>();
 
 // =============================================================================
-// External Widget Registry
+// Host Widget Registry
 // =============================================================================
 
 const widgetRegistry = new Map<string, WidgetFactory>();
@@ -53,7 +53,7 @@ function logStudioWidget(message: string): void {
     logger?.(message);
 }
 
-/** Register an external widget factory. */
+/** Register an host widget factory. */
 export function registerWidget(type: string, factory: WidgetFactory): void {
     widgetRegistry.set(type, factory);
     logStudioWidget(`[vogui] widgetRegistry.set type=${type}`);
@@ -230,9 +230,9 @@ export function voNodeToVNode(node: VoNode | null | undefined): any {
         return renderCanvas(props);
     }
 
-    // External widget (HostWidget / ExternalWidget)
-    if (type === 'vo-external-widget') {
-        return renderExternalWidget(props, children);
+    // Host widget
+    if (type === 'vo-host-widget') {
+        return renderHostWidget(props, children);
     }
 
     // Check component registry for managed components
@@ -608,12 +608,12 @@ function renderCanvas(props: Record<string, any>): any {
     });
 }
 
-function renderExternalWidget(props: Record<string, any>, children: VoNode[]): any {
+function renderHostWidget(props: Record<string, any>, children: VoNode[]): any {
     const voChildren = children.length > 0 ? childrenToVNodes(children) : undefined;
-    return h(ExternalWidgetHost, { props, voChildren });
+    return h(HostWidgetHost, { props, voChildren });
 }
 
-function ExternalWidgetHost({ props, voChildren }: { props: Record<string, any>; voChildren?: any }): any {
+function HostWidgetHost({ props, voChildren }: { props: Record<string, any>; voChildren?: any }): any {
     const widgetType = props.widgetType as string;
     const common = buildCommonProps(props);
     const style = propsToStyle(props);
@@ -634,18 +634,18 @@ function ExternalWidgetHost({ props, voChildren }: { props: Record<string, any>;
         const host = hostRef.current;
         if (!host) return;
         const factory = widgetRegistry.get(widgetType);
-        logStudioWidget(`[vogui] externalWidget effect type=${widgetType} hasFactory=${factory ? 'yes' : 'no'}`);
+        logStudioWidget(`[vogui] hostWidget effect type=${widgetType} hasFactory=${factory ? 'yes' : 'no'}`);
         if (!factory) return;
         const onWidgetEvent = (payload: string) => {
             const currentProps = propsRef.current;
             if (currentProps.onWidget != null) emit(currentProps.onWidget as number, payload);
         };
-        logStudioWidget(`[vogui] externalWidget create type=${widgetType}`);
+        logStudioWidget(`[vogui] hostWidget create type=${widgetType}`);
         const instance = factory.create(host, propsRef.current, onWidgetEvent);
         instanceRef.current = instance;
         widgetInstances.add(instance);
         return () => {
-            logStudioWidget(`[vogui] externalWidget destroy type=${widgetType}`);
+            logStudioWidget(`[vogui] hostWidget destroy type=${widgetType}`);
             widgetInstances.delete(instance);
             if (instanceRef.current === instance) {
                 instanceRef.current = null;
@@ -656,7 +656,7 @@ function ExternalWidgetHost({ props, voChildren }: { props: Record<string, any>;
 
     return h('div', {
         ...common,
-        className: 'vo-external-widget',
+        className: 'vo-host-widget',
         style,
         'data-widget-type': widgetType,
         ref: (el: HTMLElement | null) => {

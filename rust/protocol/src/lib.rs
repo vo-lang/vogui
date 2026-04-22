@@ -110,7 +110,7 @@ pub fn decode_binary_render(bytes: &[u8]) -> Result<RenderFrame, RenderDecodeErr
 pub mod query {
     use super::{RenderFrame, RenderNode, RenderValue};
 
-    pub fn find_external_widget_handler_id(frame: &RenderFrame) -> Option<i32> {
+    pub fn find_host_widget_handler_id(frame: &RenderFrame) -> Option<i32> {
         find_in_node(&frame.tree)
     }
 
@@ -120,7 +120,7 @@ pub mod query {
             RenderNode::Fragment(children) => children.iter().find_map(find_in_node),
             RenderNode::Component { child, .. } => find_in_node(child),
             RenderNode::Element(element) => {
-                if element.node_type == "vo-external-widget" {
+                if element.node_type == "vo-host-widget" {
                     if let Some(RenderValue::Int(handler_id)) = element.props.get("onWidget") {
                         return Some(*handler_id);
                     }
@@ -407,7 +407,7 @@ mod tests {
             generation: 7,
             flags: 15,
             tree: RenderNode::Element(RenderElement {
-                node_type: "vo-external-widget".to_string(),
+                node_type: "vo-host-widget".to_string(),
                 props: BTreeMap::from([
                     ("onWidget".to_string(), RenderValue::Int(42)),
                     ("widgetType".to_string(), RenderValue::String("voplay".to_string())),
@@ -451,9 +451,9 @@ mod tests {
     }
 
     #[test]
-    fn query_finds_external_widget_handler_id_inside_node_value() {
+    fn query_finds_host_widget_handler_id_inside_node_value() {
         let widget = RenderNode::Element(RenderElement {
-            node_type: "vo-external-widget".to_string(),
+            node_type: "vo-host-widget".to_string(),
             props: BTreeMap::from([
                 ("onWidget".to_string(), RenderValue::Int(99)),
                 ("widgetType".to_string(), RenderValue::String("voplay".to_string())),
@@ -478,7 +478,7 @@ mod tests {
             ref_actions: vec![],
         };
 
-        assert_eq!(query::find_external_widget_handler_id(&frame), Some(99));
+        assert_eq!(query::find_host_widget_handler_id(&frame), Some(99));
     }
 
     #[test]

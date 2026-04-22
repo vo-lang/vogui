@@ -30,19 +30,7 @@ func HostWidget(widgetType string, config map[string]any, children ...Node) Node
 		p[k] = v
 	}
 	p["widgetType"] = widgetType
-	return Node{Type: "vo-external-widget", Props: p, Children: children}
-}
-
-// ExternalWidget is the legacy API — prefer HostWidget for new code.
-// Renders a JS-managed widget with explicit handler.
-func ExternalWidget(widgetType string, props map[string]any, handler Handler) Node {
-	p := make(map[string]any, len(props)+2)
-	for k, v := range props {
-		p[k] = v
-	}
-	p["widgetType"] = widgetType
-	p["onWidget"] = handler.ID
-	return Node{Type: "vo-external-widget", Props: p}
+	return Node{Type: "vo-host-widget", Props: p, Children: children}
 }
 
 // ObserveWidget attaches an event handler to a HostWidget node.

@@ -107,7 +107,6 @@
 // JS-native components that Vo configures and observes:
 //
 //   HostWidget(type, config, children...)   create a JS widget with typed config
-//   ExternalWidget(type, props, handler)    legacy API — prefer HostWidget
 //
 // # Constants
 //
@@ -251,6 +250,5 @@
 //                  VirtualListConfig{TotalCount, ItemHeight, VisibleStart, Overscan}
 //                  RangeEvent{Start, End, ScrollTop}
 //   widget.vo      HostWidget(type, config, children…)  ObserveWidget(h)
-//                  ExternalWidget(type, props, handler)  — legacy compat
 //   explorer.vo    FileExplorer widget
 package vogui

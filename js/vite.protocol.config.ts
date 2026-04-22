@@ -1,6 +1,6 @@
 // Vite config for the Studio protocol artifact.
 // Produces a lightweight ES module (~2KB) containing only the binary decoder
-// and external widget handler ID query logic. No UI framework dependencies.
+// and host widget handler ID query logic. No UI framework dependencies.
 
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
