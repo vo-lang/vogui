@@ -1,6 +1,30 @@
 {
   "artifacts": [
     {
+      "digest": "sha256:5258a99650e30937390e178d11be8eff125fdfc8ff7ef3d8cbc9aec987230515",
+      "kind": "extension-native",
+      "name": "libvo_vogui.dylib",
+      "path": "libvo_vogui.dylib",
+      "size": 1590528,
+      "target": "aarch64-apple-darwin"
+    },
+    {
+      "digest": "sha256:89eb200bbac2a1e2c822ffde97e1730b2ea8609c31278d631f98e746009e7247",
+      "kind": "extension-native",
+      "name": "vo_vogui.dll",
+      "path": "vo_vogui.dll",
+      "size": 1379328,
+      "target": "x86_64-pc-windows-msvc"
+    },
+    {
+      "digest": "sha256:77b9f32987b0084f5a693df06d9f3f638ce1784227a22f52d02463b2ec9973f3",
+      "kind": "extension-native",
+      "name": "libvo_vogui.so",
+      "path": "libvo_vogui.so",
+      "size": 2064856,
+      "target": "x86_64-unknown-linux-gnu"
+    },
+    {
       "digest": "sha256:2e87a33cbcebef01bcb6ccd4e2a4feac0daf3591365c712ceab3ee5f1f82aa16",
       "kind": "extension-wasm",
       "name": "vogui.wasm",
