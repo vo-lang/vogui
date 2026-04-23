@@ -1,0 +1,570 @@
+{
+  "artifacts": [
+    {
+      "digest": "sha256:2e87a33cbcebef01bcb6ccd4e2a4feac0daf3591365c712ceab3ee5f1f82aa16",
+      "kind": "extension-wasm",
+      "name": "vogui.wasm",
+      "path": "web-artifacts/vogui.wasm",
+      "size": 26031,
+      "target": "wasm32-unknown-unknown"
+    }
+  ],
+  "commit": "3b8998e08634964315594eb76105871684fc2950",
+  "extension": {
+    "include": [
+      "js/dist"
+    ],
+    "name": "vogui",
+    "wasm": {
+      "js_glue": null,
+      "kind": "Standalone",
+      "local_js_glue": null,
+      "local_wasm": "web-artifacts/vogui.wasm",
+      "wasm": "vogui.wasm"
+    },
+    "web": {
+      "capabilities": [],
+      "entry": null,
+      "js_modules": {
+        "host_bridge": "js/dist/studio_host_bridge.js",
+        "protocol": "js/dist/studio_protocol.js",
+        "renderer": "js/dist/studio_renderer.js"
+      }
+    }
+  },
+  "module": "github.com/vo-lang/vogui",
+  "module_root": ".",
+  "require": [],
+  "schema_version": 1,
+  "source": [
+    {
+      "digest": "sha256:c2e279f711dbf612f4439981394a028f5b904bdc84a4f41d061c752d9ed8404f",
+      "path": ".gitignore",
+      "size": 76
+    },
+    {
+      "digest": "sha256:b4eec2b07d2595e2f368c9991e4c6ec16285df651c225271f5afcced033d20ef",
+      "path": "app.vo",
+      "size": 3959
+    },
+    {
+      "digest": "sha256:952e3c275385de6cad69139cbb9dac01c437cb8ac38cb5509fe9e60cf76deb7a",
+      "path": "audio.vo",
+      "size": 4330
+    },
+    {
+      "digest": "sha256:62020b0f5d36f46b5a1ef864cf00cd2d3a982cc1b6ec94ad9a3eb299708797f9",
+      "path": "canvas.vo",
+      "size": 11475
+    },
+    {
+      "digest": "sha256:b6af12438164ec4036d936afa95dd1c5d5b09ddf161132ead53c32900fe6a05c",
+      "path": "component.vo",
+      "size": 3698
+    },
+    {
+      "digest": "sha256:e27e1dbdbfef6d95221f1b7ce073a21cfc80839475b8d74c806351a476a14625",
+      "path": "constants.vo",
+      "size": 1430
+    },
+    {
+      "digest": "sha256:b9f7e11a81d86b4cd9311fbd16659433966ec6af76e91c26cef4bde5ac3019ee",
+      "path": "container.vo",
+      "size": 827
+    },
+    {
+      "digest": "sha256:addbc115e7873057a55a927a5aa5813d2e69badb8a537839f8ecb10ace7b9ede",
+      "path": "control.vo",
+      "size": 1917
+    },
+    {
+      "digest": "sha256:e71cea8c3fd2e04833bcb6adacf380124fe20504b93ca0ffd01ca12278d64a15",
+      "path": "display.vo",
+      "size": 3934
+    },
+    {
+      "digest": "sha256:2f92cd0b47d25c5332edbfb923dde176e6159b3e80af48dbb838be26758f1afc",
+      "path": "encode.vo",
+      "size": 5553
+    },
+    {
+      "digest": "sha256:caf6c36e6800069fec778e37766ee742ad5b187eec4e4494ed74b6f7232a0fdf",
+      "path": "event.vo",
+      "size": 12036
+    },
+    {
+      "digest": "sha256:df7e9b5b35b2b5a1f18ca0a811700a2c8ce1412cdde1d9e0bb8c9c1159176fae",
+      "path": "explorer.vo",
+      "size": 3911
+    },
+    {
+      "digest": "sha256:b9629acb757cedd2060a3c02ba8d4e6973f9c4dcf16803bc26ecef3f9aab7431",
+      "path": "form.vo",
+      "size": 995
+    },
+    {
+      "digest": "sha256:94c45f12f62d39423cf4d9daded6950e3c86d9748b4c3f78195f15744b458a8e",
+      "path": "gui.vo",
+      "size": 13142
+    },
+    {
+      "digest": "sha256:4c0eaee1402149f0596bd06265f9fcc1f45adb8bac408f45e2baf27536701bec",
+      "path": "head.vo",
+      "size": 403
+    },
+    {
+      "digest": "sha256:1eb744fd5f4e5cb9d8833fe5602013b1d9d63883541896de9f7d119660baae83",
+      "path": "input.vo",
+      "size": 5240
+    },
+    {
+      "digest": "sha256:4cdb89a00bb38b70ec3fb56e0d8714f61bd8cba5fb0b2827ce7725aa80df9069",
+      "path": "js/dist/index.d.ts",
+      "size": 5458
+    },
+    {
+      "digest": "sha256:9931b9bd80e16daa12a094250805516a2dcdb642df9e7fc8af41794b07489dc2",
+      "path": "js/dist/index.js",
+      "size": 378368
+    },
+    {
+      "digest": "sha256:3bd5ebc732e7a609976868c39bf3fd9848addf285f6da2736d5ccfba9212771b",
+      "path": "js/dist/studio_host_bridge.js",
+      "size": 39271
+    },
+    {
+      "digest": "sha256:566eec4d3f4736bb326fbdcfb585cbb49794e0604baa8363e5a240a9d0e31a68",
+      "path": "js/dist/studio_protocol.js",
+      "size": 5721
+    },
+    {
+      "digest": "sha256:a7803a3aea7de8baeea643d0372c3bf4724e372b84f009e30f7de006e61c0661",
+      "path": "js/dist/studio_renderer.js",
+      "size": 374871
+    },
+    {
+      "digest": "sha256:a8c680a7a64f02f17e3391ddcc895058bb5883d452de8cb736856500a389b986",
+      "path": "js/dist/style.css",
+      "size": 19585
+    },
+    {
+      "digest": "sha256:87dd8b9a60990b8ee254fa2894e8c50870a03724607e4f111e0778b6a8e65223",
+      "path": "js/package-lock.json",
+      "size": 175381
+    },
+    {
+      "digest": "sha256:a8e007cb9a2d7dfbe1bc2e36807e59037d1836d3bd951518c0f9767c8b01f176",
+      "path": "js/package.json",
+      "size": 1814
+    },
+    {
+      "digest": "sha256:54f3de901cf7ae63a74f0b70135fafbe5efd90d3b0e5eae609a4c237290c57e7",
+      "path": "js/postcss.config.js",
+      "size": 260
+    },
+    {
+      "digest": "sha256:443ed5305c421c31362ec01db81d64796f62e32dc8565e4f02107efe4b72b3c9",
+      "path": "js/src/audio.ts",
+      "size": 9344
+    },
+    {
+      "digest": "sha256:32c2fff2494bb71009e393dc5593b64fd2855b6a7f87ab3d7b92239224915862",
+      "path": "js/src/canvas.ts",
+      "size": 5787
+    },
+    {
+      "digest": "sha256:ed90441ef18493f90cbdfad3128002eb2175f00d6dd644cfa838486ba1c8781f",
+      "path": "js/src/components/VgAccordion.tsx",
+      "size": 2508
+    },
+    {
+      "digest": "sha256:7bad232284e0e26b22938dc1df60958a2e2a95987c35526b1bafd7023404ece2",
+      "path": "js/src/components/VgBreadcrumb.tsx",
+      "size": 1660
+    },
+    {
+      "digest": "sha256:3da2eebc52c8db87fd98660c693877b1ffac81d83557a0d75870ed3a1f7d11c2",
+      "path": "js/src/components/VgButton.tsx",
+      "size": 2615
+    },
+    {
+      "digest": "sha256:1cc71e30eeca24f6ccb17962cc55921c6764488f2072b7fdfc8a50a5f5833a3c",
+      "path": "js/src/components/VgCheckbox.tsx",
+      "size": 1658
+    },
+    {
+      "digest": "sha256:85dfe73ff0c19d628ddfc9b4a2d44bb8fc6260c2baf07eed0d04f30cfefdd779",
+      "path": "js/src/components/VgCollapsible.tsx",
+      "size": 1564
+    },
+    {
+      "digest": "sha256:a547b616d196f7adc3494ed6a27ccf4dd504b9535353e3bcdaa6acef0fe00cfa",
+      "path": "js/src/components/VgCombobox.tsx",
+      "size": 5937
+    },
+    {
+      "digest": "sha256:5142f678ebc3b36e3aa66b7edfa57edf6e64cb330f4c186d67f4e0948aeecbd0",
+      "path": "js/src/components/VgContextMenu.tsx",
+      "size": 2011
+    },
+    {
+      "digest": "sha256:8bed6807f4061722ec92f01694d78379315600ca5bae518b45c9f303ef8321a2",
+      "path": "js/src/components/VgDialog.tsx",
+      "size": 3159
+    },
+    {
+      "digest": "sha256:0d1aa97fc29ae2042bd24e6c74fe2ea25b077edd08776d139bbee135288a9e06",
+      "path": "js/src/components/VgDrawer.tsx",
+      "size": 3747
+    },
+    {
+      "digest": "sha256:5927877f0ad6c8ede180015aabc1e878cf34710193effa434279238089c265a9",
+      "path": "js/src/components/VgDropdownMenu.tsx",
+      "size": 2099
+    },
+    {
+      "digest": "sha256:1f6c2a1a54803c4694f4a1d51ca6c7c026247552e2ad69a8a734e9fa98599d3d",
+      "path": "js/src/components/VgHoverCard.tsx",
+      "size": 1198
+    },
+    {
+      "digest": "sha256:fda7a1b32ff693baf4d02955c92e8da53473de041e79cf4b35237722d46675d8",
+      "path": "js/src/components/VgPagination.tsx",
+      "size": 2501
+    },
+    {
+      "digest": "sha256:5bbabb27de811cf8d9ec55057f872faabe5257b1ec6763ac55806165c94eca01",
+      "path": "js/src/components/VgPopover.tsx",
+      "size": 1303
+    },
+    {
+      "digest": "sha256:64a7d9a7a6ab72a22693365bc909edbce497d41f8bf3055df77803fd3fabe42e",
+      "path": "js/src/components/VgRadio.tsx",
+      "size": 1301
+    },
+    {
+      "digest": "sha256:2eb1c7e312056a33dbe9dd14b7e84741754bcc5454658a9c1133cb0810a9930d",
+      "path": "js/src/components/VgSelect.tsx",
+      "size": 3300
+    },
+    {
+      "digest": "sha256:7f62ccd2307ae5ff04117c2c7ead93ad3817ae46c3eb1a4641517f579b587167",
+      "path": "js/src/components/VgSlider.tsx",
+      "size": 1463
+    },
+    {
+      "digest": "sha256:9604773370569e727bb5991d97e079b29e5f902d4aa5d93ca6c3822023e541f1",
+      "path": "js/src/components/VgSteps.tsx",
+      "size": 2145
+    },
+    {
+      "digest": "sha256:1a89d00666df7b2d967b5cdb4ec38e68661ef0812cb5ee00fdaba1ab2b5defb0",
+      "path": "js/src/components/VgSwitch.tsx",
+      "size": 1618
+    },
+    {
+      "digest": "sha256:be365b337c387e5e149712d2a6ba0c318ac51879f6efb4df4aa1692012d2495a",
+      "path": "js/src/components/VgTabs.tsx",
+      "size": 2130
+    },
+    {
+      "digest": "sha256:e5e89c27c56245f66f69ba597adbd5962e4ec72f555c08beabfb03bf6ae502d8",
+      "path": "js/src/components/VgTooltip.tsx",
+      "size": 1249
+    },
+    {
+      "digest": "sha256:3be06e84979599b05310f10372cb906ce00849973e2900b0279d237a7c363e0f",
+      "path": "js/src/components/VgTransition.tsx",
+      "size": 5170
+    },
+    {
+      "digest": "sha256:fae6888d8cee0f0196a4f8f12c7364ed9d775c587a1b0147f467c1fcf605e472",
+      "path": "js/src/components/VgTransitionGroup.tsx",
+      "size": 8804
+    },
+    {
+      "digest": "sha256:f698686893702315572ac026a604b0aba9fbd582405e95713a6cf3abf296f1f1",
+      "path": "js/src/components/VgVirtualList.tsx",
+      "size": 3987
+    },
+    {
+      "digest": "sha256:ded5d40f06a9a4a8c4a7c612f44ef1831088c30cc1df8207517e4d4ba204f61a",
+      "path": "js/src/components/index.ts",
+      "size": 2071
+    },
+    {
+      "digest": "sha256:a010eeee3081264c63f79a60d3c1d27e734b030314201d9fe2e4552c3e1ec4c9",
+      "path": "js/src/components/transitions.ts",
+      "size": 2926
+    },
+    {
+      "digest": "sha256:88871860deece350a9d51edd7bbebfa2f0b4b89068d49cace8b756f20107a3b7",
+      "path": "js/src/decoder.ts",
+      "size": 7683
+    },
+    {
+      "digest": "sha256:5ba9f5cf1b954c5a8d1f5a09420a9f2c5886ca69ed8648b6e0b3c714110dbf1e",
+      "path": "js/src/events.ts",
+      "size": 10427
+    },
+    {
+      "digest": "sha256:1bfc55d7b0c984d203c5cfcdc9216634dcedff829873081e9bdb885a9a46756a",
+      "path": "js/src/index.ts",
+      "size": 935
+    },
+    {
+      "digest": "sha256:96ae20469c7a6b654cf9054cd463ada61ebbbbbdb0109641b0c897baa4a96711",
+      "path": "js/src/mapping.ts",
+      "size": 9340
+    },
+    {
+      "digest": "sha256:4075e1d41962fa5a7446488f81e550b5b96c3d15b9050e5c01f94223f6f51307",
+      "path": "js/src/query.ts",
+      "size": 1933
+    },
+    {
+      "digest": "sha256:9862b31bd88c104759325dc5cd96f1ad22c2443497955e027ea44a2011889f37",
+      "path": "js/src/refs.ts",
+      "size": 2630
+    },
+    {
+      "digest": "sha256:5687424091ef02ed27a5b804307159ea9fb15424e50f2bd297ccb01f544fea22",
+      "path": "js/src/renderer.tsx",
+      "size": 28012
+    },
+    {
+      "digest": "sha256:8151aa629c2695b3dfafab472cae6be0ec88276501aba91de2d39550d79a9dad",
+      "path": "js/src/studio_host_bridge.ts",
+      "size": 3083
+    },
+    {
+      "digest": "sha256:b0bd440dd169c99031583e87cdb0ac27d290c51d8b041112a3ef6e968c8d159b",
+      "path": "js/src/studio_protocol.ts",
+      "size": 460
+    },
+    {
+      "digest": "sha256:eedc3d2ce4ea04a2244ee56d910ff4963d3b9f646c98b1e21e981519ee30d94a",
+      "path": "js/src/studio_renderer.ts",
+      "size": 2332
+    },
+    {
+      "digest": "sha256:7aef537666e4ad9f1036394b0e02fd2bbb3ade21cc0b66cce91094933c5a2208",
+      "path": "js/src/styles.ts",
+      "size": 3706
+    },
+    {
+      "digest": "sha256:658a364965fcf88e114a2af0baa514e352c5ec6f5674aa0c01e2ff4326890216",
+      "path": "js/src/text.ts",
+      "size": 4897
+    },
+    {
+      "digest": "sha256:79b534d3b20964a34de4d2ce0649b02b9aa1990de70cdc8d3c469d0e36ee9620",
+      "path": "js/src/types.ts",
+      "size": 4239
+    },
+    {
+      "digest": "sha256:440a5e0f40af9c2eb329b96095783080063003871dd0212440b30f549b8fe4a4",
+      "path": "js/src/vite-env.d.ts",
+      "size": 196
+    },
+    {
+      "digest": "sha256:cc1a7ad0d019ddb1d32d0ecb588ba0ac26ce41d8625dd6c366348b25f83a28ec",
+      "path": "js/src/vogui.css",
+      "size": 59
+    },
+    {
+      "digest": "sha256:7138e265e429b4faaef6ab77f0ab8ea01fd0f5c6b2fd36e4d8bc182b3ed9cf7f",
+      "path": "js/tailwind.config.js",
+      "size": 3809
+    },
+    {
+      "digest": "sha256:dc92817af50bcd6c8f9f747caa5dd938785cf8ed4f83e745add47ff7a7363215",
+      "path": "js/tests/ref_actions_smoke.ts",
+      "size": 2977
+    },
+    {
+      "digest": "sha256:b322949d4e7d9c9cf60c9d67ac24bb4479ff8b7da16ba30da71271e29d431bd7",
+      "path": "js/tsconfig.json",
+      "size": 625
+    },
+    {
+      "digest": "sha256:3fc400d92eb953818b02a84e43e3d0b194ebafb1f9a9f6fa53b6711d5b8d66aa",
+      "path": "js/vite.bridge.config.ts",
+      "size": 676
+    },
+    {
+      "digest": "sha256:b37b4d88ae9128d90d6cab84f81d3c3ec94ed72a24ea1625a1345d5765b2776a",
+      "path": "js/vite.config.ts",
+      "size": 713
+    },
+    {
+      "digest": "sha256:02b923f563ce38c8393ea9906c5e7b237c541ee3d62b0f4eb0e1d338669584a2",
+      "path": "js/vite.protocol.config.ts",
+      "size": 639
+    },
+    {
+      "digest": "sha256:93ffdbc6ca611c1bde8e028c35773bed03353d3cd42d8993f307b76f2d749f80",
+      "path": "js/vite.renderer.config.ts",
+      "size": 1154
+    },
+    {
+      "digest": "sha256:935e4fa657d6fe2a9312dfa124414ebdf389edf3c943a8ecc95b8c1fc6830434",
+      "path": "layout.vo",
+      "size": 2142
+    },
+    {
+      "digest": "sha256:ded1be3d2e2449516c4262ba8da01cb13aff26d1ac78415e3657661221f5c49f",
+      "path": "list.vo",
+      "size": 1193
+    },
+    {
+      "digest": "sha256:db2f30b67e335bfdeb45e4ca359cfaec0cf4e15a13ff33bc9e2abbc6d4b00d45",
+      "path": "measure.vo",
+      "size": 2258
+    },
+    {
+      "digest": "sha256:c10c452fefb971c8bb65d1d9360897e294db95bc327969f2d0a78c356911d757",
+      "path": "nav.vo",
+      "size": 5347
+    },
+    {
+      "digest": "sha256:f48a14130254b89aa5bf8af8c214f2474e36b866072fe107ed0e9c255b493ecd",
+      "path": "node.vo",
+      "size": 13256
+    },
+    {
+      "digest": "sha256:165e7475a3c8adb2c387815c0f7619e735bcaf84c5f77392c3e24d6bfc15c4eb",
+      "path": "overlay.vo",
+      "size": 5803
+    },
+    {
+      "digest": "sha256:507a69fa8da6eabba244ef14efb05ed0f28d219556e64ef1c9f434becffa51cd",
+      "path": "portal.vo",
+      "size": 877
+    },
+    {
+      "digest": "sha256:8dc2e1e44f6a23ac9d8b14d3e8ee3c72431f05017dc9810ebd043dd89b75d60c",
+      "path": "ref.vo",
+      "size": 2524
+    },
+    {
+      "digest": "sha256:c87de7742d3642ba4dcd85001df809085331498945468e4ff20a051e685f1828",
+      "path": "router.vo",
+      "size": 1220
+    },
+    {
+      "digest": "sha256:6defadd08b2c44d3f97c7039d4b31e69c35ced182ec5ae092d9faa69d5743bd2",
+      "path": "rust/Cargo.lock",
+      "size": 68027
+    },
+    {
+      "digest": "sha256:b69bf5d33acd84914b55e91564e368aaaa38de3e9708cdc60d4dff82552d9b28",
+      "path": "rust/Cargo.toml",
+      "size": 58
+    },
+    {
+      "digest": "sha256:2fb4889a0bc704da55124def86b95ea336efbd5baecdb32cc770b830b332e00b",
+      "path": "rust/ext/Cargo.toml",
+      "size": 1799
+    },
+    {
+      "digest": "sha256:c762b147e001671d61e4ee264d3e412a286fe132b35120c3cd9c584fc568b415",
+      "path": "rust/ext/src/audio.rs",
+      "size": 27448
+    },
+    {
+      "digest": "sha256:1ed0e563e2f7163311d0da7ee6c5c5e070bdbb9f9ba73febfa7875c1c7678071",
+      "path": "rust/ext/src/externs.rs",
+      "size": 17377
+    },
+    {
+      "digest": "sha256:66c39d87801eb5d16b3a38a7415d958c1d3975a23afcb6b51067c0e63d9cfe94",
+      "path": "rust/ext/src/lib.rs",
+      "size": 10926
+    },
+    {
+      "digest": "sha256:f408f6a564dac56e8f55a7a306404d939765ac07213e75d40b2ad24c2cff31c7",
+      "path": "rust/ext/src/standalone.rs",
+      "size": 14970
+    },
+    {
+      "digest": "sha256:684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1",
+      "path": "rust/pkg-island/.gitignore",
+      "size": 1
+    },
+    {
+      "digest": "sha256:d6f015ea4b2fbe6f75e46f11ba90166da0a2dd2f87ff86f844fa1964b6fd3823",
+      "path": "rust/protocol/Cargo.toml",
+      "size": 142
+    },
+    {
+      "digest": "sha256:5764878a78b1da12a60372547d6a01bf669da1a85fed92ca05bb301231252e49",
+      "path": "rust/protocol/src/lib.rs",
+      "size": 22642
+    },
+    {
+      "digest": "sha256:1c65ecda26bb1c2b7dfdf693db492831291a7933c76fc37262f36d281c020cad",
+      "path": "style.vo",
+      "size": 11374
+    },
+    {
+      "digest": "sha256:6c430954a29ca2575fafa5579ba0544da44327fa0873ec3ad544b6b574a0f583",
+      "path": "tests/main.vo",
+      "size": 4537
+    },
+    {
+      "digest": "sha256:c430250500c8e09a8fb34e01db18f32360c2978729bcbdd5d4846512c2987147",
+      "path": "text.vo",
+      "size": 5084
+    },
+    {
+      "digest": "sha256:2772cce4a570a41d96a3ff693037538f8982534c07adc7cea9f9c39d9eb907ea",
+      "path": "theme.vo",
+      "size": 4987
+    },
+    {
+      "digest": "sha256:86fa722c97525f35eb61eeb79c00c7d0c4016188508db377e06512e3753aa95d",
+      "path": "timer.vo",
+      "size": 1727
+    },
+    {
+      "digest": "sha256:0eadd559cba705e1ad5a466f347379933356d1f2646bb8039f5a5a77abb2a767",
+      "path": "transition.vo",
+      "size": 1345
+    },
+    {
+      "digest": "sha256:04622d6bb7da68c5ef6265b4cd926280e53c07035bfb19b24a23926afcf9a13e",
+      "path": "unsafe.vo",
+      "size": 384
+    },
+    {
+      "digest": "sha256:30a2eb70160af62eb7b66a2e13d438ee12cc5c37f2c254039afc59e1675d0d80",
+      "path": "util.vo",
+      "size": 114
+    },
+    {
+      "digest": "sha256:c3eb755705a8a54a9c844e40cfeff17d3ef89040985bb6b0500d59aef941fe9a",
+      "path": "virtual_list.vo",
+      "size": 3010
+    },
+    {
+      "digest": "sha256:5742d14b437128a0d229772b9eed8abdd72d1fa801b96e76b1f3a4d940c94a88",
+      "path": "vo.lock",
+      "size": 97
+    },
+    {
+      "digest": "sha256:6337061feef5d4a42cad92b6b83fb9ab197c70299b5d9182c7438d9bb08641e5",
+      "path": "vo.mod",
+      "size": 679
+    },
+    {
+      "digest": "sha256:d81caf4cb24fc0cf7b1778fd9a287c36de68732115a1785d5b890e16303794fb",
+      "path": "widget.vo",
+      "size": 2025
+    }
+  ],
+  "source_digest": "sha256:480ad4c08c6698773d45715a847959041d196ec628d494a6e46a2a5d5c9a2205",
+  "version": "v0.1.11",
+  "vo": "^0.1.0",
+  "web": null
+}
