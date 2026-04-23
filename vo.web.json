@@ -488,11 +488,6 @@
       "size": 14970
     },
     {
-      "digest": "sha256:684888c0ebb17f374298b65ee2807526c066094c701bcc7ebbe1c1095f494fc1",
-      "path": "rust/pkg-island/.gitignore",
-      "size": 1
-    },
-    {
       "digest": "sha256:d6f015ea4b2fbe6f75e46f11ba90166da0a2dd2f87ff86f844fa1964b6fd3823",
       "path": "rust/protocol/Cargo.toml",
       "size": 142
@@ -563,7 +558,7 @@
       "size": 2025
     }
   ],
-  "source_digest": "sha256:480ad4c08c6698773d45715a847959041d196ec628d494a6e46a2a5d5c9a2205",
+  "source_digest": "sha256:93f6231c765847b758c30ce67e3feb24136eda31b0d0e38e201169a6b203d6e2",
   "version": "v0.1.11",
   "vo": "^0.1.0",
   "web": null
