@@ -164,9 +164,9 @@ checksum = "1e748733b7cbc798e1434b6ac524f0c1ff2ab456fe201501e6497c8417a4fc33"
 
 [[package]]
 name = "cc"
-version = "1.2.60"
+version = "1.2.61"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43c5703da9466b66a946814e1adf53ea2c90f10063b86290cc9eb67ce3478a20"
+checksum = "d16d90359e986641506914ba71350897565610e87ce0ad9e6f28569db3dd5c6d"
 dependencies = [
  "find-msvc-tools",
  "jobserver",
@@ -730,9 +730,9 @@ dependencies = [
 
 [[package]]
 name = "idna_adapter"
-version = "1.2.1"
+version = "1.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3acae9609540aa318d1bc588455225fb2085b9ed0c4f6bd0d9d5bcd86f1a0344"
+checksum = "cb68373c0d6620ef8105e855e7745e18b0d00d3bdb07fb532e434244cdb9a714"
 dependencies = [
  "icu_normalizer",
  "icu_properties",
@@ -848,9 +848,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.185"
+version = "0.2.186"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "52ff2c0fe9bc6cb6b14a0592c2ff4fa9ceb83eea9db979b0487cd054946a2b8f"
+checksum = "68ab91017fe16c622486840e4c83c9a37afeff978bd239b5293d61ece587de66"
 
 [[package]]
 name = "libloading"
@@ -1420,9 +1420,9 @@ dependencies = [
 
 [[package]]
 name = "rustls"
-version = "0.23.38"
+version = "0.23.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "69f9466fb2c14ea04357e91413efb882e2a6d4a406e625449bc0a5d360d53a21"
+checksum = "7c2c118cb077cca2822033836dfb1b975355dfb784b5e8da48f7b6c5db74e60e"
 dependencies = [
  "log",
  "once_cell",
@@ -1435,9 +1435,9 @@ dependencies = [
 
 [[package]]
 name = "rustls-pki-types"
-version = "1.14.0"
+version = "1.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be040f8b0a225e40375822a563fa9524378b9d63112f53e19ffff34df5d33fdd"
+checksum = "30a7197ae7eb376e574fe940d068c30fe0462554a3ddbe4eca7838e049c937a9"
 dependencies = [
  "zeroize",
 ]
@@ -1884,7 +1884,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 [[package]]
 name = "vo-common"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=89d93f42839409aab0a9f781c1f78aff62176a6a#89d93f42839409aab0a9f781c1f78aff62176a6a"
+source = "git+https://github.com/vo-lang/volang?rev=6bf8cbe3562feedfb3a67554d97745edc3e8c262#6bf8cbe3562feedfb3a67554d97745edc3e8c262"
 dependencies = [
  "codespan-reporting",
  "rustc-hash 1.1.0",
@@ -1899,7 +1899,7 @@ dependencies = [
 [[package]]
 name = "vo-common-core"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=89d93f42839409aab0a9f781c1f78aff62176a6a#89d93f42839409aab0a9f781c1f78aff62176a6a"
+source = "git+https://github.com/vo-lang/volang?rev=6bf8cbe3562feedfb3a67554d97745edc3e8c262#6bf8cbe3562feedfb3a67554d97745edc3e8c262"
 dependencies = [
  "hashbrown 0.15.5",
  "num_enum",
@@ -1909,7 +1909,7 @@ dependencies = [
 [[package]]
 name = "vo-ext"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=89d93f42839409aab0a9f781c1f78aff62176a6a#89d93f42839409aab0a9f781c1f78aff62176a6a"
+source = "git+https://github.com/vo-lang/volang?rev=6bf8cbe3562feedfb3a67554d97745edc3e8c262#6bf8cbe3562feedfb3a67554d97745edc3e8c262"
 dependencies = [
  "linkme",
  "vo-ffi-macro",
@@ -1919,7 +1919,7 @@ dependencies = [
 [[package]]
 name = "vo-ffi-macro"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=89d93f42839409aab0a9f781c1f78aff62176a6a#89d93f42839409aab0a9f781c1f78aff62176a6a"
+source = "git+https://github.com/vo-lang/volang?rev=6bf8cbe3562feedfb3a67554d97745edc3e8c262#6bf8cbe3562feedfb3a67554d97745edc3e8c262"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1932,7 +1932,7 @@ dependencies = [
 [[package]]
 name = "vo-module"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=89d93f42839409aab0a9f781c1f78aff62176a6a#89d93f42839409aab0a9f781c1f78aff62176a6a"
+source = "git+https://github.com/vo-lang/volang?rev=6bf8cbe3562feedfb3a67554d97745edc3e8c262#6bf8cbe3562feedfb3a67554d97745edc3e8c262"
 dependencies = [
  "flate2",
  "js-sys",
@@ -1952,7 +1952,7 @@ dependencies = [
 [[package]]
 name = "vo-runtime"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=89d93f42839409aab0a9f781c1f78aff62176a6a#89d93f42839409aab0a9f781c1f78aff62176a6a"
+source = "git+https://github.com/vo-lang/volang?rev=6bf8cbe3562feedfb3a67554d97745edc3e8c262#6bf8cbe3562feedfb3a67554d97745edc3e8c262"
 dependencies = [
  "dirs",
  "hashbrown 0.15.5",
@@ -1970,7 +1970,7 @@ dependencies = [
 [[package]]
 name = "vo-stdlib"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=89d93f42839409aab0a9f781c1f78aff62176a6a#89d93f42839409aab0a9f781c1f78aff62176a6a"
+source = "git+https://github.com/vo-lang/volang?rev=6bf8cbe3562feedfb3a67554d97745edc3e8c262#6bf8cbe3562feedfb3a67554d97745edc3e8c262"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -1998,7 +1998,7 @@ dependencies = [
 [[package]]
 name = "vo-syntax"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=89d93f42839409aab0a9f781c1f78aff62176a6a#89d93f42839409aab0a9f781c1f78aff62176a6a"
+source = "git+https://github.com/vo-lang/volang?rev=6bf8cbe3562feedfb3a67554d97745edc3e8c262#6bf8cbe3562feedfb3a67554d97745edc3e8c262"
 dependencies = [
  "logos",
  "num-bigint",
@@ -2011,7 +2011,7 @@ dependencies = [
 [[package]]
 name = "vo-vm"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=89d93f42839409aab0a9f781c1f78aff62176a6a#89d93f42839409aab0a9f781c1f78aff62176a6a"
+source = "git+https://github.com/vo-lang/volang?rev=6bf8cbe3562feedfb3a67554d97745edc3e8c262#6bf8cbe3562feedfb3a67554d97745edc3e8c262"
 dependencies = [
  "fastrand",
  "hashbrown 0.15.5",
