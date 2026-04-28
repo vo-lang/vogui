@@ -9,10 +9,12 @@
 
 // ── Tag constants (mirrors ext_bridge.rs) ────────────────────────────────────
 
-const TAG_SUSPEND:     u8 = 0x01;
+const TAG_SUSPEND: u8 = 0x01;
 const TAG_HOST_OUTPUT: u8 = 0x02;
-const TAG_VALUE:       u8 = 0xE2;
-const TAG_BYTES:       u8 = 0xE3;
+const TAG_NIL_ERROR: u8 = 0xE0;
+const TAG_ERROR_STR: u8 = 0xE1;
+const TAG_VALUE: u8 = 0xE2;
+const TAG_BYTES: u8 = 0xE3;
 
 // ── Host imports (resolved by the WASM host via importObject.env) ────────────
 
@@ -31,25 +33,79 @@ extern "C" {
     fn host_select_text(ptr: *const u8, len: u32);
     fn host_set_title(ptr: *const u8, len: u32);
     fn host_set_meta(name_ptr: *const u8, name_len: u32, content_ptr: *const u8, content_len: u32);
-    fn host_toast(msg_ptr: *const u8, msg_len: u32, typ_ptr: *const u8, typ_len: u32, duration_ms: i32);
+    fn host_toast(
+        msg_ptr: *const u8,
+        msg_len: u32,
+        typ_ptr: *const u8,
+        typ_len: u32,
+        duration_ms: i32,
+    );
     fn host_start_anim_frame(id: i32);
     fn host_cancel_anim_frame(id: i32);
     fn host_start_game_loop(id: i32);
     fn host_stop_game_loop(id: i32);
     fn host_measure_text(
-        text_ptr: *const u8, text_len: u32,
-        font_ptr: *const u8, font_len: u32,
-        max_width: f64, line_height: f64,
+        text_ptr: *const u8,
+        text_len: u32,
+        font_ptr: *const u8,
+        font_len: u32,
+        max_width: f64,
+        line_height: f64,
         white_space: i32,
         out_len: *mut u32,
     ) -> *const u8;
     fn host_measure_text_lines(
-        text_ptr: *const u8, text_len: u32,
-        font_ptr: *const u8, font_len: u32,
-        max_width: f64, line_height: f64,
+        text_ptr: *const u8,
+        text_len: u32,
+        font_ptr: *const u8,
+        font_len: u32,
+        max_width: f64,
+        line_height: f64,
         white_space: i32,
         out_len: *mut u32,
     ) -> *const u8;
+    fn host_audio_load_bytes(ptr: *const u8, len: u32) -> i32;
+    fn host_audio_free(clip_id: i32);
+    fn host_audio_play_sound(clip_id: i32, volume: f64, pitch: f64);
+    fn host_audio_set_listener(
+        px: f64,
+        py: f64,
+        pz: f64,
+        fx: f64,
+        fy: f64,
+        fz: f64,
+        ux: f64,
+        uy: f64,
+        uz: f64,
+    );
+    fn host_audio_play_sound_3d(
+        clip_id: i32,
+        px: f64,
+        py: f64,
+        pz: f64,
+        volume: f64,
+        ref_distance: f64,
+        max_distance: f64,
+    );
+    fn host_audio_create_source_3d(
+        clip_id: i32,
+        px: f64,
+        py: f64,
+        pz: f64,
+        volume: f64,
+        ref_distance: f64,
+        max_distance: f64,
+    ) -> i32;
+    fn host_audio_update_spatial();
+    fn host_audio_set_source_3d_pos(source_id: i32, px: f64, py: f64, pz: f64);
+    fn host_audio_set_source_3d_params(source_id: i32, volume: f64, pitch: f64);
+    fn host_audio_remove_source_3d(source_id: i32);
+    fn host_audio_play_music(clip_id: i32, volume: f64);
+    fn host_audio_stop_music();
+    fn host_audio_pause_music();
+    fn host_audio_resume_music();
+    fn host_audio_set_sfx_volume(volume: f64);
+    fn host_audio_set_music_volume(volume: f64);
 }
 
 // ── Memory management ────────────────────────────────────────────────────────
@@ -70,14 +126,20 @@ pub extern "C" fn vo_dealloc(ptr: *mut u8, size: u32) {
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 fn raw_input<'a>(ptr: *const u8, len: u32) -> &'a [u8] {
-    if len == 0 { return &[]; }
+    if len == 0 {
+        return &[];
+    }
     unsafe { std::slice::from_raw_parts(ptr, len as usize) }
 }
 
 fn alloc_output(data: &[u8], out_len: *mut u32) -> *mut u8 {
-    unsafe { *out_len = data.len() as u32; }
+    unsafe {
+        *out_len = data.len() as u32;
+    }
     let ptr = vo_alloc(data.len() as u32);
-    unsafe { std::ptr::copy_nonoverlapping(data.as_ptr(), ptr, data.len()); }
+    unsafe {
+        std::ptr::copy_nonoverlapping(data.as_ptr(), ptr, data.len());
+    }
     ptr
 }
 
@@ -99,6 +161,26 @@ fn output_tag_value(v: u64, out_len: *mut u32) -> *mut u8 {
     let mut buf = [0u8; 9];
     buf[0] = TAG_VALUE;
     buf[1..9].copy_from_slice(&v.to_le_bytes());
+    alloc_output(&buf, out_len)
+}
+
+fn output_value_and_nil_error(v: u64, out_len: *mut u32) -> *mut u8 {
+    let mut buf = [0u8; 10];
+    buf[0] = TAG_VALUE;
+    buf[1..9].copy_from_slice(&v.to_le_bytes());
+    buf[9] = TAG_NIL_ERROR;
+    alloc_output(&buf, out_len)
+}
+
+fn output_value_and_error(v: u64, msg: &str, out_len: *mut u32) -> *mut u8 {
+    let msg_bytes = msg.as_bytes();
+    let msg_len = msg_bytes.len().min(u16::MAX as usize);
+    let mut buf = Vec::with_capacity(12 + msg_len);
+    buf.push(TAG_VALUE);
+    buf.extend_from_slice(&v.to_le_bytes());
+    buf.push(TAG_ERROR_STR);
+    buf.extend_from_slice(&(msg_len as u16).to_le_bytes());
+    buf.extend_from_slice(&msg_bytes[..msg_len]);
     alloc_output(&buf, out_len)
 }
 
@@ -173,9 +255,12 @@ pub extern "C" fn measureText(ptr: *const u8, len: u32, out_len: *mut u32) -> *m
     let mut result_len: u32 = 0;
     let result_ptr = unsafe {
         host_measure_text(
-            text.as_ptr(), text.len() as u32,
-            font.as_ptr(), font.len() as u32,
-            max_width, line_height,
+            text.as_ptr(),
+            text.len() as u32,
+            font.as_ptr(),
+            font.len() as u32,
+            max_width,
+            line_height,
             white_space as i32,
             &mut result_len,
         )
@@ -210,9 +295,12 @@ pub extern "C" fn measureTextLinesRaw(ptr: *const u8, len: u32, out_len: *mut u3
     let mut result_len: u32 = 0;
     let result_ptr = unsafe {
         host_measure_text_lines(
-            text.as_ptr(), text.len() as u32,
-            font.as_ptr(), font.len() as u32,
-            max_width, line_height,
+            text.as_ptr(),
+            text.len() as u32,
+            font.as_ptr(),
+            font.len() as u32,
+            max_width,
+            line_height,
             white_space as i32,
             &mut result_len,
         )
@@ -228,7 +316,9 @@ pub extern "C" fn startTimeout(ptr: *const u8, len: u32, out_len: *mut u32) -> *
     let input = raw_input(ptr, len);
     let (id, off) = read_value_arg(input, 0);
     let (ms, _) = read_value_arg(input, off);
-    unsafe { host_start_timeout(id as i32, ms as i32); }
+    unsafe {
+        host_start_timeout(id as i32, ms as i32);
+    }
     output_empty(out_len)
 }
 
@@ -237,7 +327,9 @@ pub extern "C" fn startTimeout(ptr: *const u8, len: u32, out_len: *mut u32) -> *
 pub extern "C" fn clearTimeout(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
     let input = raw_input(ptr, len);
     let (id, _) = read_value_arg(input, 0);
-    unsafe { host_clear_timeout(id as i32); }
+    unsafe {
+        host_clear_timeout(id as i32);
+    }
     output_empty(out_len)
 }
 
@@ -247,7 +339,9 @@ pub extern "C" fn startInterval(ptr: *const u8, len: u32, out_len: *mut u32) -> 
     let input = raw_input(ptr, len);
     let (id, off) = read_value_arg(input, 0);
     let (ms, _) = read_value_arg(input, off);
-    unsafe { host_start_interval(id as i32, ms as i32); }
+    unsafe {
+        host_start_interval(id as i32, ms as i32);
+    }
     output_empty(out_len)
 }
 
@@ -256,7 +350,9 @@ pub extern "C" fn startInterval(ptr: *const u8, len: u32, out_len: *mut u32) -> 
 pub extern "C" fn clearInterval(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
     let input = raw_input(ptr, len);
     let (id, _) = read_value_arg(input, 0);
-    unsafe { host_clear_interval(id as i32); }
+    unsafe {
+        host_clear_interval(id as i32);
+    }
     output_empty(out_len)
 }
 
@@ -265,7 +361,9 @@ pub extern "C" fn clearInterval(ptr: *const u8, len: u32, out_len: *mut u32) -> 
 pub extern "C" fn navigate(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
     let input = raw_input(ptr, len);
     let (s, _) = read_bytes_arg(input, 0);
-    unsafe { host_navigate(s.as_ptr(), s.len() as u32); }
+    unsafe {
+        host_navigate(s.as_ptr(), s.len() as u32);
+    }
     output_empty(out_len)
 }
 
@@ -289,7 +387,9 @@ pub extern "C" fn getCurrentPath(_ptr: *const u8, _len: u32, out_len: *mut u32) 
 pub extern "C" fn Focus(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
     let input = raw_input(ptr, len);
     let (s, _) = read_bytes_arg(input, 0);
-    unsafe { host_focus(s.as_ptr(), s.len() as u32); }
+    unsafe {
+        host_focus(s.as_ptr(), s.len() as u32);
+    }
     output_empty(out_len)
 }
 
@@ -298,7 +398,9 @@ pub extern "C" fn Focus(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 
 pub extern "C" fn Blur(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
     let input = raw_input(ptr, len);
     let (s, _) = read_bytes_arg(input, 0);
-    unsafe { host_blur(s.as_ptr(), s.len() as u32); }
+    unsafe {
+        host_blur(s.as_ptr(), s.len() as u32);
+    }
     output_empty(out_len)
 }
 
@@ -308,7 +410,9 @@ pub extern "C" fn ScrollTo(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut 
     let input = raw_input(ptr, len);
     let (s, off) = read_bytes_arg(input, 0);
     let (top, _) = read_value_arg(input, off);
-    unsafe { host_scroll_to(s.as_ptr(), s.len() as u32, top as i32); }
+    unsafe {
+        host_scroll_to(s.as_ptr(), s.len() as u32, top as i32);
+    }
     output_empty(out_len)
 }
 
@@ -317,7 +421,9 @@ pub extern "C" fn ScrollTo(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut 
 pub extern "C" fn ScrollIntoView(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
     let input = raw_input(ptr, len);
     let (s, _) = read_bytes_arg(input, 0);
-    unsafe { host_scroll_into_view(s.as_ptr(), s.len() as u32); }
+    unsafe {
+        host_scroll_into_view(s.as_ptr(), s.len() as u32);
+    }
     output_empty(out_len)
 }
 
@@ -326,7 +432,9 @@ pub extern "C" fn ScrollIntoView(ptr: *const u8, len: u32, out_len: *mut u32) ->
 pub extern "C" fn SelectText(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
     let input = raw_input(ptr, len);
     let (s, _) = read_bytes_arg(input, 0);
-    unsafe { host_select_text(s.as_ptr(), s.len() as u32); }
+    unsafe {
+        host_select_text(s.as_ptr(), s.len() as u32);
+    }
     output_empty(out_len)
 }
 
@@ -335,7 +443,9 @@ pub extern "C" fn SelectText(ptr: *const u8, len: u32, out_len: *mut u32) -> *mu
 pub extern "C" fn setDocTitle(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
     let input = raw_input(ptr, len);
     let (s, _) = read_bytes_arg(input, 0);
-    unsafe { host_set_title(s.as_ptr(), s.len() as u32); }
+    unsafe {
+        host_set_title(s.as_ptr(), s.len() as u32);
+    }
     output_empty(out_len)
 }
 
@@ -345,7 +455,14 @@ pub extern "C" fn setDocMeta(ptr: *const u8, len: u32, out_len: *mut u32) -> *mu
     let input = raw_input(ptr, len);
     let (name, off) = read_bytes_arg(input, 0);
     let (content, _) = read_bytes_arg(input, off);
-    unsafe { host_set_meta(name.as_ptr(), name.len() as u32, content.as_ptr(), content.len() as u32); }
+    unsafe {
+        host_set_meta(
+            name.as_ptr(),
+            name.len() as u32,
+            content.as_ptr(),
+            content.len() as u32,
+        );
+    }
     output_empty(out_len)
 }
 
@@ -356,7 +473,15 @@ pub extern "C" fn toastEmit(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut
     let (msg, off1) = read_bytes_arg(input, 0);
     let (typ, off2) = read_bytes_arg(input, off1);
     let (dur, _) = read_value_arg(input, off2);
-    unsafe { host_toast(msg.as_ptr(), msg.len() as u32, typ.as_ptr(), typ.len() as u32, dur as i32); }
+    unsafe {
+        host_toast(
+            msg.as_ptr(),
+            msg.len() as u32,
+            typ.as_ptr(),
+            typ.len() as u32,
+            dur as i32,
+        );
+    }
     output_empty(out_len)
 }
 
@@ -365,7 +490,9 @@ pub extern "C" fn toastEmit(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut
 pub extern "C" fn startAnimFrame(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
     let input = raw_input(ptr, len);
     let (id, _) = read_value_arg(input, 0);
-    unsafe { host_start_anim_frame(id as i32); }
+    unsafe {
+        host_start_anim_frame(id as i32);
+    }
     output_empty(out_len)
 }
 
@@ -374,7 +501,9 @@ pub extern "C" fn startAnimFrame(ptr: *const u8, len: u32, out_len: *mut u32) ->
 pub extern "C" fn cancelAnimFrame(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
     let input = raw_input(ptr, len);
     let (id, _) = read_value_arg(input, 0);
-    unsafe { host_cancel_anim_frame(id as i32); }
+    unsafe {
+        host_cancel_anim_frame(id as i32);
+    }
     output_empty(out_len)
 }
 
@@ -383,7 +512,9 @@ pub extern "C" fn cancelAnimFrame(ptr: *const u8, len: u32, out_len: *mut u32) -
 pub extern "C" fn startGameLoop(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
     let input = raw_input(ptr, len);
     let (id, _) = read_value_arg(input, 0);
-    unsafe { host_start_game_loop(id as i32); }
+    unsafe {
+        host_start_game_loop(id as i32);
+    }
     output_empty(out_len)
 }
 
@@ -392,6 +523,231 @@ pub extern "C" fn startGameLoop(ptr: *const u8, len: u32, out_len: *mut u32) -> 
 pub extern "C" fn stopGameLoop(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
     let input = raw_input(ptr, len);
     let (id, _) = read_value_arg(input, 0);
-    unsafe { host_stop_game_loop(id as i32); }
+    unsafe {
+        host_stop_game_loop(id as i32);
+    }
+    output_empty(out_len)
+}
+
+#[no_mangle]
+pub extern "C" fn audioLoadBytes(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
+    let input = raw_input(ptr, len);
+    let (data, _) = read_bytes_arg(input, 0);
+    let id = unsafe { host_audio_load_bytes(data.as_ptr(), data.len() as u32) };
+    if id <= 0 {
+        return output_value_and_error(0, "audioLoadBytes failed", out_len);
+    }
+    output_value_and_nil_error(id as u64, out_len)
+}
+
+#[no_mangle]
+pub extern "C" fn audioFree(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
+    let input = raw_input(ptr, len);
+    let (clip_id, _) = read_value_arg(input, 0);
+    unsafe {
+        host_audio_free(clip_id as i32);
+    }
+    output_empty(out_len)
+}
+
+#[no_mangle]
+pub extern "C" fn audioPlaySound(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
+    let input = raw_input(ptr, len);
+    let (clip_id, off) = read_value_arg(input, 0);
+    let (volume_bits, off) = read_value_arg(input, off);
+    let (pitch_bits, _) = read_value_arg(input, off);
+    unsafe {
+        host_audio_play_sound(
+            clip_id as i32,
+            f64::from_bits(volume_bits),
+            f64::from_bits(pitch_bits),
+        );
+    }
+    output_empty(out_len)
+}
+
+#[no_mangle]
+pub extern "C" fn audioSetListener(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
+    let input = raw_input(ptr, len);
+    let (px, off) = read_value_arg(input, 0);
+    let (py, off) = read_value_arg(input, off);
+    let (pz, off) = read_value_arg(input, off);
+    let (fx, off) = read_value_arg(input, off);
+    let (fy, off) = read_value_arg(input, off);
+    let (fz, off) = read_value_arg(input, off);
+    let (ux, off) = read_value_arg(input, off);
+    let (uy, off) = read_value_arg(input, off);
+    let (uz, _) = read_value_arg(input, off);
+    unsafe {
+        host_audio_set_listener(
+            f64::from_bits(px),
+            f64::from_bits(py),
+            f64::from_bits(pz),
+            f64::from_bits(fx),
+            f64::from_bits(fy),
+            f64::from_bits(fz),
+            f64::from_bits(ux),
+            f64::from_bits(uy),
+            f64::from_bits(uz),
+        );
+    }
+    output_empty(out_len)
+}
+
+#[no_mangle]
+pub extern "C" fn audioPlaySound3D(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
+    let input = raw_input(ptr, len);
+    let (clip_id, off) = read_value_arg(input, 0);
+    let (px, off) = read_value_arg(input, off);
+    let (py, off) = read_value_arg(input, off);
+    let (pz, off) = read_value_arg(input, off);
+    let (volume, off) = read_value_arg(input, off);
+    let (ref_distance, off) = read_value_arg(input, off);
+    let (max_distance, _) = read_value_arg(input, off);
+    unsafe {
+        host_audio_play_sound_3d(
+            clip_id as i32,
+            f64::from_bits(px),
+            f64::from_bits(py),
+            f64::from_bits(pz),
+            f64::from_bits(volume),
+            f64::from_bits(ref_distance),
+            f64::from_bits(max_distance),
+        );
+    }
+    output_empty(out_len)
+}
+
+#[no_mangle]
+pub extern "C" fn audioCreateSource3D(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
+    let input = raw_input(ptr, len);
+    let (clip_id, off) = read_value_arg(input, 0);
+    let (px, off) = read_value_arg(input, off);
+    let (py, off) = read_value_arg(input, off);
+    let (pz, off) = read_value_arg(input, off);
+    let (volume, off) = read_value_arg(input, off);
+    let (ref_distance, off) = read_value_arg(input, off);
+    let (max_distance, _) = read_value_arg(input, off);
+    let id = unsafe {
+        host_audio_create_source_3d(
+            clip_id as i32,
+            f64::from_bits(px),
+            f64::from_bits(py),
+            f64::from_bits(pz),
+            f64::from_bits(volume),
+            f64::from_bits(ref_distance),
+            f64::from_bits(max_distance),
+        )
+    };
+    if id <= 0 {
+        return output_value_and_error(0, "audioCreateSource3D failed", out_len);
+    }
+    output_value_and_nil_error(id as u64, out_len)
+}
+
+#[no_mangle]
+pub extern "C" fn audioUpdateSpatial(_ptr: *const u8, _len: u32, out_len: *mut u32) -> *mut u8 {
+    unsafe {
+        host_audio_update_spatial();
+    }
+    output_empty(out_len)
+}
+
+#[no_mangle]
+pub extern "C" fn audioSetSource3DPos(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
+    let input = raw_input(ptr, len);
+    let (source_id, off) = read_value_arg(input, 0);
+    let (px, off) = read_value_arg(input, off);
+    let (py, off) = read_value_arg(input, off);
+    let (pz, _) = read_value_arg(input, off);
+    unsafe {
+        host_audio_set_source_3d_pos(
+            source_id as i32,
+            f64::from_bits(px),
+            f64::from_bits(py),
+            f64::from_bits(pz),
+        );
+    }
+    output_empty(out_len)
+}
+
+#[no_mangle]
+pub extern "C" fn audioSetSource3DParams(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
+    let input = raw_input(ptr, len);
+    let (source_id, off) = read_value_arg(input, 0);
+    let (volume, off) = read_value_arg(input, off);
+    let (pitch, _) = read_value_arg(input, off);
+    unsafe {
+        host_audio_set_source_3d_params(
+            source_id as i32,
+            f64::from_bits(volume),
+            f64::from_bits(pitch),
+        );
+    }
+    output_empty(out_len)
+}
+
+#[no_mangle]
+pub extern "C" fn audioRemoveSource3D(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
+    let input = raw_input(ptr, len);
+    let (source_id, _) = read_value_arg(input, 0);
+    unsafe {
+        host_audio_remove_source_3d(source_id as i32);
+    }
+    output_empty(out_len)
+}
+
+#[no_mangle]
+pub extern "C" fn audioPlayMusic(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
+    let input = raw_input(ptr, len);
+    let (clip_id, off) = read_value_arg(input, 0);
+    let (volume, _) = read_value_arg(input, off);
+    unsafe {
+        host_audio_play_music(clip_id as i32, f64::from_bits(volume));
+    }
+    output_empty(out_len)
+}
+
+#[no_mangle]
+pub extern "C" fn audioStopMusic(_ptr: *const u8, _len: u32, out_len: *mut u32) -> *mut u8 {
+    unsafe {
+        host_audio_stop_music();
+    }
+    output_empty(out_len)
+}
+
+#[no_mangle]
+pub extern "C" fn audioPauseMusic(_ptr: *const u8, _len: u32, out_len: *mut u32) -> *mut u8 {
+    unsafe {
+        host_audio_pause_music();
+    }
+    output_empty(out_len)
+}
+
+#[no_mangle]
+pub extern "C" fn audioResumeMusic(_ptr: *const u8, _len: u32, out_len: *mut u32) -> *mut u8 {
+    unsafe {
+        host_audio_resume_music();
+    }
+    output_empty(out_len)
+}
+
+#[no_mangle]
+pub extern "C" fn audioSetSFXVolume(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
+    let input = raw_input(ptr, len);
+    let (volume, _) = read_value_arg(input, 0);
+    unsafe {
+        host_audio_set_sfx_volume(f64::from_bits(volume));
+    }
+    output_empty(out_len)
+}
+
+#[no_mangle]
+pub extern "C" fn audioSetMusicVolume(ptr: *const u8, len: u32, out_len: *mut u32) -> *mut u8 {
+    let input = raw_input(ptr, len);
+    let (volume, _) = read_value_arg(input, 0);
+    unsafe {
+        host_audio_set_music_volume(f64::from_bits(volume));
+    }
     output_empty(out_len)
 }

@@ -24,7 +24,9 @@ mod externs;
 #[cfg(not(target_arch = "wasm32"))]
 pub trait GuiHost: Send + Sync + 'static {
     fn navigate(&self, _path: &str) {}
-    fn get_current_path(&self) -> String { "/".to_string() }
+    fn get_current_path(&self) -> String {
+        "/".to_string()
+    }
     fn focus(&self, _ref_name: &str) {}
     fn blur(&self, _ref_name: &str) {}
     fn scroll_to(&self, _ref_name: &str, _top: i32) {}
@@ -35,8 +37,26 @@ pub trait GuiHost: Send + Sync + 'static {
     fn toast(&self, _message: &str, _typ: &str, _duration_ms: i32) {}
     fn start_anim_frame(&self, _id: i32) {}
     fn cancel_anim_frame(&self, _id: i32) {}
-    fn measure_text(&self, _text: &str, _font: &str, _max_width: f64, _line_height: f64, _white_space: i32) -> (f64, i32) { (0.0, 0) }
-    fn measure_text_lines(&self, _text: &str, _font: &str, _max_width: f64, _line_height: f64, _white_space: i32) -> Vec<u8> { Vec::new() }
+    fn measure_text(
+        &self,
+        _text: &str,
+        _font: &str,
+        _max_width: f64,
+        _line_height: f64,
+        _white_space: i32,
+    ) -> (f64, i32) {
+        (0.0, 0)
+    }
+    fn measure_text_lines(
+        &self,
+        _text: &str,
+        _font: &str,
+        _max_width: f64,
+        _line_height: f64,
+        _white_space: i32,
+    ) -> Vec<u8> {
+        Vec::new()
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -47,12 +67,16 @@ thread_local! {
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn set_gui_host(host: Box<dyn GuiHost>) {
-    GUI_HOST.with(|p| { *p.borrow_mut() = Some(host); });
+    GUI_HOST.with(|p| {
+        *p.borrow_mut() = Some(host);
+    });
 }
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn clear_gui_host() {
-    GUI_HOST.with(|p| { *p.borrow_mut() = None; });
+    GUI_HOST.with(|p| {
+        *p.borrow_mut() = None;
+    });
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -85,11 +109,15 @@ pub trait VoguiPlatform: Send + Sync + 'static {
     fn clear_timeout(&self, id: i32);
     fn start_interval(&self, id: i32, ms: i32);
     fn clear_interval(&self, id: i32);
-    fn has_host_capability(&self, _name: &str) -> bool { false }
+    fn has_host_capability(&self, _name: &str) -> bool {
+        false
+    }
     fn start_tick_loop(&self, _id: i32) {}
     fn stop_tick_loop(&self, _id: i32) {}
     fn navigate(&self, _path: &str) {}
-    fn get_current_path(&self) -> String { "/".to_string() }
+    fn get_current_path(&self) -> String {
+        "/".to_string()
+    }
     fn focus(&self, _ref_name: &str) {}
     fn blur(&self, _ref_name: &str) {}
     fn scroll_to(&self, _ref_name: &str, _top: i32) {}
@@ -100,8 +128,26 @@ pub trait VoguiPlatform: Send + Sync + 'static {
     fn toast(&self, _message: &str, _typ: &str, _duration_ms: i32) {}
     fn start_anim_frame(&self, _id: i32) {}
     fn cancel_anim_frame(&self, _id: i32) {}
-    fn measure_text(&self, _text: &str, _font: &str, _max_width: f64, _line_height: f64, _white_space: i32) -> (f64, i32) { (0.0, 0) }
-    fn measure_text_lines(&self, _text: &str, _font: &str, _max_width: f64, _line_height: f64, _white_space: i32) -> Vec<u8> { Vec::new() }
+    fn measure_text(
+        &self,
+        _text: &str,
+        _font: &str,
+        _max_width: f64,
+        _line_height: f64,
+        _white_space: i32,
+    ) -> (f64, i32) {
+        (0.0, 0)
+    }
+    fn measure_text_lines(
+        &self,
+        _text: &str,
+        _font: &str,
+        _max_width: f64,
+        _line_height: f64,
+        _white_space: i32,
+    ) -> Vec<u8> {
+        Vec::new()
+    }
 }
 
 #[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
@@ -112,12 +158,16 @@ thread_local! {
 
 #[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
 pub fn set_platform(platform: Box<dyn VoguiPlatform>) {
-    PLATFORM.with(|p| { *p.borrow_mut() = Some(platform); });
+    PLATFORM.with(|p| {
+        *p.borrow_mut() = Some(platform);
+    });
 }
 
 #[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
 pub fn clear_platform() {
-    PLATFORM.with(|p| { *p.borrow_mut() = None; });
+    PLATFORM.with(|p| {
+        *p.borrow_mut() = None;
+    });
 }
 
 #[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
@@ -216,24 +266,60 @@ mod wasm_js {
 
 #[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
 impl VoguiPlatform for WasmPlatform {
-    fn start_timeout(&self, id: i32, ms: i32) { wasm_js::start_timeout(id, ms); }
-    fn clear_timeout(&self, id: i32) { wasm_js::clear_timeout(id); }
-    fn start_interval(&self, id: i32, ms: i32) { wasm_js::start_interval(id, ms); }
-    fn clear_interval(&self, id: i32) { wasm_js::clear_interval(id); }
-    fn navigate(&self, path: &str) { wasm_js::navigate(path); }
-    fn get_current_path(&self) -> String { wasm_js::get_current_path() }
-    fn focus(&self, ref_name: &str) { wasm_js::focus(ref_name); }
-    fn blur(&self, ref_name: &str) { wasm_js::blur(ref_name); }
-    fn scroll_to(&self, ref_name: &str, top: i32) { wasm_js::scroll_to(ref_name, top); }
-    fn scroll_into_view(&self, ref_name: &str) { wasm_js::scroll_into_view(ref_name); }
-    fn select_text(&self, ref_name: &str) { wasm_js::select_text(ref_name); }
-    fn set_title(&self, title: &str) { wasm_js::set_title(title); }
-    fn set_meta(&self, name: &str, content: &str) { wasm_js::set_meta(name, content); }
-    fn toast(&self, message: &str, typ: &str, duration_ms: i32) { wasm_js::toast(message, typ, duration_ms); }
-    fn start_anim_frame(&self, id: i32) { wasm_js::start_anim_frame(id); }
-    fn cancel_anim_frame(&self, id: i32) { wasm_js::cancel_anim_frame(id); }
-    fn start_tick_loop(&self, id: i32) { wasm_js::start_tick_loop(id); }
-    fn stop_tick_loop(&self, id: i32) { wasm_js::stop_tick_loop(id); }
+    fn start_timeout(&self, id: i32, ms: i32) {
+        wasm_js::start_timeout(id, ms);
+    }
+    fn clear_timeout(&self, id: i32) {
+        wasm_js::clear_timeout(id);
+    }
+    fn start_interval(&self, id: i32, ms: i32) {
+        wasm_js::start_interval(id, ms);
+    }
+    fn clear_interval(&self, id: i32) {
+        wasm_js::clear_interval(id);
+    }
+    fn navigate(&self, path: &str) {
+        wasm_js::navigate(path);
+    }
+    fn get_current_path(&self) -> String {
+        wasm_js::get_current_path()
+    }
+    fn focus(&self, ref_name: &str) {
+        wasm_js::focus(ref_name);
+    }
+    fn blur(&self, ref_name: &str) {
+        wasm_js::blur(ref_name);
+    }
+    fn scroll_to(&self, ref_name: &str, top: i32) {
+        wasm_js::scroll_to(ref_name, top);
+    }
+    fn scroll_into_view(&self, ref_name: &str) {
+        wasm_js::scroll_into_view(ref_name);
+    }
+    fn select_text(&self, ref_name: &str) {
+        wasm_js::select_text(ref_name);
+    }
+    fn set_title(&self, title: &str) {
+        wasm_js::set_title(title);
+    }
+    fn set_meta(&self, name: &str, content: &str) {
+        wasm_js::set_meta(name, content);
+    }
+    fn toast(&self, message: &str, typ: &str, duration_ms: i32) {
+        wasm_js::toast(message, typ, duration_ms);
+    }
+    fn start_anim_frame(&self, id: i32) {
+        wasm_js::start_anim_frame(id);
+    }
+    fn cancel_anim_frame(&self, id: i32) {
+        wasm_js::cancel_anim_frame(id);
+    }
+    fn start_tick_loop(&self, id: i32) {
+        wasm_js::start_tick_loop(id);
+    }
+    fn stop_tick_loop(&self, id: i32) {
+        wasm_js::stop_tick_loop(id);
+    }
 }
 
 // =============================================================================
@@ -273,4 +359,3 @@ pub fn ensure_linked() {
 
 #[cfg(feature = "wasm-standalone")]
 mod standalone;
-

@@ -274,6 +274,16 @@ function voAudioSetSource3DPos(sourceId: number, px: number, py: number, pz: num
   src.pannerNode.positionZ.value = pz;
 }
 
+function voAudioSetSource3DParams(sourceId: number, volume: number, pitch: number): void {
+  const src = spatialSources.get(sourceId);
+  if (!src) return;
+  src.volume = Math.max(0, volume);
+  src.gainNode.gain.value = src.volume * sfxVolume;
+  if (src.sourceNode) {
+    src.sourceNode.playbackRate.value = Math.max(0.01, pitch);
+  }
+}
+
 function voAudioRemoveSource3D(sourceId: number): void {
   const src = spatialSources.get(sourceId);
   if (!src) return;
@@ -306,5 +316,6 @@ export function installAudioBridge(): void {
   w.voAudioCreateSource3D = voAudioCreateSource3D;
   w.voAudioUpdateSpatial = voAudioUpdateSpatial;
   w.voAudioSetSource3DPos = voAudioSetSource3DPos;
+  w.voAudioSetSource3DParams = voAudioSetSource3DParams;
   w.voAudioRemoveSource3D = voAudioRemoveSource3D;
 }

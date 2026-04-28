@@ -14,6 +14,7 @@ func audioPlaySound3D(clipID int, px, py, pz, volume, refDistance, maxDistance f
 func audioCreateSource3D(clipID int, px, py, pz, volume, refDistance, maxDistance float64) (int, error)
 func audioUpdateSpatial()
 func audioSetSource3DPos(sourceID int, px, py, pz float64)
+func audioSetSource3DParams(sourceID int, volume, pitch float64)
 func audioRemoveSource3D(sourceID int)
 func audioPlayMusic(clipID int, volume float64)
 func audioStopMusic()
@@ -127,6 +128,10 @@ func UpdateSpatialAudio() {
 // SetPosition updates the world position of a persistent 3D source.
 func (s AudioSourceID) SetPosition(pos AudioVec3) {
 	audioSetSource3DPos(int(s), pos.X, pos.Y, pos.Z)
+}
+
+func (s AudioSourceID) SetParams(volume, pitch float64) {
+	audioSetSource3DParams(int(s), volume, pitch)
 }
 
 // Remove stops and removes a persistent 3D source.

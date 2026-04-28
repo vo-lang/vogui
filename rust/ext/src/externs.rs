@@ -10,16 +10,25 @@ use crate::audio::{with_global_audio, with_global_audio_result};
 // =============================================================================
 
 #[cfg(target_arch = "wasm32")]
-fn with_host<F, R>(f: F) -> R where F: FnOnce(&dyn crate::VoguiPlatform) -> R {
+fn with_host<F, R>(f: F) -> R
+where
+    F: FnOnce(&dyn crate::VoguiPlatform) -> R,
+{
     crate::with_platform(f)
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn with_gui<F, R>(f: F) -> R where F: FnOnce(&dyn crate::GuiHost) -> R {
+fn with_gui<F, R>(f: F) -> R
+where
+    F: FnOnce(&dyn crate::GuiHost) -> R,
+{
     crate::with_gui_host(f)
 }
 #[cfg(target_arch = "wasm32")]
-fn with_gui<F, R>(f: F) -> R where F: FnOnce(&dyn crate::VoguiPlatform) -> R {
+fn with_gui<F, R>(f: F) -> R
+where
+    F: FnOnce(&dyn crate::VoguiPlatform) -> R,
+{
     crate::with_platform(f)
 }
 
@@ -31,7 +40,8 @@ fn with_gui<F, R>(f: F) -> R where F: FnOnce(&dyn crate::VoguiPlatform) -> R {
 pub fn wait_for_event(ctx: &mut ExternCallContext) -> ExternResult {
     // Replay path: host attached event data via wake_host_event_with_data
     if let Some(_token) = ctx.take_resume_host_event_token() {
-        let data = ctx.take_resume_host_event_data()
+        let data = ctx
+            .take_resume_host_event_data()
             .expect("waitForEvent woke but no resume data");
         // Decode: [i32 handler_id LE][UTF-8 payload]
         let handler_id = i32::from_le_bytes(data[..4].try_into().unwrap());
@@ -79,7 +89,8 @@ pub fn measure_text(ctx: &mut ExternCallContext) -> ExternResult {
     let max_width = ctx.arg_f64(slots::ARG_MAX_WIDTH);
     let line_height = ctx.arg_f64(slots::ARG_LINE_HEIGHT);
     let white_space = ctx.arg_i64(slots::ARG_WHITE_SPACE) as i32;
-    let (height, line_count) = with_gui(|p| p.measure_text(&text, &font, max_width, line_height, white_space));
+    let (height, line_count) =
+        with_gui(|p| p.measure_text(&text, &font, max_width, line_height, white_space));
     ctx.ret_f64(slots::RET_0, height);
     ctx.ret_i64(slots::RET_1, line_count as i64);
     ExternResult::Ok
@@ -92,7 +103,8 @@ pub fn measure_text_lines_raw(ctx: &mut ExternCallContext) -> ExternResult {
     let max_width = ctx.arg_f64(slots::ARG_MAX_WIDTH);
     let line_height = ctx.arg_f64(slots::ARG_LINE_HEIGHT);
     let white_space = ctx.arg_i64(slots::ARG_WHITE_SPACE) as i32;
-    let data = with_gui(|p| p.measure_text_lines(&text, &font, max_width, line_height, white_space));
+    let data =
+        with_gui(|p| p.measure_text_lines(&text, &font, max_width, line_height, white_space));
     let gc_ref = ctx.alloc_bytes(&data);
     ctx.ret_ref(slots::RET_0, gc_ref);
     ExternResult::Ok
@@ -274,7 +286,12 @@ fn write_u32_handle_result(
 #[vo_fn("vogui", "audioLoadBytes")]
 pub fn audio_load_bytes(ctx: &mut ExternCallContext) -> ExternResult {
     let data = ctx.arg_bytes(0).to_vec();
-    write_u32_handle_result(ctx, 0, 1, with_global_audio_result(|engine| engine.load_bytes(data)));
+    write_u32_handle_result(
+        ctx,
+        0,
+        1,
+        with_global_audio_result(|engine| engine.load_bytes(data)),
+    );
     ExternResult::Ok
 }
 
@@ -305,7 +322,8 @@ pub fn audio_set_listener(ctx: &mut ExternCallContext) -> ExternResult {
     let ux = ctx.arg_f64(6) as f32;
     let uy = ctx.arg_f64(7) as f32;
     let uz = ctx.arg_f64(8) as f32;
-    let _ = with_global_audio(|engine| engine.set_listener([px, py, pz], [fx, fy, fz], [ux, uy, uz]));
+    let _ =
+        with_global_audio(|engine| engine.set_listener([px, py, pz], [fx, fy, fz], [ux, uy, uz]));
     ExternResult::Ok
 }
 
@@ -333,9 +351,14 @@ pub fn audio_create_source_3d(ctx: &mut ExternCallContext) -> ExternResult {
     let volume = ctx.arg_f64(4) as f32;
     let ref_distance = ctx.arg_f64(5) as f32;
     let max_distance = ctx.arg_f64(6) as f32;
-    write_u32_handle_result(ctx, 0, 1, with_global_audio_result(|engine| {
-        engine.create_source_3d(clip_id, [px, py, pz], volume, ref_distance, max_distance)
-    }));
+    write_u32_handle_result(
+        ctx,
+        0,
+        1,
+        with_global_audio_result(|engine| {
+            engine.create_source_3d(clip_id, [px, py, pz], volume, ref_distance, max_distance)
+        }),
+    );
     ExternResult::Ok
 }
 
@@ -352,6 +375,15 @@ pub fn audio_set_source_3d_pos(ctx: &mut ExternCallContext) -> ExternResult {
     let py = ctx.arg_f64(2) as f32;
     let pz = ctx.arg_f64(3) as f32;
     let _ = with_global_audio(|engine| engine.set_source_3d_position(source_id, [px, py, pz]));
+    ExternResult::Ok
+}
+
+#[vo_fn("vogui", "audioSetSource3DParams")]
+pub fn audio_set_source_3d_params(ctx: &mut ExternCallContext) -> ExternResult {
+    let source_id = ctx.arg_u64(0) as u32;
+    let volume = ctx.arg_f64(1) as f32;
+    let pitch = ctx.arg_f64(2) as f32;
+    let _ = with_global_audio(|engine| engine.set_source_3d_params(source_id, volume, pitch));
     ExternResult::Ok
 }
 
@@ -440,6 +472,7 @@ vo_ext::export_extensions!(
     __EXT_vogui_audioCreateSource3D,
     __EXT_vogui_audioUpdateSpatial,
     __EXT_vogui_audioSetSource3DPos,
+    __EXT_vogui_audioSetSource3DParams,
     __EXT_vogui_audioRemoveSource3D,
     __EXT_vogui_audioPlayMusic,
     __EXT_vogui_audioStopMusic,
@@ -466,7 +499,10 @@ pub fn vo_ext_register(registry: &mut ExternRegistry, externs: &[ExternDef]) {
     #[cfg(target_arch = "wasm32")]
     {
         fn find_id(externs: &[ExternDef], name: &str) -> Option<u32> {
-            externs.iter().position(|d| d.name == name).map(|i| i as u32)
+            externs
+                .iter()
+                .position(|d| d.name == name)
+                .map(|i| i as u32)
         }
         for entry in VO_EXT_ENTRIES {
             if let Some(id) = find_id(externs, entry.name()) {

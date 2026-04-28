@@ -129,6 +129,7 @@ pub trait AudioEngine: Send {
     ) -> Result<u32, String>;
     fn update_spatial_sources(&mut self);
     fn set_source_3d_position(&mut self, source_id: u32, position: [f32; 3]);
+    fn set_source_3d_params(&mut self, source_id: u32, volume: f32, pitch: f32);
     fn remove_source_3d(&mut self, source_id: u32);
 }
 
@@ -138,8 +139,8 @@ pub trait AudioEngine: Send {
 
 #[cfg(not(target_arch = "wasm32"))]
 mod native {
-    use super::AudioEngine;
     use super::spatial_math::*;
+    use super::AudioEngine;
     use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink, Source, SpatialSink};
     use std::collections::HashMap;
     use std::io::Cursor;
@@ -155,6 +156,7 @@ mod native {
         ref_distance: f32,
         max_distance: f32,
         base_volume: f32,
+        pitch: f32,
     }
 
     pub struct NativeAudioEngine {
@@ -306,9 +308,7 @@ mod native {
                 }
             } else {
                 for source in self.spatial_sources.values() {
-                    source
-                        .sink
-                        .set_volume(source.base_volume * self.sfx_volume);
+                    source.sink.set_volume(source.base_volume * self.sfx_volume);
                 }
             }
         }
@@ -360,15 +360,11 @@ mod native {
             if gain <= 0.0 {
                 return;
             }
-            let sink = match SpatialSink::try_new(
-                &self.stream_handle,
-                source_pos,
-                left_ear,
-                right_ear,
-            ) {
-                Ok(s) => s,
-                Err(_) => return,
-            };
+            let sink =
+                match SpatialSink::try_new(&self.stream_handle, source_pos, left_ear, right_ear) {
+                    Ok(s) => s,
+                    Err(_) => return,
+                };
             let cursor = Cursor::new(Arc::clone(&clip.bytes));
             let source = match Decoder::new(cursor) {
                 Ok(s) => s,
@@ -395,9 +391,8 @@ mod native {
                 Some(l) => listener_ear_positions(l.position, l.forward, l.up),
                 None => default_ears(),
             };
-            let sink =
-                SpatialSink::try_new(&self.stream_handle, position, left_ear, right_ear)
-                    .map_err(|e| format!("audio: spatial sink error: {e}"))?;
+            let sink = SpatialSink::try_new(&self.stream_handle, position, left_ear, right_ear)
+                .map_err(|e| format!("audio: spatial sink error: {e}"))?;
             let cursor = Cursor::new(Arc::clone(&clip.bytes));
             let source = Decoder::new(cursor)
                 .map_err(|e| format!("audio: decode error for clip {clip_id}: {e}"))?;
@@ -408,6 +403,7 @@ mod native {
                 ref_distance,
                 max_distance,
                 base_volume: volume,
+                pitch: 1.0,
             };
             if let Some(listener) = self.listener.as_ref() {
                 update_spatial_source_with_listener(self.sfx_volume, listener, &mut spatial);
@@ -438,6 +434,20 @@ mod native {
             source.sink.set_emitter_position(position);
             if let Some(listener) = self.listener.as_ref() {
                 update_spatial_source_with_listener(self.sfx_volume, listener, source);
+            }
+        }
+
+        fn set_source_3d_params(&mut self, source_id: u32, volume: f32, pitch: f32) {
+            let Some(source) = self.spatial_sources.get_mut(&source_id) else {
+                return;
+            };
+            source.base_volume = volume.max(0.0);
+            source.pitch = pitch.max(0.01);
+            source.sink.set_speed(source.pitch);
+            if let Some(listener) = self.listener.as_ref() {
+                update_spatial_source_with_listener(self.sfx_volume, listener, source);
+            } else {
+                source.sink.set_volume(source.base_volume * self.sfx_volume);
             }
         }
 
@@ -496,15 +506,23 @@ mod wasm {
             // --- 3D spatial ---
             #[wasm_bindgen(js_namespace = window, js_name = voAudioSetListener)]
             pub fn audio_set_listener(
-                px: f32, py: f32, pz: f32,
-                fx: f32, fy: f32, fz: f32,
-                ux: f32, uy: f32, uz: f32,
+                px: f32,
+                py: f32,
+                pz: f32,
+                fx: f32,
+                fy: f32,
+                fz: f32,
+                ux: f32,
+                uy: f32,
+                uz: f32,
             );
 
             #[wasm_bindgen(js_namespace = window, js_name = voAudioPlaySound3D)]
             pub fn audio_play_sound_3d(
                 clip_id: i32,
-                px: f32, py: f32, pz: f32,
+                px: f32,
+                py: f32,
+                pz: f32,
                 volume: f32,
                 ref_distance: f32,
                 max_distance: f32,
@@ -513,7 +531,9 @@ mod wasm {
             #[wasm_bindgen(js_namespace = window, js_name = voAudioCreateSource3D)]
             pub fn audio_create_source_3d(
                 clip_id: i32,
-                px: f32, py: f32, pz: f32,
+                px: f32,
+                py: f32,
+                pz: f32,
                 volume: f32,
                 ref_distance: f32,
                 max_distance: f32,
@@ -524,6 +544,9 @@ mod wasm {
 
             #[wasm_bindgen(js_namespace = window, js_name = voAudioSetSource3DPos)]
             pub fn audio_set_source_3d_pos(source_id: i32, px: f32, py: f32, pz: f32);
+
+            #[wasm_bindgen(js_namespace = window, js_name = voAudioSetSource3DParams)]
+            pub fn audio_set_source_3d_params(source_id: i32, volume: f32, pitch: f32);
 
             #[wasm_bindgen(js_namespace = window, js_name = voAudioRemoveSource3D)]
             pub fn audio_remove_source_3d(source_id: i32);
@@ -586,9 +609,15 @@ mod wasm {
 
         fn set_listener(&mut self, position: [f32; 3], forward: [f32; 3], up: [f32; 3]) {
             js::audio_set_listener(
-                position[0], position[1], position[2],
-                forward[0], forward[1], forward[2],
-                up[0], up[1], up[2],
+                position[0],
+                position[1],
+                position[2],
+                forward[0],
+                forward[1],
+                forward[2],
+                up[0],
+                up[1],
+                up[2],
             );
         }
 
@@ -602,7 +631,9 @@ mod wasm {
         ) {
             js::audio_play_sound_3d(
                 clip_id as i32,
-                source_pos[0], source_pos[1], source_pos[2],
+                source_pos[0],
+                source_pos[1],
+                source_pos[2],
                 volume,
                 ref_distance,
                 max_distance,
@@ -619,7 +650,9 @@ mod wasm {
         ) -> Result<u32, String> {
             let id = js::audio_create_source_3d(
                 clip_id as i32,
-                position[0], position[1], position[2],
+                position[0],
+                position[1],
+                position[2],
                 volume,
                 ref_distance,
                 max_distance,
@@ -636,10 +669,11 @@ mod wasm {
         }
 
         fn set_source_3d_position(&mut self, source_id: u32, position: [f32; 3]) {
-            js::audio_set_source_3d_pos(
-                source_id as i32,
-                position[0], position[1], position[2],
-            );
+            js::audio_set_source_3d_pos(source_id as i32, position[0], position[1], position[2]);
+        }
+
+        fn set_source_3d_params(&mut self, source_id: u32, volume: f32, pitch: f32) {
+            js::audio_set_source_3d_params(source_id as i32, volume, pitch);
         }
 
         fn remove_source_3d(&mut self, source_id: u32) {
@@ -696,7 +730,8 @@ mod standalone_wasm {
             _volume: f32,
             _ref_distance: f32,
             _max_distance: f32,
-        ) {}
+        ) {
+        }
 
         fn create_source_3d(
             &mut self,
@@ -712,6 +747,8 @@ mod standalone_wasm {
         fn update_spatial_sources(&mut self) {}
 
         fn set_source_3d_position(&mut self, _source_id: u32, _position: [f32; 3]) {}
+
+        fn set_source_3d_params(&mut self, _source_id: u32, _volume: f32, _pitch: f32) {}
 
         fn remove_source_3d(&mut self, _source_id: u32) {}
     }
@@ -730,13 +767,11 @@ static GLOBAL_AUDIO: OnceLock<Option<Mutex<Box<dyn AudioEngine>>>> = OnceLock::n
 
 fn get_global_audio() -> Option<&'static Mutex<Box<dyn AudioEngine>>> {
     GLOBAL_AUDIO
-        .get_or_init(|| {
-            match create_audio_engine() {
-                Some(engine) => Some(Mutex::new(engine)),
-                None => {
-                    log::warn!("vogui audio: no audio device available, audio will be silent");
-                    None
-                }
+        .get_or_init(|| match create_audio_engine() {
+            Some(engine) => Some(Mutex::new(engine)),
+            None => {
+                log::warn!("vogui audio: no audio device available, audio will be silent");
+                None
             }
         })
         .as_ref()
@@ -745,9 +780,7 @@ fn get_global_audio() -> Option<&'static Mutex<Box<dyn AudioEngine>>> {
 /// Access the global audio engine. Returns Err if no audio device is available.
 /// Used by vogui externs and by external crates (e.g. voplay) that need to
 /// load audio clips via their own file I/O layer.
-pub fn with_global_audio<R>(
-    f: impl FnOnce(&mut Box<dyn AudioEngine>) -> R,
-) -> Result<R, String> {
+pub fn with_global_audio<R>(f: impl FnOnce(&mut Box<dyn AudioEngine>) -> R) -> Result<R, String> {
     let audio_mutex =
         get_global_audio().ok_or_else(|| "vogui: no audio device available".to_string())?;
     let mut engine = audio_mutex.lock().unwrap();
