@@ -1,39 +1,39 @@
 {
   "artifacts": [
     {
-      "digest": "sha256:5258a99650e30937390e178d11be8eff125fdfc8ff7ef3d8cbc9aec987230515",
+      "digest": "sha256:2c6de887edb5b89a690b7100da1295757ecde3f9d76ad73a63760983a7ed6a49",
       "kind": "extension-native",
       "name": "libvo_vogui.dylib",
       "path": "libvo_vogui.dylib",
-      "size": 1590528,
+      "size": 1590848,
       "target": "aarch64-apple-darwin"
     },
     {
-      "digest": "sha256:89eb200bbac2a1e2c822ffde97e1730b2ea8609c31278d631f98e746009e7247",
+      "digest": "sha256:7136967af3d0793ab07a2fe6a12df0e5ab27507852bb9fdd1d2bb8890600542b",
       "kind": "extension-native",
       "name": "vo_vogui.dll",
       "path": "vo_vogui.dll",
-      "size": 1379328,
+      "size": 1381376,
       "target": "x86_64-pc-windows-msvc"
     },
     {
-      "digest": "sha256:77b9f32987b0084f5a693df06d9f3f638ce1784227a22f52d02463b2ec9973f3",
+      "digest": "sha256:509a7cba71b1d3b3da05eb05a6f441c331d68e58e42ec5217337c3cd07306e18",
       "kind": "extension-native",
       "name": "libvo_vogui.so",
       "path": "libvo_vogui.so",
-      "size": 2064856,
+      "size": 2068016,
       "target": "x86_64-unknown-linux-gnu"
     },
     {
-      "digest": "sha256:2e87a33cbcebef01bcb6ccd4e2a4feac0daf3591365c712ceab3ee5f1f82aa16",
+      "digest": "sha256:a8cd94beffcec3d8d3d70940435a86fb2ad38e78268d691fb48433406d1bfd9c",
       "kind": "extension-wasm",
       "name": "vogui.wasm",
       "path": "web-artifacts/vogui.wasm",
-      "size": 26031,
+      "size": 29805,
       "target": "wasm32-unknown-unknown"
     }
   ],
-  "commit": "3b8998e08634964315594eb76105871684fc2950",
+  "commit": "18ad520ccaee8665e5b5681194ad8de3509aef64",
   "extension": {
     "include": [
       "js/dist"
@@ -72,9 +72,9 @@
       "size": 3959
     },
     {
-      "digest": "sha256:952e3c275385de6cad69139cbb9dac01c437cb8ac38cb5509fe9e60cf76deb7a",
+      "digest": "sha256:cec170db9173d4b55a7e633ddd6bb4a6621615543ec323a7787e8d33231e774a",
       "path": "audio.vo",
-      "size": 4330
+      "size": 4503
     },
     {
       "digest": "sha256:62020b0f5d36f46b5a1ef864cf00cd2d3a982cc1b6ec94ad9a3eb299708797f9",
@@ -147,9 +147,9 @@
       "size": 5458
     },
     {
-      "digest": "sha256:9931b9bd80e16daa12a094250805516a2dcdb642df9e7fc8af41794b07489dc2",
+      "digest": "sha256:698ecf8f45b853aaac09640a17f452945d3413c3a2426fdd4deb899696b097b1",
       "path": "js/dist/index.js",
-      "size": 378368
+      "size": 378595
     },
     {
       "digest": "sha256:3bd5ebc732e7a609976868c39bf3fd9848addf285f6da2736d5ccfba9212771b",
@@ -162,9 +162,9 @@
       "size": 5721
     },
     {
-      "digest": "sha256:a7803a3aea7de8baeea643d0372c3bf4724e372b84f009e30f7de006e61c0661",
+      "digest": "sha256:31c5dcc8dcf86c04198d645113c062560a327ea058424380389b15b570d93fe1",
       "path": "js/dist/studio_renderer.js",
-      "size": 374871
+      "size": 375098
     },
     {
       "digest": "sha256:a8c680a7a64f02f17e3391ddcc895058bb5883d452de8cb736856500a389b986",
@@ -187,9 +187,9 @@
       "size": 260
     },
     {
-      "digest": "sha256:443ed5305c421c31362ec01db81d64796f62e32dc8565e4f02107efe4b72b3c9",
+      "digest": "sha256:c43760c2934f72663691f7487e4600971ec3cbb5162d694fc5c5020f4f6d382b",
       "path": "js/src/audio.ts",
-      "size": 9344
+      "size": 9738
     },
     {
       "digest": "sha256:32c2fff2494bb71009e393dc5593b64fd2855b6a7f87ab3d7b92239224915862",
@@ -477,7 +477,7 @@
       "size": 1220
     },
     {
-      "digest": "sha256:6defadd08b2c44d3f97c7039d4b31e69c35ced182ec5ae092d9faa69d5743bd2",
+      "digest": "sha256:01131e852e439372b7363a3d09f8b3faa0242e89f4fb42d0921850c1bddf4395",
       "path": "rust/Cargo.lock",
       "size": 68027
     },
@@ -487,29 +487,29 @@
       "size": 58
     },
     {
-      "digest": "sha256:2fb4889a0bc704da55124def86b95ea336efbd5baecdb32cc770b830b332e00b",
+      "digest": "sha256:0c6d788fd22f04b0837b92f6a3902d6acd8bee6afa7cbe8a2027daff592454be",
       "path": "rust/ext/Cargo.toml",
       "size": 1799
     },
     {
-      "digest": "sha256:c762b147e001671d61e4ee264d3e412a286fe132b35120c3cd9c584fc568b415",
+      "digest": "sha256:770831dff79c57ba6d835edc8baef95a69032bf69d11a86346a9f67fd565b71e",
       "path": "rust/ext/src/audio.rs",
-      "size": 27448
+      "size": 28744
     },
     {
-      "digest": "sha256:1ed0e563e2f7163311d0da7ee6c5c5e070bdbb9f9ba73febfa7875c1c7678071",
+      "digest": "sha256:17181effef633df07c0d64d2e6f3edbeac5e7a5af781528919f687c59125600d",
       "path": "rust/ext/src/externs.rs",
-      "size": 17377
+      "size": 17972
     },
     {
-      "digest": "sha256:66c39d87801eb5d16b3a38a7415d958c1d3975a23afcb6b51067c0e63d9cfe94",
+      "digest": "sha256:1d8a4a3d6e01091e4c7f664246a96debbdcf6021feee13541adf61a33569fdde",
       "path": "rust/ext/src/lib.rs",
-      "size": 10926
+      "size": 11493
     },
     {
-      "digest": "sha256:f408f6a564dac56e8f55a7a306404d939765ac07213e75d40b2ad24c2cff31c7",
+      "digest": "sha256:db779454c0720cead1cbc05ea47dd13fc2f5fab308361fd6c71d503a24191748",
       "path": "rust/ext/src/standalone.rs",
-      "size": 14970
+      "size": 24573
     },
     {
       "digest": "sha256:d6f015ea4b2fbe6f75e46f11ba90166da0a2dd2f87ff86f844fa1964b6fd3823",
@@ -582,8 +582,8 @@
       "size": 2025
     }
   ],
-  "source_digest": "sha256:93f6231c765847b758c30ce67e3feb24136eda31b0d0e38e201169a6b203d6e2",
-  "version": "v0.1.11",
+  "source_digest": "sha256:d920e853c612ecc29b45a9fc19fe2696b3e78ad392e4e3b7cda1ade234ce90ca",
+  "version": "v0.1.14",
   "vo": "^0.1.0",
   "web": null
 }
