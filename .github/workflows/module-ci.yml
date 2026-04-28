@@ -194,8 +194,10 @@ jobs:
         shell: bash
         run: |
           version="${{ inputs.version || github.event.release.tag_name || github.ref_name }}"
+          source_commit="$(node -e "console.log(JSON.parse(require('fs').readFileSync('vo.web.json', 'utf8')).commit)")"
           vo release stage . \
             --version "$version" \
+            --commit "$source_commit" \
             --artifact extension-native aarch64-apple-darwin libvo_vogui.dylib "$RUNNER_TEMP/release-artifacts/libvo_vogui.dylib" \
             --artifact extension-native x86_64-unknown-linux-gnu libvo_vogui.so "$RUNNER_TEMP/release-artifacts/libvo_vogui.so" \
             --artifact extension-native x86_64-pc-windows-msvc vo_vogui.dll "$RUNNER_TEMP/release-artifacts/vo_vogui.dll" \
