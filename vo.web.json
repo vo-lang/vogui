@@ -25,7 +25,7 @@
       "target": "x86_64-unknown-linux-gnu"
     },
     {
-      "digest": "sha256:a8cd94beffcec3d8d3d70940435a86fb2ad38e78268d691fb48433406d1bfd9c",
+      "digest": "sha256:83d90c148f58851ffed12ceec24cc641889456c1ffcab3ea40b8f66d4e3aab83",
       "kind": "extension-wasm",
       "name": "vogui.wasm",
       "path": "web-artifacts/vogui.wasm",
@@ -33,7 +33,7 @@
       "target": "wasm32-unknown-unknown"
     }
   ],
-  "commit": "18ad520ccaee8665e5b5681194ad8de3509aef64",
+  "commit": "4f53eb2674fa8e9c35e068fe0f88f0f2b39c1055",
   "extension": {
     "include": [
       "js/dist"
@@ -477,7 +477,7 @@
       "size": 1220
     },
     {
-      "digest": "sha256:01131e852e439372b7363a3d09f8b3faa0242e89f4fb42d0921850c1bddf4395",
+      "digest": "sha256:0eb8b54628b487e6e388d5ed36ba337dfbe87c73cbb391627b6c79d8a2f4db51",
       "path": "rust/Cargo.lock",
       "size": 68027
     },
@@ -487,7 +487,7 @@
       "size": 58
     },
     {
-      "digest": "sha256:0c6d788fd22f04b0837b92f6a3902d6acd8bee6afa7cbe8a2027daff592454be",
+      "digest": "sha256:68e8a95440d92b117e4387f65d1908f1d42bc048ad693bf8563fa888e0b2eeda",
       "path": "rust/ext/Cargo.toml",
       "size": 1799
     },
@@ -582,8 +582,8 @@
       "size": 2025
     }
   ],
-  "source_digest": "sha256:d920e853c612ecc29b45a9fc19fe2696b3e78ad392e4e3b7cda1ade234ce90ca",
-  "version": "v0.1.14",
+  "source_digest": "sha256:133f8228adb11c5f8994e84d89f97614c70bca8965ff5bf4b48fd865b508a9d4",
+  "version": "v0.1.15",
   "vo": "^0.1.0",
   "web": null
 }
