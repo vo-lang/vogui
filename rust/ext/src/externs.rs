@@ -1,6 +1,7 @@
 //! GUI extern functions implemented with vo-ext macros.
 
 use vo_ext::prelude::*;
+use vo_runtime::ffi::HostEventReplaySource;
 use vo_runtime::objects::string;
 
 use crate::audio::{with_global_audio, with_global_audio_result};
@@ -54,7 +55,10 @@ pub fn wait_for_event(ctx: &mut ExternCallContext) -> ExternResult {
 
     // First call: generate token, block fiber
     let token = ctx.next_host_event_token();
-    ExternResult::HostEventWaitAndReplay { token }
+    ExternResult::HostEventWaitAndReplay {
+        token,
+        source: HostEventReplaySource::GuiEvent,
+    }
 }
 
 #[vo_fn("vogui", "emitRenderBinary")]
