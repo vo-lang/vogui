@@ -24,6 +24,10 @@ export default defineConfig({
     rollupOptions: {
       output: {
         entryFileNames: '[name].js',
+        assetFileNames: (assetInfo) => {
+          const name = assetInfo.name ?? '';
+          return name.endsWith('.css') ? 'style.css' : '[name][extname]';
+        },
       },
     },
     cssCodeSplit: false,

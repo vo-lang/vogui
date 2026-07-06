@@ -40,8 +40,8 @@ class k {
     return this.pos += 8, t;
   }
   str() {
-    const t = this.u16(), n = this.bytes.subarray(this.pos, this.pos + t);
-    return this.pos += t, _.decode(n);
+    const t = this.u16(), e = this.bytes.subarray(this.pos, this.pos + t);
+    return this.pos += t, _.decode(e);
   }
   value() {
     switch (this.u8()) {
@@ -56,17 +56,17 @@ class k {
       case 4:
         return this.str();
       case 5: {
-        const n = this.u16(), i = {};
-        for (let e = 0; e < n; e++) {
-          const h = this.str();
-          i[h] = this.value();
+        const e = this.u16(), n = {};
+        for (let r = 0; r < e; r++) {
+          const d = this.str();
+          n[d] = this.value();
         }
-        return i;
+        return n;
       }
       case 6: {
-        const n = this.u32(), i = new Array(n);
-        for (let e = 0; e < n; e++) i[e] = this.value();
-        return i;
+        const e = this.u32(), n = new Array(e);
+        for (let r = 0; r < e; r++) n[r] = this.value();
+        return n;
       }
       case 7:
         return this.node();
@@ -80,71 +80,71 @@ class k {
     if (t === 2)
       return { type: "#text", props: { text: this.str() }, children: [] };
     if (t === 3) {
-      const c = this.u16(), o = [];
-      for (let l = 0; l < c; l++) {
-        const f = this.node();
-        f && o.push(f);
+      const c = this.u16(), i = [];
+      for (let h = 0; h < c; h++) {
+        const l = this.node();
+        l && i.push(l);
       }
-      return { type: "Fragment", props: {}, children: o };
+      return { type: "Fragment", props: {}, children: i };
     }
     if (t === 4) {
-      const c = this.u32(), o = this.u16(), l = { _cid: c };
-      for (let r = 0; r < o; r++) {
+      const c = this.u32(), i = this.u16(), h = { _cid: c };
+      for (let o = 0; o < i; o++) {
         const u = this.str();
-        l[u] = this.value();
+        h[u] = this.value();
       }
-      const f = this.node();
-      return { type: "__comp__", props: l, children: f ? [f] : [] };
+      const l = this.node();
+      return { type: "__comp__", props: h, children: l ? [l] : [] };
     }
     if (t === 5) {
-      const c = this.u32(), o = this.u16(), l = { _cid: c };
-      for (let f = 0; f < o; f++) {
-        const r = this.str();
-        l[r] = this.value();
+      const c = this.u32(), i = this.u16(), h = { _cid: c };
+      for (let l = 0; l < i; l++) {
+        const o = this.str();
+        h[o] = this.value();
       }
-      return { type: "__cached__", props: l, children: [] };
+      return { type: "__cached__", props: h, children: [] };
     }
-    const n = this.str(), i = this.u16(), e = {};
-    for (let c = 0; c < i; c++) {
-      const o = this.str();
-      e[o] = this.value();
+    const e = this.str(), n = this.u16(), r = {};
+    for (let c = 0; c < n; c++) {
+      const i = this.str();
+      r[i] = this.value();
     }
-    const h = this.u32(), d = [];
-    for (let c = 0; c < h; c++) {
-      const o = this.node();
-      o && d.push(o);
+    const d = this.u32(), f = [];
+    for (let c = 0; c < d; c++) {
+      const i = this.node();
+      i && f.push(i);
     }
-    return { type: n, props: e, children: d };
+    return { type: e, props: r, children: f };
   }
   handler() {
-    const t = this.u16(), n = this.u16(), i = this.u8(), e = this.i32(), h = this.u8(), d = [];
-    for (let o = 0; o < h; o++) d.push(this.str());
+    const t = this.u16(), e = this.u16(), n = this.u8(), r = this.i32(), d = this.u8(), f = [];
+    for (let i = 0; i < d; i++) f.push(this.str());
     const c = this.str();
     return {
       iD: t,
-      gen: n,
-      type: i,
-      intVal: e,
-      modifiers: d.length > 0 ? d : void 0,
+      gen: e,
+      type: n,
+      intVal: r,
+      modifiers: f.length > 0 ? f : void 0,
       keyFilter: c || void 0
     };
   }
 }
 function T(s) {
-  const t = new k(s), n = t.u32(), i = t.u8(), e = t.node(), h = t.u16(), d = new Array(h);
-  for (let r = 0; r < h; r++)
-    d[r] = t.handler();
+  const t = new k(s), e = t.u32(), n = t.u8(), r = t.node(), d = t.u16(), f = new Array(d);
+  for (let o = 0; o < d; o++)
+    f[o] = t.handler();
   let c;
-  if (i & 1) {
-    const r = t.u16();
-    c = new Array(r);
-    for (let u = 0; u < r; u++) c[u] = t.str();
+  if (n & 1) {
+    const o = t.u16();
+    c = new Array(o);
+    for (let u = 0; u < o; u++) c[u] = t.str();
   }
-  let o;
-  if (i & 2) {
-    const r = t.u16();
-    o = new Array(r);
-    for (let u = 0; u < r; u++) {
+  let i;
+  if (n & 2) {
+    const o = t.u16();
+    i = new Array(o);
+    for (let u = 0; u < o; u++) {
       const m = t.str(), p = t.u32(), g = new Array(p);
       for (let a = 0; a < p; a++) {
         const v = t.str(), y = t.u8();
@@ -155,61 +155,60 @@ function T(s) {
         } else
           g[a] = { c: v };
       }
-      o[u] = { ref: m, cmds: g };
+      i[u] = { ref: m, cmds: g };
+    }
+  }
+  let h;
+  if (n & 4) {
+    const o = t.u16();
+    h = {};
+    for (let u = 0; u < o; u++) {
+      const m = t.str(), p = t.str();
+      h[m] = p;
     }
   }
   let l;
-  if (i & 4) {
-    const r = t.u16();
-    l = {};
-    for (let u = 0; u < r; u++) {
-      const m = t.str(), p = t.str();
-      l[m] = p;
-    }
-  }
-  let f;
-  if (i & 8) {
-    const r = t.u16();
-    f = new Array(r);
-    for (let u = 0; u < r; u++) {
+  if (n & 8) {
+    const o = t.u16();
+    l = new Array(o);
+    for (let u = 0; u < o; u++) {
       const m = t.str(), p = C(t.str()), a = t.u8() !== 0 ? t.i32() : void 0, y = t.u8() !== 0 ? t.i32() : void 0, w = { ref: m, cmd: p };
-      a !== void 0 && (w.top = a), y !== void 0 && (w.measureId = y), f[u] = w;
+      a !== void 0 && (w.top = a), y !== void 0 && (w.measureId = y), l[u] = w;
     }
   }
-  return { type: "render", gen: n, tree: e, handlers: d, styles: c, canvas: o, theme: l, refActions: f };
+  return { type: "render", gen: e, tree: r, handlers: f, styles: c, canvas: i, theme: h, refActions: l };
 }
 function V(s) {
   return A(s.tree);
 }
 function A(s) {
-  var i;
   if (!s)
     return null;
   if (s.type === "vo-host-widget") {
-    const e = (i = s.props) == null ? void 0 : i.onWidget;
-    if (typeof e == "number")
-      return e;
+    const n = s.props?.onWidget;
+    if (typeof n == "number")
+      return n;
   }
   const t = s.props ?? {};
-  for (const e of Object.values(t)) {
-    const h = b(e);
-    if (h !== null)
-      return h;
+  for (const n of Object.values(t)) {
+    const r = b(n);
+    if (r !== null)
+      return r;
   }
-  const n = s.children ?? [];
-  for (const e of n) {
-    const h = A(e);
-    if (h !== null)
-      return h;
+  const e = s.children ?? [];
+  for (const n of e) {
+    const r = A(n);
+    if (r !== null)
+      return r;
   }
   return null;
 }
 function b(s) {
   if (Array.isArray(s)) {
     for (const t of s) {
-      const n = b(t);
-      if (n !== null)
-        return n;
+      const e = b(t);
+      if (e !== null)
+        return e;
     }
     return null;
   }
@@ -218,9 +217,9 @@ function b(s) {
   if (x(s))
     return A(s);
   for (const t of Object.values(s)) {
-    const n = b(t);
-    if (n !== null)
-      return n;
+    const e = b(t);
+    if (e !== null)
+      return e;
   }
   return null;
 }
