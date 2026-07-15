@@ -2,3 +2,22 @@
 members = ["ext", "protocol"]
 resolver = "2"
 
+# First-party development and release verification must exercise the exact
+# sibling Volang checkout selected by the outer source-provenance contract.
+[patch."https://github.com/vo-lang/volang"]
+vo-analysis = { path = "../../volang/lang/crates/vo-analysis" }
+vo-app-runtime = { path = "../../volang/lang/crates/vo-app-runtime" }
+vo-codegen = { path = "../../volang/lang/crates/vo-codegen" }
+vo-common = { path = "../../volang/lang/crates/vo-common" }
+vo-common-core = { path = "../../volang/lang/crates/vo-common-core" }
+vo-engine = { path = "../../volang/lang/crates/vo-engine" }
+vo-ext = { path = "../../volang/lang/crates/vo-ext" }
+vo-ffi-macro = { path = "../../volang/lang/crates/vo-ffi-macro" }
+vo-jit = { path = "../../volang/lang/crates/vo-jit" }
+vo-module = { path = "../../volang/lang/crates/vo-module" }
+vo-runtime = { path = "../../volang/lang/crates/vo-runtime" }
+vo-stdlib = { path = "../../volang/lang/crates/vo-stdlib" }
+vo-stdlib-source = { path = "../../volang/lang/stdlib" }
+vo-syntax = { path = "../../volang/lang/crates/vo-syntax" }
+vo-vm = { path = "../../volang/lang/crates/vo-vm" }
+vo-web = { path = "../../volang/lang/crates/vo-web" }

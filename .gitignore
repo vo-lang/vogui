@@ -5,3 +5,5 @@ rust/.cargo/
 /.dist/
 /.dist-v*/
 **/.vo-cache/
+**/.volang/
+**/.vo-project.lock

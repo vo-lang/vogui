@@ -67,15 +67,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "arbitrary"
-version = "1.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1"
-dependencies = [
- "derive_arbitrary",
-]
-
-[[package]]
 name = "arrayvec"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -136,6 +127,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3078c7629b62d3f0439517fa394996acacc5cbc91c5a20d8c658e77abd503a71"
 dependencies = [
  "generic-array",
+]
+
+[[package]]
+name = "bstr"
+version = "1.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "63044e1ae8e69f3b5a92c736ca6269b8d12fa7efe39bf34ddb06d102cf0e2cab"
+dependencies = [
+ "memchr",
+ "serde",
 ]
 
 [[package]]
@@ -335,12 +336,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "crossbeam-utils"
-version = "0.8.21"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0a5c400df2834b80a4c3327b3aad3a4c4cd4de0629063962b03235697506a28"
-
-[[package]]
 name = "crypto-common"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -355,17 +350,6 @@ name = "dasp_sample"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c87e182de0887fd5361989c677c4e8f5000cd9491d6d563161a8f3a5519fc7f"
-
-[[package]]
-name = "derive_arbitrary"
-version = "1.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e567bd82dcff979e4b03460c307b3cdc9e96fde3d73bed1496d2bc75d9dd62a"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
 
 [[package]]
 name = "digest"
@@ -558,6 +542,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0cc23270f6e1808e30a928bdc84dea0b9b4136a8bc82338574f23baf47bbd280"
 
 [[package]]
+name = "globset"
+version = "0.4.18"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "52dfc19153a48bde0cbd630453615c8151bce3a5adfac7a0aebfbf0a1e1f57e3"
+dependencies = [
+ "aho-corasick",
+ "bstr",
+ "log",
+ "regex-automata",
+ "regex-syntax",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.14.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -636,14 +633,36 @@ dependencies = [
 ]
 
 [[package]]
-name = "icu_collections"
-version = "2.2.0"
+name = "icu_casemap"
+version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2984d1cd16c883d7935b9e07e44071dca8d917fd52ecc02c04d5fa0b5a3f191c"
+checksum = "2183be5a01b948227f1a521f4e586ee69828d2eecc1d2397ce686de68233d27d"
+dependencies = [
+ "displaydoc",
+ "icu_casemap_data",
+ "icu_collections",
+ "icu_locale_core",
+ "icu_properties",
+ "icu_provider",
+ "potential_utf",
+ "writeable",
+ "zerovec",
+]
+
+[[package]]
+name = "icu_casemap_data"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7584067558ab4c60c95d1ac2abd1588689cb4bcd4e099507f62dae86ae8d2c0"
+
+[[package]]
+name = "icu_collections"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "200072f5d0e3614556f94a9930d5dc3e0662a652823904c3a75dc3b0af7fee47"
 dependencies = [
  "displaydoc",
  "potential_utf",
- "utf8_iter",
  "yoke",
  "zerofrom",
  "zerovec",
@@ -657,6 +676,7 @@ checksum = "92219b62b3e2b4d88ac5119f8904c10f8f61bf7e95b640d25ba3075e6cac2c29"
 dependencies = [
  "displaydoc",
  "litemap",
+ "serde",
  "tinystr",
  "writeable",
  "zerovec",
@@ -664,10 +684,11 @@ dependencies = [
 
 [[package]]
 name = "icu_normalizer"
-version = "2.2.0"
+version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c56e5ee99d6e3d33bd91c5d85458b6005a22140021cc324cea84dd0e72cff3b4"
+checksum = "8b24a59706036ba941c9476a55cd57b82b77f38a3c667d637ee7cabbc85eaedc"
 dependencies = [
+ "displaydoc",
  "icu_collections",
  "icu_normalizer_data",
  "icu_properties",
@@ -678,29 +699,31 @@ dependencies = [
 
 [[package]]
 name = "icu_normalizer_data"
-version = "2.2.0"
+version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da3be0ae77ea334f4da67c12f149704f19f81d1adf7c51cf482943e84a2bad38"
+checksum = "00210d6893afc98edb752b664b8890f0ef174c8adbb8d0be9710fa66fbbf72d3"
 
 [[package]]
 name = "icu_properties"
-version = "2.2.0"
+version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bee3b67d0ea5c2cca5003417989af8996f8604e34fb9ddf96208a033901e70de"
+checksum = "f5a97b8ac6235e69506e8dacfb2adf38461d2ce6d3e9bd9c94c4cbc3cd4400a4"
 dependencies = [
+ "displaydoc",
  "icu_collections",
  "icu_locale_core",
  "icu_properties_data",
  "icu_provider",
+ "potential_utf",
  "zerotrie",
  "zerovec",
 ]
 
 [[package]]
 name = "icu_properties_data"
-version = "2.2.0"
+version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e2bbb201e0c04f7b4b3e14382af113e17ba4f63e2c9d2ee626b720cbce54a14"
+checksum = "298459143998310acd25ffe6810ed544932242d3f07083eee1084d83a71bd632"
 
 [[package]]
 name = "icu_provider"
@@ -710,6 +733,8 @@ checksum = "139c4cf31c8b5f33d7e199446eff9c1e02decfc2f0eec2c8d71f65befa45b421"
 dependencies = [
  "displaydoc",
  "icu_locale_core",
+ "serde",
+ "stable_deref_trait",
  "writeable",
  "yoke",
  "zerofrom",
@@ -730,9 +755,9 @@ dependencies = [
 
 [[package]]
 name = "idna_adapter"
-version = "1.2.2"
+version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cb68373c0d6620ef8105e855e7745e18b0d00d3bdb07fb532e434244cdb9a714"
+checksum = "3acae9609540aa318d1bc588455225fb2085b9ed0c4f6bd0d9d5bcd86f1a0344"
 dependencies = [
  "icu_normalizer",
  "icu_properties",
@@ -774,7 +799,7 @@ dependencies = [
  "combine",
  "jni-sys 0.3.1",
  "log",
- "thiserror 1.0.69",
+ "thiserror",
  "walkdir",
  "windows-sys 0.45.0",
 ]
@@ -861,6 +886,12 @@ dependencies = [
  "cfg-if",
  "windows-link",
 ]
+
+[[package]]
+name = "libm"
+version = "0.2.16"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
 
 [[package]]
 name = "libredox"
@@ -993,7 +1024,7 @@ dependencies = [
  "log",
  "ndk-sys",
  "num_enum",
- "thiserror 1.0.69",
+ "thiserror",
 ]
 
 [[package]]
@@ -1150,6 +1181,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
 
 [[package]]
+name = "ordered-float"
+version = "4.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7bb71e1b3fa6ca1c61f383464aaf2bb0e2f8e772a1f01d486832464de363b951"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "parse-zoneinfo"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1157,12 +1197,6 @@ checksum = "1f2a05b18d44e2957b88f96ba460715e295bc1d7510468a2f3d3b44535d26c24"
 dependencies = [
  "regex",
 ]
-
-[[package]]
-name = "paste"
-version = "1.0.15"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 
 [[package]]
 name = "percent-encoding"
@@ -1232,6 +1266,8 @@ version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0103b1cef7ec0cf76490e969665504990193874ea05c85ff9bab8b911d0a0564"
 dependencies = [
+ "serde_core",
+ "writeable",
  "zerovec",
 ]
 
@@ -1300,7 +1336,7 @@ checksum = "ba009ff324d1fc1b900bd1fdb31564febe58a8ccc8a6fdbb93b543d33b13ca43"
 dependencies = [
  "getrandom 0.2.17",
  "libredox",
- "thiserror 1.0.69",
+ "thiserror",
 ]
 
 [[package]]
@@ -1356,7 +1392,7 @@ dependencies = [
  "hound",
  "lewton",
  "symphonia",
- "thiserror 1.0.69",
+ "thiserror",
 ]
 
 [[package]]
@@ -1389,6 +1425,7 @@ version = "8.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5bcdef0be6fe7f6fa333b1073c949729274b05f123a0ad7efcb8efd878e5c3b1"
 dependencies = [
+ "globset",
  "sha2",
  "walkdir",
 ]
@@ -1687,16 +1724,7 @@ version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52"
 dependencies = [
- "thiserror-impl 1.0.69",
-]
-
-[[package]]
-name = "thiserror"
-version = "2.0.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4288b5bcbc7920c07a1149a35cf9590a2aa808e0bc1eafaade0b80947865fbc4"
-dependencies = [
- "thiserror-impl 2.0.18",
+ "thiserror-impl",
 ]
 
 [[package]]
@@ -1711,23 +1739,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "thiserror-impl"
-version = "2.0.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ebc4ee7f67670e9b64d05fa4253e753e016c6c95ff35b89b7941d6b856dec1d5"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "tinystr"
 version = "0.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c8323304221c2a851516f22236c5722a72eaa19749016521d6dff0824447d96d"
 dependencies = [
  "displaydoc",
+ "serde_core",
  "zerovec",
 ]
 
@@ -1882,26 +1900,39 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
+name = "vo-analysis"
+version = "0.1.1"
+dependencies = [
+ "num-bigint",
+ "num-rational",
+ "num-traits",
+ "ordered-float",
+ "vo-common",
+ "vo-common-core",
+ "vo-module",
+ "vo-syntax",
+]
+
+[[package]]
 name = "vo-common"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=493852359ec920eadb2d0fdb56950319f0da78d2#493852359ec920eadb2d0fdb56950319f0da78d2"
 dependencies = [
  "codespan-reporting",
  "rustc-hash 1.1.0",
  "sha2",
  "string-interner",
- "termcolor",
- "thiserror 1.0.69",
+ "thiserror",
  "vo-common-core",
- "zip",
 ]
 
 [[package]]
 name = "vo-common-core"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=493852359ec920eadb2d0fdb56950319f0da78d2#493852359ec920eadb2d0fdb56950319f0da78d2"
 dependencies = [
  "hashbrown 0.15.5",
+ "icu_casemap",
+ "icu_normalizer",
+ "icu_properties",
  "num_enum",
  "string-interner",
 ]
@@ -1909,9 +1940,8 @@ dependencies = [
 [[package]]
 name = "vo-ext"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=493852359ec920eadb2d0fdb56950319f0da78d2#493852359ec920eadb2d0fdb56950319f0da78d2"
 dependencies = [
- "linkme",
+ "vo-common-core",
  "vo-ffi-macro",
  "vo-runtime",
 ]
@@ -1919,23 +1949,27 @@ dependencies = [
 [[package]]
 name = "vo-ffi-macro"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=493852359ec920eadb2d0fdb56950319f0da78d2#493852359ec920eadb2d0fdb56950319f0da78d2"
 dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+ "toml",
+ "vo-analysis",
  "vo-common",
  "vo-module",
+ "vo-stdlib-source",
  "vo-syntax",
 ]
 
 [[package]]
 name = "vo-module"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=493852359ec920eadb2d0fdb56950319f0da78d2#493852359ec920eadb2d0fdb56950319f0da78d2"
 dependencies = [
  "flate2",
+ "icu_casemap",
+ "icu_normalizer",
  "js-sys",
+ "libc",
  "serde",
  "serde_json",
  "sha2",
@@ -1952,7 +1986,6 @@ dependencies = [
 [[package]]
 name = "vo-runtime"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=493852359ec920eadb2d0fdb56950319f0da78d2#493852359ec920eadb2d0fdb56950319f0da78d2"
 dependencies = [
  "dirs",
  "hashbrown 0.15.5",
@@ -1960,8 +1993,8 @@ dependencies = [
  "lazy_static",
  "libc",
  "libloading",
+ "libm",
  "linkme",
- "paste",
  "regex",
  "vo-common-core",
  "vo-ffi-macro",
@@ -1970,20 +2003,21 @@ dependencies = [
 [[package]]
 name = "vo-stdlib"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=493852359ec920eadb2d0fdb56950319f0da78d2#493852359ec920eadb2d0fdb56950319f0da78d2"
 dependencies = [
  "chrono",
  "chrono-tz",
  "dirs",
  "hostname 0.4.2",
- "js-sys",
+ "icu_casemap",
+ "icu_properties",
  "lazy_static",
  "libc",
+ "libm",
  "linkme",
+ "memchr",
  "nix",
- "paste",
  "regex",
- "rust-embed",
+ "regex-syntax",
  "ryu",
  "ureq",
  "vo-common",
@@ -1991,27 +2025,31 @@ dependencies = [
  "vo-ffi-macro",
  "vo-module",
  "vo-runtime",
- "wasm-bindgen",
- "web-sys",
+ "vo-stdlib-source",
+]
+
+[[package]]
+name = "vo-stdlib-source"
+version = "0.1.1"
+dependencies = [
+ "rust-embed",
 ]
 
 [[package]]
 name = "vo-syntax"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=493852359ec920eadb2d0fdb56950319f0da78d2#493852359ec920eadb2d0fdb56950319f0da78d2"
 dependencies = [
  "logos",
  "num-bigint",
  "num-rational",
  "num-traits",
- "thiserror 1.0.69",
+ "thiserror",
  "vo-common",
 ]
 
 [[package]]
 name = "vo-vm"
 version = "0.1.1"
-source = "git+https://github.com/vo-lang/volang?rev=493852359ec920eadb2d0fdb56950319f0da78d2#493852359ec920eadb2d0fdb56950319f0da78d2"
 dependencies = [
  "fastrand",
  "hashbrown 0.15.5",
@@ -2599,6 +2637,7 @@ dependencies = [
  "displaydoc",
  "yoke",
  "zerofrom",
+ "zerovec",
 ]
 
 [[package]]
@@ -2607,6 +2646,7 @@ version = "0.11.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90f911cbc359ab6af17377d242225f4d75119aec87ea711a880987b18cd7b239"
 dependencies = [
+ "serde",
  "yoke",
  "zerofrom",
  "zerovec-derive",
@@ -2624,36 +2664,27 @@ dependencies = [
 ]
 
 [[package]]
-name = "zip"
-version = "2.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fabe6324e908f85a1c52063ce7aa26b68dcb7eb6dbc83a2d148403c9bc3eba50"
-dependencies = [
- "arbitrary",
- "crc32fast",
- "crossbeam-utils",
- "displaydoc",
- "flate2",
- "indexmap",
- "memchr",
- "thiserror 2.0.18",
- "zopfli",
-]
-
-[[package]]
 name = "zmij"
 version = "1.0.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b8848ee67ecc8aedbaf3e4122217aff892639231befc6a1b58d29fff4c2cabaa"
 
-[[package]]
-name = "zopfli"
-version = "0.8.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f05cd8797d63865425ff89b5c4a48804f35ba0ce8d125800027ad6017d2b5249"
-dependencies = [
- "bumpalo",
- "crc32fast",
- "log",
- "simd-adler32",
-]
+[[patch.unused]]
+name = "vo-app-runtime"
+version = "0.1.1"
+
+[[patch.unused]]
+name = "vo-codegen"
+version = "0.1.1"
+
+[[patch.unused]]
+name = "vo-engine"
+version = "0.1.1"
+
+[[patch.unused]]
+name = "vo-jit"
+version = "0.1.1"
+
+[[patch.unused]]
+name = "vo-web"
+version = "0.1.1"

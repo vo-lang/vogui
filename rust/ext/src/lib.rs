@@ -7,9 +7,9 @@
 //! This crate provides extern function implementations for GUI operations.
 //! VM management and event loop are handled by the caller (e.g., playground, studio).
 
-#[cfg(not(feature = "wasm-standalone"))]
+#[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
 use vo_runtime::ffi::ExternRegistry;
-#[cfg(not(feature = "wasm-standalone"))]
+#[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
 use vo_vm::bytecode::ExternDef;
 
 pub mod audio;
@@ -326,18 +326,85 @@ impl VoguiPlatform for WasmPlatform {
 // Public API
 // =============================================================================
 
-#[cfg(not(feature = "wasm-standalone"))]
+#[cfg(all(target_arch = "wasm32", not(feature = "wasm-standalone")))]
 pub fn register_externs(registry: &mut ExternRegistry, externs: &[ExternDef]) {
     externs::vo_ext_register(registry, externs);
 }
 
-/// Force link this crate so that linkme distributed-slice entries survive
-/// dead-code elimination. Call from your binary's init path.
+/// Keep this crate's explicit native entry table reachable so its linkme
+/// catalog survives dead-code elimination. Call from the final binary's init
+/// path when linking VoGUI as an rlib dependency.
 #[cfg(all(not(target_arch = "wasm32"), not(feature = "wasm-standalone")))]
 pub fn ensure_linked() {
-    // Touch the register_externs function pointer to keep the crate (and its
-    // linkme-annotated statics) reachable from the linker's perspective.
-    let _ = std::hint::black_box(register_externs as fn(&mut ExternRegistry, &[ExternDef]));
+    let _ = std::hint::black_box(externs::VO_EXT_ENTRIES);
+}
+
+#[cfg(all(test, not(target_arch = "wasm32"), not(feature = "wasm-standalone")))]
+mod tests {
+    use std::collections::BTreeSet;
+
+    use vo_runtime::bytecode::ExternDef;
+    use vo_runtime::ffi::{ExternRegistry, EXTERN_MODULE_OWNER_TABLE, EXTERN_TABLE};
+
+    #[test]
+    fn every_native_entry_registers_with_the_vogui_atomic_catalog_owner() {
+        super::ensure_linked();
+        assert!(!super::externs::VO_EXT_ENTRIES.is_empty());
+        let mut names = BTreeSet::new();
+        let definitions = super::externs::VO_EXT_ENTRIES
+            .iter()
+            .map(|entry| {
+                let name = unsafe { entry.name_unchecked() }.to_string();
+                assert!(names.insert(name.clone()), "duplicate VoGUI extern {name}");
+                ExternDef::call_site_variadic(
+                    name,
+                    0,
+                    entry
+                        .effects()
+                        .expect("generated extern effects must be valid"),
+                    Vec::new(),
+                )
+            })
+            .collect::<Vec<_>>();
+        let linked_names = EXTERN_TABLE
+            .iter()
+            .filter_map(|entry| {
+                let owner = unsafe { entry.module_owner_unchecked() };
+                (owner == "github.com/vo-lang/vogui")
+                    .then(|| unsafe { entry.name_unchecked() }.to_string())
+            })
+            .collect::<BTreeSet<_>>();
+        assert_eq!(linked_names, names, "explicit and linkme catalogs diverged");
+        let owner_declarations = EXTERN_MODULE_OWNER_TABLE
+            .iter()
+            .filter(|entry| {
+                let bytes = unsafe {
+                    std::slice::from_raw_parts(
+                        entry.module_owner_ptr,
+                        entry.module_owner_len as usize,
+                    )
+                };
+                bytes == b"github.com/vo-lang/vogui"
+            })
+            .count();
+        assert_eq!(owner_declarations, 1);
+        let mut registry = ExternRegistry::new();
+
+        registry
+            .register_from_extension_catalogs(None, &definitions)
+            .expect("VoGUI native entries must register through one atomic catalog");
+
+        for name in names {
+            let registered = registry
+                .registered_by_name(&name)
+                .expect("every VoGUI native extern must be registered");
+            assert_eq!(
+                registered.provider_module_owner(),
+                Some("github.com/vo-lang/vogui"),
+                "wrong provider owner for {name}",
+            );
+        }
+    }
 }
 
 // =============================================================================

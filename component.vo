@@ -33,28 +33,28 @@ package vogui
 
 // componentEntry tracks a mounted component's lifecycle state.
 type componentEntry struct {
-	ptr      any
-	cached   Node
+	ptr any
+	cached Node
 	hasCache bool
-	inited   bool
-	alive    bool
+	inited bool
+	alive bool
 }
 
 var componentRegistry = map[int]*componentEntry{}
-var componentPtrToID  = map[any]int{}
-var nextComponentID   = 1
+
+var componentPtrToID = map[any]int{}
+
+var nextComponentID = 1
 
 // Mount renders a Component, managing Init/Destroy lifecycle and optional ShouldUpdate memo.
 // component must be a pointer to a struct with a View() Node method.
 func Mount(component any) Node {
 	id, entry := getOrCreateEntry(component)
 	entry.alive = true
-
 	if !entry.inited {
 		entry.inited = true
-		component~>Init()
+		_ = component~>Init()
 	}
-
 	if entry.hasCache {
 		skip, err := component~>ShouldUpdate()
 		if err == nil && !skip.(bool) {
@@ -62,13 +62,11 @@ func Mount(component any) Node {
 			return Node{Type: "__cached__", Props: map[string]any{"_cid": id}}
 		}
 	}
-
 	// Set component context so handlers registered during View() are scoped to this component.
 	prevCtx := currentComponentCtx
 	currentComponentCtx = component
 	result, _ := component~>View()
 	currentComponentCtx = prevCtx
-
 	tree := result.(Node)
 	// Wrap with component marker so JS can track the subtree root for cache reuse.
 	wrapped := Node{Type: "__comp__", Props: map[string]any{"_cid": id}, Children: []Node{tree}}
@@ -93,7 +91,7 @@ func getOrCreateEntry(component any) (int, *componentEntry) {
 func cleanupDestroyedComponents() {
 	for id, entry := range componentRegistry {
 		if !entry.alive {
-			entry.ptr~>Destroy()
+			_ = entry.ptr~>Destroy()
 			delete(componentRegistry, id)
 			delete(componentPtrToID, entry.ptr)
 		}
@@ -102,4 +100,3 @@ func cleanupDestroyedComponents() {
 		entry.alive = false
 	}
 }
-

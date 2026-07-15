@@ -442,76 +442,102 @@ pub fn audio_set_music_volume(ctx: &mut ExternCallContext) -> ExternResult {
 // Export all entries for registration
 // =============================================================================
 
-#[cfg(all(not(target_arch = "wasm32"), feature = "standalone"))]
-vo_ext::export_extensions!();
+macro_rules! with_vogui_extension_entries {
+    ($consumer:ident) => {
+        $consumer!(
+            vo_ext::vo_extension_entry!("vogui", "waitForEvent"),
+            vo_ext::vo_extension_entry!("vogui", "emitRenderBinary"),
+            vo_ext::vo_extension_entry!("vogui", "float64bits"),
+            vo_ext::vo_extension_entry!("vogui", "float64frombits"),
+            vo_ext::vo_extension_entry!("vogui", "measureText"),
+            vo_ext::vo_extension_entry!("vogui", "measureTextLinesRaw"),
+            vo_ext::vo_extension_entry!("vogui", "startTimeout"),
+            vo_ext::vo_extension_entry!("vogui", "clearTimeout"),
+            vo_ext::vo_extension_entry!("vogui", "startInterval"),
+            vo_ext::vo_extension_entry!("vogui", "clearInterval"),
+            vo_ext::vo_extension_entry!("vogui", "navigate"),
+            vo_ext::vo_extension_entry!("vogui", "getCurrentPath"),
+            vo_ext::vo_extension_entry!("vogui", "HasHostCapability"),
+            vo_ext::vo_extension_entry!("vogui", "setDocTitle"),
+            vo_ext::vo_extension_entry!("vogui", "setDocMeta"),
+            vo_ext::vo_extension_entry!("vogui", "toastEmit"),
+            vo_ext::vo_extension_entry!("vogui", "startAnimFrame"),
+            vo_ext::vo_extension_entry!("vogui", "cancelAnimFrame"),
+            vo_ext::vo_extension_entry!("vogui", "startGameLoop"),
+            vo_ext::vo_extension_entry!("vogui", "stopGameLoop"),
+            // audio
+            vo_ext::vo_extension_entry!("vogui", "audioLoadBytes"),
+            vo_ext::vo_extension_entry!("vogui", "audioFree"),
+            vo_ext::vo_extension_entry!("vogui", "audioPlaySound"),
+            vo_ext::vo_extension_entry!("vogui", "audioSetListener"),
+            vo_ext::vo_extension_entry!("vogui", "audioPlaySound3D"),
+            vo_ext::vo_extension_entry!("vogui", "audioCreateSource3D"),
+            vo_ext::vo_extension_entry!("vogui", "audioUpdateSpatial"),
+            vo_ext::vo_extension_entry!("vogui", "audioSetSource3DPos"),
+            vo_ext::vo_extension_entry!("vogui", "audioSetSource3DParams"),
+            vo_ext::vo_extension_entry!("vogui", "audioRemoveSource3D"),
+            vo_ext::vo_extension_entry!("vogui", "audioPlayMusic"),
+            vo_ext::vo_extension_entry!("vogui", "audioStopMusic"),
+            vo_ext::vo_extension_entry!("vogui", "audioPauseMusic"),
+            vo_ext::vo_extension_entry!("vogui", "audioResumeMusic"),
+            vo_ext::vo_extension_entry!("vogui", "audioSetSFXVolume"),
+            vo_ext::vo_extension_entry!("vogui", "audioSetMusicVolume"),
+        );
+    };
+}
 
-#[cfg(target_arch = "wasm32")]
-vo_ext::export_extensions!(
-    vo_ext::vo_extension_entry!("vogui", "waitForEvent"),
-    vo_ext::vo_extension_entry!("vogui", "emitRenderBinary"),
-    vo_ext::vo_extension_entry!("vogui", "float64bits"),
-    vo_ext::vo_extension_entry!("vogui", "float64frombits"),
-    vo_ext::vo_extension_entry!("vogui", "measureText"),
-    vo_ext::vo_extension_entry!("vogui", "measureTextLinesRaw"),
-    vo_ext::vo_extension_entry!("vogui", "startTimeout"),
-    vo_ext::vo_extension_entry!("vogui", "clearTimeout"),
-    vo_ext::vo_extension_entry!("vogui", "startInterval"),
-    vo_ext::vo_extension_entry!("vogui", "clearInterval"),
-    vo_ext::vo_extension_entry!("vogui", "navigate"),
-    vo_ext::vo_extension_entry!("vogui", "getCurrentPath"),
-    vo_ext::vo_extension_entry!("vogui", "HasHostCapability"),
-    vo_ext::vo_extension_entry!("vogui", "setDocTitle"),
-    vo_ext::vo_extension_entry!("vogui", "setDocMeta"),
-    vo_ext::vo_extension_entry!("vogui", "toastEmit"),
-    vo_ext::vo_extension_entry!("vogui", "startAnimFrame"),
-    vo_ext::vo_extension_entry!("vogui", "cancelAnimFrame"),
-    vo_ext::vo_extension_entry!("vogui", "startGameLoop"),
-    vo_ext::vo_extension_entry!("vogui", "stopGameLoop"),
-    // audio
-    vo_ext::vo_extension_entry!("vogui", "audioLoadBytes"),
-    vo_ext::vo_extension_entry!("vogui", "audioFree"),
-    vo_ext::vo_extension_entry!("vogui", "audioPlaySound"),
-    vo_ext::vo_extension_entry!("vogui", "audioSetListener"),
-    vo_ext::vo_extension_entry!("vogui", "audioPlaySound3D"),
-    vo_ext::vo_extension_entry!("vogui", "audioCreateSource3D"),
-    vo_ext::vo_extension_entry!("vogui", "audioUpdateSpatial"),
-    vo_ext::vo_extension_entry!("vogui", "audioSetSource3DPos"),
-    vo_ext::vo_extension_entry!("vogui", "audioSetSource3DParams"),
-    vo_ext::vo_extension_entry!("vogui", "audioRemoveSource3D"),
-    vo_ext::vo_extension_entry!("vogui", "audioPlayMusic"),
-    vo_ext::vo_extension_entry!("vogui", "audioStopMusic"),
-    vo_ext::vo_extension_entry!("vogui", "audioPauseMusic"),
-    vo_ext::vo_extension_entry!("vogui", "audioResumeMusic"),
-    vo_ext::vo_extension_entry!("vogui", "audioSetSFXVolume"),
-    vo_ext::vo_extension_entry!("vogui", "audioSetMusicVolume")
-);
+#[cfg(any(target_arch = "wasm32", feature = "standalone"))]
+macro_rules! export_vogui_extension_entries {
+    ($($entry:expr),+ $(,)?) => {
+        vo_ext::export_extensions!($($entry),+);
+    };
+}
+
+#[cfg(any(target_arch = "wasm32", feature = "standalone"))]
+with_vogui_extension_entries!(export_vogui_extension_entries);
+
+// When linked into another native extension, keep an explicit table without
+// emitting a second set of `vo_ext_get_*` symbols.
+#[cfg(all(not(target_arch = "wasm32"), not(feature = "standalone")))]
+macro_rules! declare_linked_vogui_extension_entries {
+    ($($entry:expr),+ $(,)?) => {
+        pub static VO_EXT_ENTRIES: &[vo_runtime::ffi::ExternEntry] = &[$($entry),+];
+    };
+}
+
+#[cfg(all(not(target_arch = "wasm32"), not(feature = "standalone")))]
+with_vogui_extension_entries!(declare_linked_vogui_extension_entries);
+
+// Atomic native catalog construction requires each statically linked module
+// owner to be declared even when this crate is an rlib dependency.
+#[cfg(all(
+    not(target_arch = "wasm32"),
+    not(feature = "standalone"),
+    feature = "native"
+))]
+vo_ext::__vo_declare_extension_module_owner!();
 
 // =============================================================================
 // Registration function
 // =============================================================================
 
+#[cfg(target_arch = "wasm32")]
 use vo_runtime::ffi::ExternRegistry;
+#[cfg(target_arch = "wasm32")]
 use vo_vm::bytecode::ExternDef;
 
 /// Register all GUI extern functions into the provided registry.
+#[cfg(target_arch = "wasm32")]
 pub fn vo_ext_register(registry: &mut ExternRegistry, externs: &[ExternDef]) {
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        registry.register_from_linkme(externs);
+    fn find_id(externs: &[ExternDef], name: &str) -> Option<u32> {
+        externs
+            .iter()
+            .position(|d| d.name == name)
+            .map(|i| i as u32)
     }
-
-    #[cfg(target_arch = "wasm32")]
-    {
-        fn find_id(externs: &[ExternDef], name: &str) -> Option<u32> {
-            externs
-                .iter()
-                .position(|d| d.name == name)
-                .map(|i| i as u32)
-        }
-        for entry in VO_EXT_ENTRIES {
-            if let Some(id) = find_id(externs, entry.name()) {
-                entry.register(registry, id);
-            }
+    for entry in VO_EXT_ENTRIES {
+        if let Some(id) = find_id(externs, entry.name()) {
+            entry.register(registry, id);
         }
     }
 }

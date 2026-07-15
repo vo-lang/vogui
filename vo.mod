@@ -10,6 +10,7 @@ include = [
 
 [extension.native]
 path = "rust/target/{profile}/libvo_vogui"
+cargo_manifest = "rust/ext/Cargo.toml"
 
 [[extension.native.targets]]
 target = "aarch64-apple-darwin"

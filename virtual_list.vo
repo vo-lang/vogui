@@ -36,24 +36,20 @@
 //   }
 package vogui
 
-import "encoding/json"
-
-const (
-	handlerVirtualRange = 18
-)
+const handlerVirtualRange = 18
 
 // VirtualListConfig configures the JS-native virtual list component.
 type VirtualListConfig struct {
-	TotalCount   int     // total number of items in the data set
-	ItemHeight   float64 // estimated or fixed height per item (px)
-	VisibleStart int     // index of the first visible item (matches children[0])
-	Overscan     int     // extra items above/below viewport (default 3 in JS)
+	TotalCount int // total number of items in the data set
+	ItemHeight float64 // estimated or fixed height per item (px)
+	VisibleStart int // index of the first visible item (matches children[0])
+	Overscan int // extra items above/below viewport (default 3 in JS)
 }
 
 // RangeEvent is emitted by the JS virtual list when the visible range changes.
 type RangeEvent struct {
-	Start     int     // first visible item index (inclusive)
-	End       int     // last visible item index (exclusive)
+	Start int // first visible item index (inclusive)
+	End int // last visible item index (exclusive)
 	ScrollTop float64 // current scroll position
 }
 
@@ -62,8 +58,7 @@ type RangeEvent struct {
 // Chain .OnRange(handler) to receive RangeEvent when the visible window changes.
 func VirtualList(config VirtualListConfig, children ...Node) Node {
 	p := map[string]any{
-		"totalCount":   config.TotalCount,
-		"itemHeight":   config.ItemHeight,
+		"totalCount": config.TotalCount, "itemHeight": config.ItemHeight,
 		"visibleStart": config.VisibleStart,
 	}
 	if config.Overscan > 0 {
@@ -82,4 +77,3 @@ func (n Node) OnRange(h Handler) Node {
 func OnVirtualRange(action any) Handler {
 	return registerHandler(action, handlerVirtualRange, 0)
 }
-
