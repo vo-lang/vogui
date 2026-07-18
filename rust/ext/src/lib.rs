@@ -27,11 +27,6 @@ pub trait GuiHost: Send + Sync + 'static {
     fn get_current_path(&self) -> String {
         "/".to_string()
     }
-    fn focus(&self, _ref_name: &str) {}
-    fn blur(&self, _ref_name: &str) {}
-    fn scroll_to(&self, _ref_name: &str, _top: i32) {}
-    fn scroll_into_view(&self, _ref_name: &str) {}
-    fn select_text(&self, _ref_name: &str) {}
     fn set_title(&self, _title: &str) {}
     fn set_meta(&self, _name: &str, _content: &str) {}
     fn toast(&self, _message: &str, _typ: &str, _duration_ms: i32) {}
@@ -118,11 +113,6 @@ pub trait VoguiPlatform: Send + Sync + 'static {
     fn get_current_path(&self) -> String {
         "/".to_string()
     }
-    fn focus(&self, _ref_name: &str) {}
-    fn blur(&self, _ref_name: &str) {}
-    fn scroll_to(&self, _ref_name: &str, _top: i32) {}
-    fn scroll_into_view(&self, _ref_name: &str) {}
-    fn select_text(&self, _ref_name: &str) {}
     fn set_title(&self, _title: &str) {}
     fn set_meta(&self, _name: &str, _content: &str) {}
     fn toast(&self, _message: &str, _typ: &str, _duration_ms: i32) {}
@@ -226,21 +216,6 @@ mod wasm_js {
         #[wasm_bindgen(js_name = getCurrentPath)]
         pub fn get_current_path() -> String;
 
-        #[wasm_bindgen(js_name = voguiFocus)]
-        pub fn focus(ref_name: &str);
-
-        #[wasm_bindgen(js_name = voguiBlur)]
-        pub fn blur(ref_name: &str);
-
-        #[wasm_bindgen(js_name = voguiScrollTo)]
-        pub fn scroll_to(ref_name: &str, top: i32);
-
-        #[wasm_bindgen(js_name = voguiScrollIntoView)]
-        pub fn scroll_into_view(ref_name: &str);
-
-        #[wasm_bindgen(js_name = voguiSelectText)]
-        pub fn select_text(ref_name: &str);
-
         #[wasm_bindgen(js_name = voguiSetTitle)]
         pub fn set_title(title: &str);
 
@@ -283,21 +258,6 @@ impl VoguiPlatform for WasmPlatform {
     }
     fn get_current_path(&self) -> String {
         wasm_js::get_current_path()
-    }
-    fn focus(&self, ref_name: &str) {
-        wasm_js::focus(ref_name);
-    }
-    fn blur(&self, ref_name: &str) {
-        wasm_js::blur(ref_name);
-    }
-    fn scroll_to(&self, ref_name: &str, top: i32) {
-        wasm_js::scroll_to(ref_name, top);
-    }
-    fn scroll_into_view(&self, ref_name: &str) {
-        wasm_js::scroll_into_view(ref_name);
-    }
-    fn select_text(&self, ref_name: &str) {
-        wasm_js::select_text(ref_name);
     }
     fn set_title(&self, title: &str) {
         wasm_js::set_title(title);
@@ -414,9 +374,9 @@ mod tests {
 // Follows the same ext_bridge calling convention as zip:
 //   vo_alloc(size) → ptr
 //   vo_dealloc(ptr, size)
-//   <extern_name>(input_ptr, input_len, out_len_ptr) → output_ptr
+//   __vo_ext_<hex(canonical extern key)>(u32, u32, u32) → u32
 //
-// For host side effects (timers, DOM, game loop), the module declares raw
+// For host side effects (timers, navigation, text, audio, game loop), the module declares raw
 // WASM imports under the "env" namespace.  The host (voSetupExtModule)
 // provides these in the importObject during WebAssembly.instantiate.
 //
@@ -426,3 +386,56 @@ mod tests {
 
 #[cfg(feature = "wasm-standalone")]
 mod standalone;
+
+// This feature produces the complete standalone browser extension artifact.
+// Export its protocol identity once at the root so dependency builds remain
+// free to link this crate without contributing a second protocol symbol.
+#[cfg(all(feature = "wasm-standalone", target_arch = "wasm32"))]
+vo_ext::export_wasm_extension_protocol!();
+
+#[cfg(all(test, feature = "wasm-standalone", target_arch = "wasm32"))]
+mod wasm_protocol_contract {
+    #[test]
+    fn standalone_artifact_exports_protocol_v3() {
+        assert_eq!(
+            super::vo_ext_protocol_version(),
+            vo_ext::WASM_EXTENSION_PROTOCOL_VERSION,
+        );
+        assert_eq!(super::vo_ext_protocol_version(), 3);
+    }
+}
+
+#[cfg(test)]
+mod legacy_ref_action_contract {
+    #[test]
+    fn ref_actions_remain_owned_by_the_render_protocol() {
+        let rust = include_str!("lib.rs");
+        let renderer = include_str!("../../../js/src/studio_renderer.ts");
+        let bridge = include_str!("../../../js/src/studio_host_bridge.ts");
+        let stale_methods = [
+            ["fo", "cus"],
+            ["bl", "ur"],
+            ["scroll_", "to"],
+            ["scroll_into_", "view"],
+            ["select_", "text"],
+        ];
+
+        for fragments in stale_methods {
+            let method = fragments.concat();
+            assert!(
+                !rust.contains(&format!("fn {method}(")),
+                "legacy ref-action platform method remains: {method}",
+            );
+            assert!(
+                !rust.contains(&format!("wasm_js::{method}(")),
+                "legacy ref-action wasm import remains: {method}",
+            );
+        }
+
+        let global_registry = ["__vogui", "RefRegistry"].concat();
+        assert!(!renderer.contains(&global_registry));
+        assert!(!bridge.contains(&global_registry));
+        let registry_import = ["import { ref", "Registry }"].concat();
+        assert!(!renderer.contains(&registry_import));
+    }
+}

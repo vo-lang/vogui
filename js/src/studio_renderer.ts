@@ -8,12 +8,7 @@ import { destroyWidgets, registerWidget as registerWidgetImpl, render as renderG
 import { injectStyles } from './styles';
 import { setupKeyHandler } from './events';
 import { installAudioBridge } from './audio';
-import { refRegistry } from './refs';
 import type { RendererConfig, WidgetFactory } from './types';
-
-// Expose ref registry globally so the host bridge (loaded as a separate blob module)
-// can access DOM refs created by this renderer.
-(globalThis as Record<string, unknown>).__voguiRefRegistry = refRegistry;
 
 // Minimal host interface — the renderer only uses these two methods.
 // Studio may pass an object with additional fields; they are ignored.

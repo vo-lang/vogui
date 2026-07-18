@@ -1,7 +1,6 @@
 // Vite config for the Studio host bridge artifact.
-// Produces a self-contained ES module with text measurement (@chenglou/pretext)
-// and DOM ref access functions. Used by Studio to build WASM import entries
-// for the web path.
+// Produces a self-contained ES module with text measurement (@chenglou/pretext).
+// Used by Studio to build WASM import entries for the web path.
 
 import { defineConfig } from 'vite';
 import { resolve } from 'path';

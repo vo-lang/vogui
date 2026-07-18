@@ -96,7 +96,9 @@ impl fmt::Display for RenderDecodeError {
             Self::InvalidUtf8 => write!(f, "invalid utf-8 in binary render payload"),
             Self::InvalidNodeTag(tag) => write!(f, "invalid binary render node tag: {}", tag),
             Self::InvalidValueTag(tag) => write!(f, "invalid binary render value tag: {}", tag),
-            Self::TrailingBytes(remaining) => write!(f, "binary render payload has {} trailing bytes", remaining),
+            Self::TrailingBytes(remaining) => {
+                write!(f, "binary render payload has {} trailing bytes", remaining)
+            }
         }
     }
 }
@@ -196,7 +198,10 @@ impl<'a> RenderDecoder<'a> {
                     }
                     commands.push(CanvasCommand { command, args });
                 }
-                batches.push(CanvasBatch { reference, commands });
+                batches.push(CanvasBatch {
+                    reference,
+                    commands,
+                });
             }
             batches
         } else {
@@ -295,7 +300,9 @@ impl<'a> RenderDecoder<'a> {
                     child: Box::new(child),
                 })
             }
-            5 => Ok(RenderNode::Cached { id: self.read_u32()? }),
+            5 => Ok(RenderNode::Cached {
+                id: self.read_u32()?,
+            }),
             tag => Err(RenderDecodeError::InvalidNodeTag(tag)),
         }
     }
@@ -347,7 +354,11 @@ impl<'a> RenderDecoder<'a> {
             handler_type,
             int_value,
             modifiers,
-            key_filter: if key_filter.is_empty() { None } else { Some(key_filter) },
+            key_filter: if key_filter.is_empty() {
+                None
+            } else {
+                Some(key_filter)
+            },
         })
     }
 
@@ -356,8 +367,14 @@ impl<'a> RenderDecoder<'a> {
     }
 
     fn read_exact(&mut self, len: usize) -> Result<&'a [u8], RenderDecodeError> {
-        let end = self.pos.checked_add(len).ok_or(RenderDecodeError::UnexpectedEof)?;
-        let bytes = self.bytes.get(self.pos..end).ok_or(RenderDecodeError::UnexpectedEof)?;
+        let end = self
+            .pos
+            .checked_add(len)
+            .ok_or(RenderDecodeError::UnexpectedEof)?;
+        let bytes = self
+            .bytes
+            .get(self.pos..end)
+            .ok_or(RenderDecodeError::UnexpectedEof)?;
         self.pos = end;
         Ok(bytes)
     }
@@ -398,7 +415,10 @@ impl<'a> RenderDecoder<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::{decode_binary_render, query, CanvasBatch, CanvasCommand, RefAction, RenderDecodeError, RenderElement, RenderFrame, RenderHandler, RenderNode, RenderValue};
+    use super::{
+        decode_binary_render, query, CanvasBatch, CanvasCommand, RefAction, RenderDecodeError,
+        RenderElement, RenderFrame, RenderHandler, RenderNode, RenderValue,
+    };
     use std::collections::BTreeMap;
 
     #[test]
@@ -410,7 +430,10 @@ mod tests {
                 node_type: "vo-host-widget".to_string(),
                 props: BTreeMap::from([
                     ("onWidget".to_string(), RenderValue::Int(42)),
-                    ("widgetType".to_string(), RenderValue::String("voplay".to_string())),
+                    (
+                        "widgetType".to_string(),
+                        RenderValue::String("voplay".to_string()),
+                    ),
                 ]),
                 children: vec![RenderNode::Text("ready".to_string())],
             }),
@@ -456,7 +479,10 @@ mod tests {
             node_type: "vo-host-widget".to_string(),
             props: BTreeMap::from([
                 ("onWidget".to_string(), RenderValue::Int(99)),
-                ("widgetType".to_string(), RenderValue::String("voplay".to_string())),
+                (
+                    "widgetType".to_string(),
+                    RenderValue::String("voplay".to_string()),
+                ),
             ]),
             children: vec![],
         });

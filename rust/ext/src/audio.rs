@@ -823,7 +823,7 @@ pub fn create_audio_engine() -> Option<Box<dyn AudioEngine>> {
 // Tests
 // =============================================================================
 
-#[cfg(test)]
+#[cfg(all(test, not(target_arch = "wasm32")))]
 mod tests {
     use super::spatial_math::*;
 

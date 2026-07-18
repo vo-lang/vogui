@@ -1,8 +1,5 @@
 // VoGUI Studio Host Bridge — WASM import entries for framework-specific host functions.
-// Loaded by Studio via blob URL. Provides DOM ref access, text measurement, etc.
-//
-// The renderer module (studio_renderer.ts) exposes its ref registry on
-// globalThis.__voguiRefRegistry. This bridge reads from that shared global.
+// Loaded by Studio via blob URL. Provides text-measurement host functions.
 //
 // Contract: { buildImports }
 
@@ -17,40 +14,10 @@ interface HostBridgeContext {
   writeU32(ptr: number, value: number): void;
 }
 
-function getRef(name: string): HTMLElement | undefined {
-  const registry = (globalThis as Record<string, unknown>).__voguiRefRegistry as
-    | Map<string, HTMLElement>
-    | undefined;
-  return registry?.get(name);
-}
-
 export function buildImports(
   ctx: HostBridgeContext,
 ): Record<string, (...args: number[]) => number | void> {
   return {
-    host_focus(ptr: number, len: number): void {
-      const el = getRef(ctx.readString(ptr, len));
-      if (el instanceof HTMLElement) el.focus();
-    },
-
-    host_blur(ptr: number, len: number): void {
-      const el = getRef(ctx.readString(ptr, len));
-      if (el instanceof HTMLElement) el.blur();
-    },
-
-    host_scroll_to(ptr: number, len: number, top: number): void {
-      getRef(ctx.readString(ptr, len))?.scrollTo({ top });
-    },
-
-    host_scroll_into_view(ptr: number, len: number): void {
-      getRef(ctx.readString(ptr, len))?.scrollIntoView();
-    },
-
-    host_select_text(ptr: number, len: number): void {
-      const el = getRef(ctx.readString(ptr, len));
-      if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) el.select();
-    },
-
     host_measure_text(
       textPtr: number,
       textLen: number,

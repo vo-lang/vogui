@@ -1,35 +1,26 @@
-module github.com/vo-lang/vogui
-
-vo ^0.1.0
+module = "github.com/vo-lang/vogui"
+vo = "^0.1.0"
 
 [extension]
 name = "vogui"
-include = [
-  "js/dist",
-]
 
 [extension.native]
-path = "rust/target/{profile}/libvo_vogui"
-cargo_manifest = "rust/ext/Cargo.toml"
-
-[[extension.native.targets]]
-target = "aarch64-apple-darwin"
-library = "libvo_vogui.dylib"
-
-[[extension.native.targets]]
-target = "x86_64-unknown-linux-gnu"
-library = "libvo_vogui.so"
-
-[[extension.native.targets]]
-target = "x86_64-pc-windows-msvc"
-library = "vo_vogui.dll"
+library = "vo_vogui"
+targets = ["aarch64-apple-darwin", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"]
 
 [extension.wasm]
-type = "standalone"
+kind = "standalone"
 wasm = "vogui.wasm"
-local_wasm = "web-artifacts/vogui.wasm"
 
 [extension.web.js]
-renderer = "js/dist/studio_renderer.js"
-protocol = "js/dist/studio_protocol.js"
 host_bridge = "js/dist/studio_host_bridge.js"
+protocol = "js/dist/studio_protocol.js"
+renderer = "js/dist/studio_renderer.js"
+
+[build.native]
+kind = "cargo"
+manifest = "rust/ext/Cargo.toml"
+package = "vogui"
+
+[build.wasm]
+wasm = "web-artifacts/vogui.wasm"

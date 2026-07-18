@@ -1,4 +1,4 @@
-const $0 = [
+const _0 = [
   "BN",
   "BN",
   "BN",
@@ -255,7 +255,7 @@ const $0 = [
   "L",
   "L",
   "L"
-], M0 = [
+], d0 = [
   [697, 698, "ON"],
   [706, 719, "ON"],
   [722, 735, "ON"],
@@ -971,12 +971,12 @@ const $0 = [
   [1048574, 1048575, "BN"],
   [1114110, 1114111, "BN"]
 ];
-function q0(e) {
+function $0(e) {
   if (e <= 255)
-    return $0[e];
-  let t = 0, n = M0.length - 1;
+    return _0[e];
+  let t = 0, n = d0.length - 1;
   for (; t <= n; ) {
-    const r = t + n >> 1, i = M0[r];
+    const r = t + n >> 1, i = d0[r];
     if (e < i[0]) {
       n = r - 1;
       continue;
@@ -989,7 +989,7 @@ function q0(e) {
   }
   return "L";
 }
-function V0(e) {
+function q0(e) {
   const t = e.length;
   if (t === 0)
     return null;
@@ -1002,7 +1002,7 @@ function V0(e) {
       const E = e.charCodeAt(s + 1);
       E >= 56320 && E <= 57343 && (c = (l - 55296 << 10) + (E - 56320) + 65536, N = 2);
     }
-    const a = q0(c);
+    const a = $0(c);
     (a === "R" || a === "AL" || a === "AN") && (r = !0);
     for (let E = 0; E < N; E++)
       n[s + E] = a;
@@ -1077,7 +1077,7 @@ function V0(e) {
   return x;
 }
 function X0(e, t) {
-  const n = V0(e);
+  const n = q0(e);
   if (n === null)
     return null;
   const r = new Int8Array(t.length);
@@ -1085,31 +1085,31 @@ function X0(e, t) {
     r[i] = n[t[i]];
   return r;
 }
-const Z0 = /[ \t\n\r\f]+/g, Y0 = /[\t\n\r\f]| {2,}|^ | $/;
-function ee(e) {
+const V0 = /[ \t\n\r\f]+/g, Z0 = /[\t\n\r\f]| {2,}|^ | $/;
+function Y0(e) {
   const t = e ?? "normal";
   return t === "pre-wrap" ? { mode: t, preserveOrdinarySpaces: !0, preserveHardBreaks: !0 } : { mode: t, preserveOrdinarySpaces: !1, preserveHardBreaks: !1 };
 }
-function te(e) {
-  if (!Y0.test(e))
+function ee(e) {
+  if (!Z0.test(e))
     return e;
-  let t = e.replace(Z0, " ");
+  let t = e.replace(V0, " ");
   return t.charCodeAt(0) === 32 && (t = t.slice(1)), t.length > 0 && t.charCodeAt(t.length - 1) === 32 && (t = t.slice(0, -1)), t;
 }
-function ne(e) {
+function te(e) {
   return /[\r\f]/.test(e) ? e.replace(/\r\n/g, `
 `).replace(/[\r\f]/g, `
 `) : e;
 }
-let l0 = null, xe;
-function re() {
-  return l0 === null && (l0 = new Intl.Segmenter(xe, { granularity: "word" })), l0;
+let u0 = null, ne;
+function xe() {
+  return u0 === null && (u0 = new Intl.Segmenter(ne, { granularity: "word" })), u0;
 }
-const ie = new RegExp("\\p{Script=Arabic}", "u"), U = new RegExp("\\p{M}", "u"), f0 = new RegExp("\\p{Nd}", "u");
+const re = new RegExp("\\p{Script=Arabic}", "u"), J = new RegExp("\\p{M}", "u"), a0 = new RegExp("\\p{Nd}", "u");
+function M0(e) {
+  return re.test(e);
+}
 function D0(e) {
-  return ie.test(e);
-}
-function p0(e) {
   return e >= 19968 && e <= 40959 || e >= 13312 && e <= 19903 || e >= 131072 && e <= 173791 || e >= 173824 && e <= 177983 || e >= 177984 && e <= 178207 || e >= 178208 && e <= 183983 || e >= 183984 && e <= 191471 || e >= 191472 && e <= 192093 || e >= 194560 && e <= 195103 || e >= 196608 && e <= 201551 || e >= 201552 && e <= 205743 || e >= 205744 && e <= 210041 || e >= 63744 && e <= 64255 || e >= 12288 && e <= 12351 || e >= 12352 && e <= 12447 || e >= 12448 && e <= 12543 || e >= 12592 && e <= 12687 || e >= 44032 && e <= 55215 || e >= 65280 && e <= 65519;
 }
 function z(e) {
@@ -1120,45 +1120,45 @@ function z(e) {
         const r = e.charCodeAt(t + 1);
         if (r >= 56320 && r <= 57343) {
           const i = (n - 55296 << 10) + (r - 56320) + 65536;
-          if (p0(i))
+          if (D0(i))
             return !0;
           t++;
           continue;
         }
       }
-      if (p0(n))
+      if (D0(n))
         return !0;
     }
   }
   return !1;
 }
-function se(e) {
-  const t = V(e);
-  return t !== null && (S0.has(t) || J.has(t));
+function ie(e) {
+  const t = q(e);
+  return t !== null && (f0.has(t) || Q.has(t));
 }
-const ue = /* @__PURE__ */ new Set([
+const se = /* @__PURE__ */ new Set([
   " ",
   " ",
   "⁠",
   "\uFEFF"
-]), le = /* @__PURE__ */ new Set([
+]), ue = /* @__PURE__ */ new Set([
   "-",
   "‐",
   "–",
   "—"
 ]);
+function le(e) {
+  const t = q(e);
+  return t !== null && se.has(t);
+}
 function oe(e) {
-  const t = V(e);
+  const t = q(e);
   return t !== null && ue.has(t);
 }
-function Fe(e) {
-  const t = V(e);
-  return t !== null && le.has(t);
+function v0(e, t) {
+  return le(e) ? !1 : t ? !(ie(e) || oe(e)) : !0;
 }
-function T0(e, t) {
-  return oe(e) ? !1 : t ? !(se(e) || Fe(e)) : !0;
-}
-const S0 = /* @__PURE__ */ new Set([
+const f0 = /* @__PURE__ */ new Set([
   "，",
   "．",
   "！",
@@ -1185,7 +1185,7 @@ const S0 = /* @__PURE__ */ new Set([
   "ゞ",
   "ヽ",
   "ヾ"
-]), n0 = /* @__PURE__ */ new Set([
+]), t0 = /* @__PURE__ */ new Set([
   '"',
   "(",
   "[",
@@ -1209,10 +1209,10 @@ const S0 = /* @__PURE__ */ new Set([
   "〖",
   "〘",
   "〚"
-]), A0 = /* @__PURE__ */ new Set([
+]), S0 = /* @__PURE__ */ new Set([
   "'",
   "’"
-]), J = /* @__PURE__ */ new Set([
+]), Q = /* @__PURE__ */ new Set([
   ".",
   ",",
   "!",
@@ -1239,14 +1239,14 @@ const S0 = /* @__PURE__ */ new Set([
   "»",
   "›",
   "…"
-]), ce = /* @__PURE__ */ new Set([
+]), Fe = /* @__PURE__ */ new Set([
   ":",
   ".",
   "،",
   "؛"
-]), Ne = /* @__PURE__ */ new Set([
+]), ce = /* @__PURE__ */ new Set([
   "၏"
-]), ae = /* @__PURE__ */ new Set([
+]), Ne = /* @__PURE__ */ new Set([
   "”",
   "’",
   "»",
@@ -1259,39 +1259,39 @@ const S0 = /* @__PURE__ */ new Set([
   "〕",
   "）"
 ]);
-function fe(e) {
-  if (E0(e))
+function ae(e) {
+  if (A0(e))
     return !0;
   let t = !1;
   for (const n of e) {
-    if (J.has(n) || r0(n)) {
+    if (Q.has(n) || x0(n)) {
       t = !0;
       continue;
     }
-    if (!(t && U.test(n)))
+    if (!(t && J.test(n)))
       return !1;
   }
   return t;
 }
-function Se(e) {
+function fe(e) {
   for (const t of e)
-    if (!S0.has(t) && !J.has(t))
+    if (!f0.has(t) && !Q.has(t))
       return !1;
   return e.length > 0;
 }
-function Ae(e) {
-  if (E0(e))
+function Se(e) {
+  if (A0(e))
     return !0;
   for (const t of e)
-    if (!n0.has(t) && !A0.has(t) && !U.test(t) && !r0(t))
+    if (!t0.has(t) && !S0.has(t) && !J.test(t) && !x0(t))
       return !1;
   return e.length > 0;
 }
-function E0(e) {
+function A0(e) {
   let t = !1;
   for (const n of e)
-    if (!(n === "\\" || U.test(n))) {
-      if (n0.has(n) || J.has(n) || A0.has(n)) {
+    if (!(n === "\\" || J.test(n))) {
+      if (t0.has(n) || Q.has(n) || S0.has(n)) {
         t = !0;
         continue;
       }
@@ -1299,7 +1299,7 @@ function E0(e) {
     }
   return t;
 }
-function x0(e, t) {
+function n0(e, t) {
   const n = t - 1;
   if (n <= 0)
     return Math.max(n, 0);
@@ -1312,28 +1312,28 @@ function x0(e, t) {
   const x = e.charCodeAt(i);
   return x >= 55296 && x <= 56319 ? i : n;
 }
-function V(e) {
+function q(e) {
   if (e.length === 0)
     return null;
-  const t = x0(e, e.length);
+  const t = n0(e, e.length);
   return e.slice(t);
 }
-function Ee(e) {
+function Ae(e) {
   for (const t of e)
-    if (!U.test(t))
+    if (!J.test(t))
       return t;
   return null;
 }
-function he(e) {
+function Ee(e) {
   for (let t = e.length; t > 0; ) {
-    const n = x0(e, t), r = e.slice(n, t);
-    if (!U.test(r))
+    const n = n0(e, t), r = e.slice(n, t);
+    if (!J.test(r))
       return r;
     t = n;
   }
   return null;
 }
-const Be = [
+const he = [
   36,
   37,
   43,
@@ -1401,34 +1401,34 @@ const Be = [
   126128,
   126128
 ];
-function Ce(e, t) {
+function Be(e, t) {
   for (let n = 0; n < t.length; n += 2)
     if (e >= t[n] && e <= t[n + 1])
       return !0;
   return !1;
 }
-function r0(e) {
+function x0(e) {
   const t = e.codePointAt(0);
-  return t !== void 0 && Ce(t, Be);
+  return t !== void 0 && Be(t, he);
+}
+function Ce(e) {
+  const t = Ee(e);
+  return t !== null && x0(t);
 }
 function de(e) {
-  const t = he(e);
-  return t !== null && r0(t);
+  const t = Ae(e);
+  return t !== null && a0.test(t);
 }
 function Me(e) {
-  const t = Ee(e);
-  return t !== null && f0.test(t);
-}
-function De(e) {
   const t = Array.from(e);
   let n = t.length;
   for (; n > 0; ) {
     const r = t[n - 1];
-    if (U.test(r)) {
+    if (J.test(r)) {
       n--;
       continue;
     }
-    if (n0.has(r) || A0.has(r)) {
+    if (t0.has(r) || S0.has(r)) {
       n--;
       continue;
     }
@@ -1439,10 +1439,10 @@ function De(e) {
     tail: t.slice(n).join("")
   };
 }
-function pe(e, t, n) {
+function De(e, t, n) {
   return n === "text" && !t && e.length === 1 && e !== "-" && e !== "—" ? e : null;
 }
-function g0(e, t, n, r) {
+function p0(e, t, n, r) {
   const i = t[r], x = e[r];
   if (i == null)
     return x;
@@ -1452,32 +1452,32 @@ function g0(e, t, n, r) {
   const F = i.repeat(u);
   return e[r] = F, F;
 }
-function L0(e, t) {
-  return e && t !== null && ce.has(t);
+function g0(e, t) {
+  return e && t !== null && Fe.has(t);
+}
+function pe(e) {
+  const t = q(e);
+  return t !== null && ce.has(t);
 }
 function ge(e) {
-  const t = V(e);
-  return t !== null && Ne.has(t);
-}
-function Le(e) {
   if (e.length < 2 || e[0] !== " ")
     return null;
   const t = e.slice(1);
   return new RegExp("^\\p{M}+$", "u").test(t) ? { space: " ", marks: t } : null;
 }
-function N0(e) {
+function c0(e) {
   let t = e.length;
   for (; t > 0; ) {
-    const n = x0(e, t), r = e.slice(n, t);
-    if (ae.has(r))
+    const n = n0(e, t), r = e.slice(n, t);
+    if (Ne.has(r))
       return !0;
-    if (!J.has(r))
+    if (!Q.has(r))
       return !1;
     t = n;
   }
   return !1;
 }
-function Oe(e, t) {
+function Le(e, t) {
   if (t.preserveOrdinarySpaces || t.preserveHardBreaks) {
     if (e === " ")
       return "preserved-space";
@@ -1489,23 +1489,23 @@ function Oe(e, t) {
   }
   return e === " " ? "space" : e === " " || e === " " || e === "⁠" || e === "\uFEFF" ? "glue" : e === "​" ? "zero-width-break" : e === "­" ? "soft-hyphen" : "text";
 }
-const ke = /[\x20\t\n\xA0\xAD\u200B\u202F\u2060\uFEFF]/;
+const Oe = /[\x20\t\n\xA0\xAD\u200B\u202F\u2060\uFEFF]/;
 function j(e) {
   return e.length === 1 ? e[0] : e.join("");
 }
-function be(e, t) {
+function ke(e, t) {
   const n = [];
   for (let r = e.length - 1; r >= 0; r--)
     n.push(e[r]);
   return n.push(t), j(n);
 }
-function me(e, t, n, r) {
-  if (!ke.test(e))
+function be(e, t, n, r) {
+  if (!Oe.test(e))
     return [{ text: e, isWordLike: t, kind: "text", start: n }];
   const i = [];
   let x = null, u = [], F = n, o = !1, s = 0;
   for (const l of e) {
-    const c = Oe(l, r), N = c === "text" && t;
+    const c = Le(l, r), N = c === "text" && t;
     if (x !== null && c === x && N === o) {
       u.push(l), s += l.length;
       continue;
@@ -1524,25 +1524,25 @@ function me(e, t, n, r) {
     start: F
   }), i;
 }
-function a0(e) {
+function N0(e) {
   return e === "space" || e === "preserved-space" || e === "zero-width-break" || e === "hard-break";
 }
-const we = /^[A-Za-z][A-Za-z0-9+.-]*:$/;
-function We(e, t) {
+const me = /^[A-Za-z][A-Za-z0-9+.-]*:$/;
+function we(e, t) {
   const n = e.texts[t];
-  return n.startsWith("www.") ? !0 : we.test(n) && t + 1 < e.len && e.kinds[t + 1] === "text" && e.texts[t + 1] === "//";
+  return n.startsWith("www.") ? !0 : me.test(n) && t + 1 < e.len && e.kinds[t + 1] === "text" && e.texts[t + 1] === "//";
 }
-function ye(e) {
+function We(e) {
   return e.includes("?") && (e.includes("://") || e.startsWith("www."));
 }
-function Re(e) {
+function ye(e) {
   const t = e.texts.slice(), n = e.isWordLike.slice(), r = e.kinds.slice(), i = e.starts.slice();
   for (let u = 0; u < e.len; u++) {
-    if (r[u] !== "text" || !We(e, u))
+    if (r[u] !== "text" || !we(e, u))
       continue;
     const F = [t[u]];
     let o = u + 1;
-    for (; o < e.len && !a0(r[o]); ) {
+    for (; o < e.len && !N0(r[o]); ) {
       F.push(t[o]), n[u] = !0;
       const s = t[o].includes("?");
       if (r[o] = "text", t[o] = "", o++, s)
@@ -1563,18 +1563,18 @@ function Re(e) {
     starts: i
   };
 }
-function ve(e) {
+function Re(e) {
   const t = [], n = [], r = [], i = [];
   for (let x = 0; x < e.len; x++) {
     const u = e.texts[x];
-    if (t.push(u), n.push(e.isWordLike[x]), r.push(e.kinds[x]), i.push(e.starts[x]), !ye(u))
+    if (t.push(u), n.push(e.isWordLike[x]), r.push(e.kinds[x]), i.push(e.starts[x]), !We(u))
       continue;
     const F = x + 1;
-    if (F >= e.len || a0(e.kinds[F]))
+    if (F >= e.len || N0(e.kinds[F]))
       continue;
     const o = [], s = e.starts[F];
     let l = F;
-    for (; l < e.len && !a0(e.kinds[l]); )
+    for (; l < e.len && !N0(e.kinds[l]); )
       o.push(e.texts[l]), l++;
     o.length > 0 && (t.push(j(o)), n.push(!0), r.push("text"), i.push(s), x = l - 1);
   }
@@ -1586,7 +1586,7 @@ function ve(e) {
     starts: i
   };
 }
-const Te = /* @__PURE__ */ new Set([
+const ve = /* @__PURE__ */ new Set([
   ":",
   "-",
   "/",
@@ -1596,7 +1596,7 @@ const Te = /* @__PURE__ */ new Set([
   "+",
   "–",
   "—"
-]), Pe = /[\p{P}\p{S}\p{Co}]/u, Ke = new RegExp("\\p{Emoji_Presentation}", "u"), Ge = /* @__PURE__ */ new Set([
+]), Te = /[\p{P}\p{S}\p{Co}]/u, Pe = new RegExp("\\p{Emoji_Presentation}", "u"), Ke = /* @__PURE__ */ new Set([
   "?",
   "֊",
   "-",
@@ -1609,60 +1609,60 @@ const Te = /* @__PURE__ */ new Set([
   "‽",
   "⁉"
 ]);
-function je(e) {
+function Ge(e) {
   return e >= 33 && e <= 47 && e !== 45 || e >= 58 && e <= 64 && e !== 63 || e >= 91 && e <= 96 || e >= 123 && e <= 126;
 }
-function P0(e) {
+function T0(e) {
   const t = e.charCodeAt(0);
-  return t < 128 ? je(t) : !Ge.has(e) && !Ke.test(e) && Pe.test(e);
+  return t < 128 ? Ge(t) : !Ke.has(e) && !Pe.test(e) && Te.test(e);
 }
-function O0(e) {
+function L0(e) {
   let t = !1;
   for (const n of e)
-    if (!U.test(n)) {
-      if (!P0(n))
+    if (!J.test(n)) {
+      if (!T0(n))
         return !1;
       t = !0;
     }
   return t;
 }
-function ze(e) {
+function je(e) {
   for (let t = e.length; t > 0; ) {
-    const n = x0(e, t), r = e.slice(n, t);
-    if (U.test(r)) {
+    const n = n0(e, t), r = e.slice(n, t);
+    if (J.test(r)) {
       t = n;
       continue;
     }
-    return P0(r) || r0(r);
+    return T0(r) || x0(r);
   }
   return !1;
 }
-function _e(e, t, n, r) {
-  const i = !t && O0(e), x = !r && O0(n), u = de(e), F = (t || u) && ze(e);
+function ze(e, t, n, r) {
+  const i = !t && L0(e), x = !r && L0(n), u = Ce(e), F = (t || u) && je(e);
   return !i && !x && !F || z(e) || z(n) ? !1 : (t || i || u) && (r || x);
 }
-function K0(e) {
+function P0(e) {
   for (const t of e)
-    if (f0.test(t))
+    if (a0.test(t))
       return !0;
   return !1;
 }
-function e0(e) {
+function Y(e) {
   if (e.length === 0)
     return !1;
   for (const t of e)
-    if (!(f0.test(t) || Te.has(t)))
+    if (!(a0.test(t) || ve.has(t)))
       return !1;
   return !0;
 }
-function He(e) {
+function Ue(e) {
   const t = [], n = [], r = [], i = [];
   for (let x = 0; x < e.len; x++) {
     const u = e.texts[x], F = e.kinds[x];
-    if (F === "text" && e0(u) && K0(u)) {
+    if (F === "text" && Y(u) && P0(u)) {
       const o = [u];
       let s = x + 1;
-      for (; s < e.len && e.kinds[s] === "text" && e0(e.texts[s]); )
+      for (; s < e.len && e.kinds[s] === "text" && Y(e.texts[s]); )
         o.push(e.texts[s]), s++;
       t.push(j(o)), n.push(!0), r.push("text"), i.push(e.starts[x]), x = s - 1;
       continue;
@@ -1677,7 +1677,7 @@ function He(e) {
     starts: i
   };
 }
-function Ue(e) {
+function He(e) {
   const t = [], n = [], r = [], i = [];
   let x = 0;
   for (; x < e.len; ) {
@@ -1685,7 +1685,7 @@ function Ue(e) {
     if (F === "text") {
       const s = [u];
       let l = x + 1, c = o;
-      for (; l < e.len && e.kinds[l] === "text" && _e(e.texts[l - 1], e.isWordLike[l - 1], e.texts[l], e.isWordLike[l]); ) {
+      for (; l < e.len && e.kinds[l] === "text" && ze(e.texts[l - 1], e.isWordLike[l - 1], e.texts[l], e.isWordLike[l]); ) {
         const N = e.texts[l];
         s.push(N), c = c || e.isWordLike[l], l++;
       }
@@ -1704,7 +1704,7 @@ function Ue(e) {
     starts: i
   };
 }
-function Ie(e) {
+function Je(e) {
   const t = [], n = [], r = [], i = [];
   for (let x = 0; x < e.len; x++) {
     const u = e.texts[x];
@@ -1715,7 +1715,7 @@ function Ie(e) {
         const l = F[s];
         if (!o)
           break;
-        (l.length === 0 || !K0(l) || !e0(l)) && (o = !1);
+        (l.length === 0 || !P0(l) || !Y(l)) && (o = !1);
       }
       if (o) {
         let s = 0;
@@ -1736,7 +1736,7 @@ function Ie(e) {
     starts: i
   };
 }
-function Je(e) {
+function Ie(e) {
   const t = [], n = [], r = [], i = [];
   let x = 0;
   for (; x < e.len; ) {
@@ -1782,7 +1782,7 @@ function Qe(e) {
   for (let x = 0; x < t.length - 1; x++) {
     if (r[x] !== "text" || r[x + 1] !== "text" || !z(t[x]) || !z(t[x + 1]))
       continue;
-    const u = De(t[x]);
+    const u = Me(t[x]);
     u !== null && (t[x] = u.head, t[x + 1] = u.tail + t[x + 1], i[x + 1] = i[x] + u.head.length);
   }
   return {
@@ -1793,35 +1793,35 @@ function Qe(e) {
     starts: i
   };
 }
-function $e(e, t, n) {
-  const r = re();
+function _e(e, t, n) {
+  const r = xe();
   let i = 0;
   const x = [], u = [], F = [], o = [], s = [], l = [], c = [], N = [], a = [], E = [], g = [], k = [];
   for (const f of r.segment(e))
-    for (const h of me(f.segment, f.isWordLike ?? !1, f.index, n)) {
+    for (const h of be(f.segment, f.isWordLike ?? !1, f.index, n)) {
       let B = function() {
         l[A] !== null && (u[A] = [
-          g0(x, l, c, A)
-        ], l[A] = null), u[A].push(h.text), F[A] = F[A] || h.isWordLike, N[A] = N[A] || M, a[A] = a[A] || d, E[A] = y, g[A] = W, k[A] = L0(a[A], p);
+          p0(x, l, c, A)
+        ], l[A] = null), u[A].push(h.text), F[A] = F[A] || h.isWordLike, N[A] = N[A] || M, a[A] = a[A] || d, E[A] = y, g[A] = W, k[A] = g0(a[A], p);
       };
-      const G = h.kind === "text", D = pe(h.text, h.isWordLike, h.kind), M = z(h.text), d = D0(h.text), p = V(h.text), y = N0(h.text), W = ge(h.text), A = i - 1;
-      t.carryCJKAfterClosingQuote && G && i > 0 && o[A] === "text" && M && N[A] && E[A] || G && i > 0 && o[A] === "text" && Se(h.text) && N[A] || G && i > 0 && o[A] === "text" && g[A] ? B() : G && i > 0 && o[A] === "text" && h.isWordLike && d && k[A] ? (B(), F[A] = !0) : D !== null && i > 0 && o[A] === "text" && l[A] === D ? c[A] = (c[A] ?? 1) + 1 : G && !h.isWordLike && i > 0 && o[A] === "text" && !N[A] && (fe(h.text) || h.text === "-" && F[A]) ? B() : (x[i] = h.text, u[i] = [h.text], F[i] = h.isWordLike, o[i] = h.kind, s[i] = h.start, l[i] = D, c[i] = D === null ? 0 : 1, N[i] = M, a[i] = d, E[i] = y, g[i] = W, k[i] = L0(d, p), i++);
+      const G = h.kind === "text", D = De(h.text, h.isWordLike, h.kind), M = z(h.text), d = M0(h.text), p = q(h.text), y = c0(h.text), W = pe(h.text), A = i - 1;
+      t.carryCJKAfterClosingQuote && G && i > 0 && o[A] === "text" && M && N[A] && E[A] || G && i > 0 && o[A] === "text" && fe(h.text) && N[A] || G && i > 0 && o[A] === "text" && g[A] ? B() : G && i > 0 && o[A] === "text" && h.isWordLike && d && k[A] ? (B(), F[A] = !0) : D !== null && i > 0 && o[A] === "text" && l[A] === D ? c[A] = (c[A] ?? 1) + 1 : G && !h.isWordLike && i > 0 && o[A] === "text" && !N[A] && (ae(h.text) || h.text === "-" && F[A]) ? B() : (x[i] = h.text, u[i] = [h.text], F[i] = h.isWordLike, o[i] = h.kind, s[i] = h.start, l[i] = D, c[i] = D === null ? 0 : 1, N[i] = M, a[i] = d, E[i] = y, g[i] = W, k[i] = g0(d, p), i++);
     }
   for (let f = 0; f < i; f++) {
     if (l[f] !== null) {
-      x[f] = g0(x, l, c, f);
+      x[f] = p0(x, l, c, f);
       continue;
     }
     x[f] = j(u[f]);
   }
   for (let f = 1; f < i; f++)
-    o[f] === "text" && !F[f] && E0(x[f]) && o[f - 1] === "text" && !N[f - 1] && (x[f - 1] += x[f], F[f - 1] = F[f - 1] || F[f], x[f] = "");
+    o[f] === "text" && !F[f] && A0(x[f]) && o[f - 1] === "text" && !N[f - 1] && (x[f - 1] += x[f], F[f - 1] = F[f - 1] || F[f], x[f] = "");
   const L = Array.from({ length: i }, () => null);
   let m = -1;
   for (let f = i - 1; f >= 0; f--) {
     const h = x[f];
     if (h.length !== 0) {
-      if (o[f] === "text" && !F[f] && m >= 0 && o[m] === "text" && (Ae(h) || h === "-" && Me(x[m]))) {
+      if (o[f] === "text" && !F[f] && m >= 0 && o[m] === "text" && (Se(h) || h === "-" && de(x[m]))) {
         const G = L[m] ?? [];
         G.push(h), L[m] = G, s[m] = s[f], x[f] = "";
         continue;
@@ -1831,7 +1831,7 @@ function $e(e, t, n) {
   }
   for (let f = 0; f < i; f++) {
     const h = L[f];
-    h != null && (x[f] = be(h, x[f]));
+    h != null && (x[f] = ke(h, x[f]));
   }
   let w = 0;
   for (let f = 0; f < i; f++) {
@@ -1839,20 +1839,20 @@ function $e(e, t, n) {
     h.length !== 0 && (w !== f && (x[w] = h, F[w] = F[f], o[w] = o[f], s[w] = s[f]), w++);
   }
   x.length = w, F.length = w, o.length = w, s.length = w;
-  const R = Je({
+  const R = Ie({
     len: w,
     texts: x,
     isWordLike: F,
     kinds: o,
     starts: s
-  }), b = Qe(Ue(Ie(He(ve(Re(R))))));
+  }), b = Qe(He(Je(Ue(Re(ye(R))))));
   for (let f = 0; f < b.len - 1; f++) {
-    const h = Le(b.texts[f]);
-    h !== null && (b.kinds[f] !== "space" && b.kinds[f] !== "preserved-space" || b.kinds[f + 1] !== "text" || !D0(b.texts[f + 1]) || (b.texts[f] = h.space, b.isWordLike[f] = !1, b.kinds[f] = b.kinds[f] === "preserved-space" ? "preserved-space" : "space", b.texts[f + 1] = h.marks + b.texts[f + 1], b.starts[f + 1] = b.starts[f] + h.space.length));
+    const h = ge(b.texts[f]);
+    h !== null && (b.kinds[f] !== "space" && b.kinds[f] !== "preserved-space" || b.kinds[f + 1] !== "text" || !M0(b.texts[f + 1]) || (b.texts[f] = h.space, b.isWordLike[f] = !1, b.kinds[f] = b.kinds[f] === "preserved-space" ? "preserved-space" : "space", b.texts[f + 1] = h.marks + b.texts[f + 1], b.starts[f + 1] = b.starts[f] + h.space.length));
   }
   return b;
 }
-function qe(e, t) {
+function $e(e, t) {
   if (e.len === 0)
     return [];
   if (!t.preserveHardBreaks)
@@ -1875,7 +1875,7 @@ function qe(e, t) {
     consumedEndSegmentIndex: e.len
   }), n;
 }
-function Ve(e, t, n) {
+function qe(e, t, n) {
   if (t.len <= 1)
     return t;
   const r = [], i = [], x = [], u = [];
@@ -1903,7 +1903,7 @@ function Ve(e, t, n) {
   for (let N = 0; N < t.len; N++) {
     const a = t.texts[N], E = t.kinds[N];
     if (E === "text") {
-      F >= 0 && !T0(t.texts[N - 1], n) && c(N), F < 0 && (F = N), o = o || z(a);
+      F >= 0 && !v0(t.texts[N - 1], n) && c(N), F < 0 && (F = N), o = o || z(a);
       continue;
     }
     c(N), r.push(a), i.push(t.isWordLike[N]), x.push(E), u.push(t.starts[N]);
@@ -1917,7 +1917,7 @@ function Ve(e, t, n) {
   };
 }
 function Xe(e, t, n = "normal", r = "normal") {
-  const i = ee(n), x = i.mode === "pre-wrap" ? ne(e) : te(e);
+  const i = Y0(n), x = i.mode === "pre-wrap" ? te(e) : ee(e);
   if (x.length === 0)
     return {
       normalized: x,
@@ -1928,40 +1928,40 @@ function Xe(e, t, n = "normal", r = "normal") {
       kinds: [],
       starts: []
     };
-  const u = $e(x, t, i), F = r === "keep-all" ? Ve(x, u, t.breakKeepAllAfterPunctuation) : u;
+  const u = _e(x, t, i), F = r === "keep-all" ? qe(x, u, t.breakKeepAllAfterPunctuation) : u;
   return {
     normalized: x,
-    chunks: qe(F, i),
+    chunks: $e(F, i),
     ...F
   };
 }
-let Q = null;
-const k0 = /* @__PURE__ */ new Map();
+let _ = null;
+const O0 = /* @__PURE__ */ new Map();
 let $ = null;
-const Ze = 96, Ye = new RegExp("\\p{Emoji_Presentation}", "u"), et = /[\p{Emoji_Presentation}\p{Extended_Pictographic}\p{Regional_Indicator}\uFE0F\u20E3]/u;
-let o0 = null;
-const b0 = /* @__PURE__ */ new Map();
-function h0() {
-  if (Q !== null)
-    return Q;
+const Ve = 96, Ze = new RegExp("\\p{Emoji_Presentation}", "u"), Ye = /[\p{Emoji_Presentation}\p{Extended_Pictographic}\p{Regional_Indicator}\uFE0F\u20E3]/u;
+let l0 = null;
+const k0 = /* @__PURE__ */ new Map();
+function E0() {
+  if (_ !== null)
+    return _;
   if (typeof OffscreenCanvas < "u")
-    return Q = new OffscreenCanvas(1, 1).getContext("2d"), Q;
+    return _ = new OffscreenCanvas(1, 1).getContext("2d"), _;
   if (typeof document < "u")
-    return Q = document.createElement("canvas").getContext("2d"), Q;
+    return _ = document.createElement("canvas").getContext("2d"), _;
   throw new Error("Text measurement requires OffscreenCanvas or a DOM canvas context.");
 }
-function tt(e) {
-  let t = k0.get(e);
-  return t || (t = /* @__PURE__ */ new Map(), k0.set(e, t)), t;
+function et(e) {
+  let t = O0.get(e);
+  return t || (t = /* @__PURE__ */ new Map(), O0.set(e, t)), t;
 }
 function H(e, t) {
   let n = t.get(e);
   return n === void 0 && (n = {
-    width: h0().measureText(e).width,
+    width: E0().measureText(e).width,
     containsCJK: z(e)
   }, t.set(e, n)), n;
 }
-function i0() {
+function r0() {
   if ($ !== null)
     return $;
   if (typeof navigator > "u")
@@ -1981,24 +1981,24 @@ function i0() {
     preferEarlySoftHyphenBreak: n
   }, $;
 }
-function nt(e) {
+function tt(e) {
   const t = e.match(/(\d+(?:\.\d+)?)\s*px/);
   return t ? parseFloat(t[1]) : 16;
 }
-function G0() {
-  return o0 === null && (o0 = new Intl.Segmenter(void 0, { granularity: "grapheme" })), o0;
+function K0() {
+  return l0 === null && (l0 = new Intl.Segmenter(void 0, { granularity: "grapheme" })), l0;
+}
+function nt(e) {
+  return Ze.test(e) || e.includes("️");
 }
 function xt(e) {
-  return Ye.test(e) || e.includes("️");
+  return Ye.test(e);
 }
-function rt(e) {
-  return et.test(e);
-}
-function it(e, t) {
-  let n = b0.get(e);
+function rt(e, t) {
+  let n = k0.get(e);
   if (n !== void 0)
     return n;
-  const r = h0();
+  const r = E0();
   r.font = e;
   const i = r.measureText("😀").width;
   if (n = 0, i > t + 0.5 && typeof document < "u" && document.body !== null) {
@@ -2007,26 +2007,26 @@ function it(e, t) {
     const u = x.getBoundingClientRect().width;
     document.body.removeChild(x), i - u > 0.5 && (n = i - u);
   }
-  return b0.set(e, n), n;
+  return k0.set(e, n), n;
 }
-function st(e) {
+function it(e) {
   let t = 0;
-  const n = G0();
+  const n = K0();
   for (const r of n.segment(e))
-    xt(r.segment) && t++;
+    nt(r.segment) && t++;
   return t;
 }
-function ut(e, t) {
-  return t.emojiCount === void 0 && (t.emojiCount = st(e)), t.emojiCount;
+function st(e, t) {
+  return t.emojiCount === void 0 && (t.emojiCount = it(e)), t.emojiCount;
 }
 function I(e, t, n) {
-  return n === 0 ? t.width : t.width - ut(e, t) * n;
+  return n === 0 ? t.width : t.width - st(e, t) * n;
 }
-function lt(e, t, n, r, i) {
+function ut(e, t, n, r, i) {
   if (t.breakableFitAdvances !== void 0 && t.breakableFitMode === i)
     return t.breakableFitAdvances;
   t.breakableFitMode = i;
-  const x = G0(), u = [];
+  const x = K0(), u = [];
   for (const l of x.segment(e))
     u.push(l.segment);
   if (u.length <= 1)
@@ -2039,7 +2039,7 @@ function lt(e, t, n, r, i) {
     }
     return t.breakableFitAdvances = l, t.breakableFitAdvances;
   }
-  if (i === "pair-context" || u.length > Ze) {
+  if (i === "pair-context" || u.length > Ve) {
     const l = [];
     let c = null, N = 0;
     for (const a of u) {
@@ -2063,67 +2063,67 @@ function lt(e, t, n, r, i) {
   }
   return t.breakableFitAdvances = F, t.breakableFitAdvances;
 }
-function ot(e, t) {
-  const n = h0();
+function lt(e, t) {
+  const n = E0();
   n.font = e;
-  const r = tt(e), i = nt(e), x = t ? it(e, i) : 0;
+  const r = et(e), i = tt(e), x = t ? rt(e, i) : 0;
   return { cache: r, fontSize: i, emojiCorrection: x };
 }
-function Ft(e) {
+function ot(e) {
   return e === "space" || e === "zero-width-break" || e === "soft-hyphen";
 }
-function j0(e) {
+function G0(e) {
   return e === "space" || e === "preserved-space" || e === "tab" || e === "zero-width-break" || e === "soft-hyphen";
 }
-function z0(e, t, n = e.widths.length) {
+function j0(e, t, n = e.widths.length) {
   for (; t < n; ) {
     const r = e.kinds[t];
-    if (!Ft(r))
+    if (!ot(r))
       break;
     t++;
   }
   return t;
 }
-function ct(e, t) {
+function Ft(e, t) {
   if (t <= 0)
     return 0;
   const n = e % t;
   return Math.abs(n) <= 1e-6 ? t : t - n;
 }
-function Nt(e, t, n) {
+function ct(e, t, n) {
   return e.letterSpacing !== 0 && t && e.spacingGraphemeCounts[n] > 0 ? e.letterSpacing : 0;
 }
-function B0(e, t) {
+function h0(e, t) {
   return t === 0 ? 0 : e + t;
 }
-function at(e, t) {
+function Nt(e, t) {
   return e.letterSpacing !== 0 && e.spacingGraphemeCounts[t] > 0 ? e.letterSpacing : 0;
 }
-function ft(e, t, n, r, i) {
-  const x = t === "tab" ? i + at(e, n) : e.lineEndFitAdvances[n];
-  return B0(r, x);
+function at(e, t, n, r, i) {
+  const x = t === "tab" ? i + Nt(e, n) : e.lineEndFitAdvances[n];
+  return h0(r, x);
 }
-function m0(e, t, n, r) {
+function b0(e, t, n, r) {
   const i = t === "tab" ? 0 : e.lineEndFitAdvances[n];
-  return B0(r, i);
+  return h0(r, i);
 }
-function w0(e, t, n, r, i) {
+function m0(e, t, n, r, i) {
   const x = t === "tab" ? i : e.lineEndPaintAdvances[n];
-  return B0(r, x);
+  return h0(r, x);
 }
-function St(e, t, n) {
+function ft(e, t, n) {
   return e.letterSpacing !== 0 && t ? n + e.letterSpacing : n;
 }
-function At(e, t) {
+function St(e, t) {
   return e.letterSpacing === 0 ? t : t + e.letterSpacing;
 }
-function t0(e, t, n) {
+function e0(e, t, n) {
   let r = t;
   for (; r < e.length && e[r] < n; )
     r++;
   return r;
 }
-function Et(e, t, n, r, i) {
+function At(e, t, n, r, i) {
   if (e.letterSpacing === 0)
     return 0;
   if (i > 0)
@@ -2141,17 +2141,17 @@ function Et(e, t, n, r, i) {
   }
   return 0;
 }
-function ht(e, t, n, r, i, x) {
-  return t + Et(e, n, r, i, x);
+function Et(e, t, n, r, i, x) {
+  return t + At(e, n, r, i, x);
 }
-function Bt(e, t) {
-  return _0(e, t);
+function ht(e, t) {
+  return z0(e, t);
 }
-function Ct(e, t, n) {
+function Bt(e, t, n) {
   const { widths: r, kinds: i, breakableFitAdvances: x, breakablePreferredBreaks: u } = e;
   if (r.length === 0)
     return 0;
-  const o = i0().lineFitEpsilon, s = t + o;
+  const o = r0().lineFitEpsilon, s = t + o;
   let l = 0, c = 0, N = !1, a = 0, E = 0, g = 0, k = 0, L = -1, m = 0;
   function w() {
     L = -1, m = 0;
@@ -2174,14 +2174,14 @@ function Ct(e, t, n) {
   }
   function G(M, d) {
     const p = x[M], y = u[M] ?? null;
-    let W = y === null ? -1 : t0(y, 0, d + 1), A = -1, B = 0, C = d;
+    let W = y === null ? -1 : e0(y, 0, d + 1), A = -1, B = 0, C = d;
     for (; C < p.length; ) {
       const S = p[C];
       if (!N)
         f(M, C, S);
       else if (c + S > s) {
         if (y !== null && A > d) {
-          R(M, A, B), C = A, W = t0(y, W, C + 1), A = -1, B = 0;
+          R(M, A, B), C = A, W = e0(y, W, C + 1), A = -1, B = 0;
           continue;
         }
         R(), f(M, C, S);
@@ -2193,8 +2193,8 @@ function Ct(e, t, n) {
     N && g === M && k === p.length && (g = M + 1, k = 0);
   }
   let D = 0;
-  for (; D < r.length && !(!N && (D = z0(e, D), D >= r.length)); ) {
-    const M = r[D], d = i[D], p = j0(d);
+  for (; D < r.length && !(!N && (D = j0(e, D), D >= r.length)); ) {
+    const M = r[D], d = i[D], p = G0(d);
     if (!N) {
       M > s && x[D] !== null ? G(D, 0) : b(D, M), p && (L = D + 1, m = c - M), D++;
       continue;
@@ -2223,13 +2223,13 @@ function Ct(e, t, n) {
   }
   return N && R(), l;
 }
-function _0(e, t, n) {
+function z0(e, t, n) {
   if (e.simpleLineWalkFastPath)
-    return Ct(e, t, n);
+    return Bt(e, t, n);
   const { widths: r, kinds: i, breakableFitAdvances: x, breakablePreferredBreaks: u, discretionaryHyphenWidth: F, chunks: o } = e;
   if (r.length === 0 || o.length === 0)
     return 0;
-  const s = i0(), l = s.lineFitEpsilon, c = t + l;
+  const s = r0(), l = s.lineFitEpsilon, c = t + l;
   let N = 0, a = 0, E = !1, g = 0, k = 0, L = 0, m = 0, w = -1, R = 0, b = 0, f = null;
   function h() {
     w = -1, R = 0, b = 0, f = null;
@@ -2238,7 +2238,7 @@ function _0(e, t, n) {
     return f === "soft-hyphen" && w === L && m === 0 ? b : a;
   }
   function D(B = L, C = m, S) {
-    N++, n !== void 0 && n(ht(e, S ?? G(), g, k, B, C), g, k, B, C), a = 0, E = !1, h();
+    N++, n !== void 0 && n(Et(e, S ?? G(), g, k, B, C), g, k, B, C), a = 0, E = !1, h();
   }
   function M(B, C) {
     E = !0, g = B, k = 0, L = B + 1, m = 0, a = C;
@@ -2256,29 +2256,29 @@ function _0(e, t, n) {
   function y(B, C, S, O, P, v) {
     if (!C)
       return;
-    const K = m0(e, B, S, P), T = w0(e, B, S, P, O);
+    const K = b0(e, B, S, P), T = m0(e, B, S, P, O);
     w = S + 1, R = a - v + K, b = a - v + T, f = B;
   }
   function W(B, C) {
     const S = x[B], O = u[B] ?? null;
-    let P = O === null ? -1 : t0(O, 0, C + 1), v = -1, K = 0, T = C;
+    let P = O === null ? -1 : e0(O, 0, C + 1), v = -1, K = 0, T = C;
     for (; T < S.length; ) {
-      const _ = S[T];
+      const U = S[T];
       if (!E)
-        d(B, T, _);
+        d(B, T, U);
       else {
-        const u0 = St(e, !0, _), X = a + u0;
-        if (At(e, X) > c) {
+        const s0 = ft(e, !0, U), X = a + s0;
+        if (St(e, X) > c) {
           if (O !== null && v > C) {
-            D(B, v, K), T = v, P = t0(O, P, T + 1), v = -1, K = 0;
+            D(B, v, K), T = v, P = e0(O, P, T + 1), v = -1, K = 0;
             continue;
           }
-          D(), d(B, T, _);
+          D(), d(B, T, U);
         } else
           a = X, L = B, m = T + 1;
       }
-      const s0 = T + 1;
-      O !== null && O[P] === s0 && (v = s0, K = a, P++), T++;
+      const i0 = T + 1;
+      O !== null && O[P] === i0 && (v = i0, K = a, P++), T++;
     }
     E && L === B && m === S.length && (L = B + 1, m = 0);
   }
@@ -2293,23 +2293,23 @@ function _0(e, t, n) {
     }
     E = !1, a = 0, g = C.startSegmentIndex, k = 0, L = C.startSegmentIndex, m = 0, h();
     let S = C.startSegmentIndex;
-    for (; S < C.endSegmentIndex && !(!E && (S = z0(e, S, C.endSegmentIndex), S >= C.endSegmentIndex)); ) {
-      const O = i[S], P = j0(O), v = Nt(e, E, S), K = O === "tab" ? ct(a + v, e.tabStopAdvance) : r[S], T = v + K, _ = ft(e, O, S, v, K);
+    for (; S < C.endSegmentIndex && !(!E && (S = j0(e, S, C.endSegmentIndex), S >= C.endSegmentIndex)); ) {
+      const O = i[S], P = G0(O), v = ct(e, E, S), K = O === "tab" ? Ft(a + v, e.tabStopAdvance) : r[S], T = v + K, U = at(e, O, S, v, K);
       if (O === "soft-hyphen") {
         E && (L = S + 1, m = 0, w = S + 1, R = a + F, b = a + F, f = O), S++;
         continue;
       }
       if (!E) {
-        _ > c && x[S] !== null ? W(S, 0) : M(S, K), y(O, P, S, K, v, T), S++;
+        U > c && x[S] !== null ? W(S, 0) : M(S, K), y(O, P, S, K, v, T), S++;
         continue;
       }
-      if (a + _ > c) {
-        const u0 = a + m0(e, O, S, v), X = a + w0(e, O, S, v, K);
+      if (a + U > c) {
+        const s0 = a + b0(e, O, S, v), X = a + m0(e, O, S, v, K);
         if (f === "soft-hyphen" && s.preferEarlySoftHyphenBreak && R <= c) {
           D(w, 0, b);
           continue;
         }
-        if (P && u0 <= c) {
+        if (P && s0 <= c) {
           p(S, T), D(S + 1, 0, X), S++;
           continue;
         }
@@ -2318,11 +2318,11 @@ function _0(e, t, n) {
             D();
             continue;
           }
-          const d0 = w;
-          D(d0, 0, b), S = d0;
+          const C0 = w;
+          D(C0, 0, b), S = C0;
           continue;
         }
-        if (_ > c && x[S] !== null) {
+        if (U > c && x[S] !== null) {
           D(), W(S, 0), S++;
           continue;
         }
@@ -2338,54 +2338,54 @@ function _0(e, t, n) {
   }
   return N;
 }
-let F0 = null, W0 = /* @__PURE__ */ new WeakMap();
-function dt() {
-  return F0 === null && (F0 = new Intl.Segmenter(void 0, { granularity: "grapheme" })), F0;
+let o0 = null, w0 = /* @__PURE__ */ new WeakMap();
+function Ct() {
+  return o0 === null && (o0 = new Intl.Segmenter(void 0, { granularity: "grapheme" })), o0;
 }
-function y0(e, t, n) {
+function W0(e, t, n) {
   let r = n.get(e);
   if (r !== void 0)
     return r;
   r = [];
-  const i = dt();
+  const i = Ct();
   for (const x of i.segment(t[e]))
     r.push(x.segment);
   return n.set(e, r), r;
 }
-function Mt(e, t, n) {
+function dt(e, t, n) {
   return n > t && e[n - 1] === "soft-hyphen";
 }
-function R0(e, t, n, r) {
+function y0(e, t, n, r) {
   for (let i = n; i < r; i++)
     e += t[i];
   return e;
 }
-function Dt(e) {
-  let t = W0.get(e);
-  return t !== void 0 || (t = /* @__PURE__ */ new Map(), W0.set(e, t)), t;
+function Mt(e) {
+  let t = w0.get(e);
+  return t !== void 0 || (t = /* @__PURE__ */ new Map(), w0.set(e, t)), t;
 }
-function pt(e, t, n, r, i, x) {
+function Dt(e, t, n, r, i, x) {
   let u = "";
-  const F = Mt(e.kinds, n, i);
+  const F = dt(e.kinds, n, i);
   for (let o = n; o < i; o++)
     if (!(e.kinds[o] === "soft-hyphen" || e.kinds[o] === "hard-break"))
       if (o === n && r > 0) {
-        const s = y0(o, e.segments, t);
-        u = R0(u, s, r, s.length);
+        const s = W0(o, e.segments, t);
+        u = y0(u, s, r, s.length);
       } else
         u += e.segments[o];
   if (x > 0) {
     F && (u += "-");
-    const o = y0(i, e.segments, t);
-    u = R0(u, o, n === i ? r : 0, x);
+    const o = W0(i, e.segments, t);
+    u = y0(u, o, n === i ? r : 0, x);
   } else F && (u += "-");
   return u;
 }
-let c0 = null;
-function C0() {
-  return c0 === null && (c0 = new Intl.Segmenter(void 0, { granularity: "grapheme" })), c0;
+let F0 = null;
+function B0() {
+  return F0 === null && (F0 = new Intl.Segmenter(void 0, { granularity: "grapheme" })), F0;
 }
-function gt(e) {
+function pt(e) {
   return e ? {
     widths: [],
     lineEndFitAdvances: [],
@@ -2417,7 +2417,7 @@ function gt(e) {
     chunks: []
   };
 }
-function Lt(e, t) {
+function gt(e, t) {
   const n = [];
   let r = [], i = 0, x = !1, u = !1, F = !1;
   function o() {
@@ -2427,20 +2427,20 @@ function Lt(e, t) {
     }), r = [], x = !1, u = !1, F = !1);
   }
   function s(c, N, a) {
-    r = [c], i = N, x = a, u = N0(c), F = n0.has(c);
+    r = [c], i = N, x = a, u = c0(c), F = t0.has(c);
   }
   function l(c, N) {
     r.push(c), x = x || N;
-    const a = N0(c);
-    c.length === 1 && J.has(c) ? u = u || a : u = a, F = !1;
+    const a = c0(c);
+    c.length === 1 && Q.has(c) ? u = u || a : u = a, F = !1;
   }
-  for (const c of C0().segment(e)) {
+  for (const c of B0().segment(e)) {
     const N = c.segment, a = z(N);
     if (r.length === 0) {
       s(N, c.index, a);
       continue;
     }
-    if (F || S0.has(N) || J.has(N) || t.carryCJKAfterClosingQuote && a && u) {
+    if (F || f0.has(N) || Q.has(N) || t.carryCJKAfterClosingQuote && a && u) {
       l(N, a);
       continue;
     }
@@ -2452,7 +2452,7 @@ function Lt(e, t) {
   }
   return o(), n;
 }
-function Ot(e, t, n) {
+function Lt(e, t, n) {
   if (t.length <= 1)
     return t;
   const r = [];
@@ -2476,40 +2476,40 @@ function Ot(e, t, n) {
   }
   for (let o = 0; o < t.length; o++) {
     const s = t[o];
-    i >= 0 && !T0(t[o - 1].text, n) && F(o), i < 0 && (i = o), x = x || z(s.text);
+    i >= 0 && !v0(t[o - 1].text, n) && F(o), i < 0 && (i = o), x = x || z(s.text);
   }
   return F(t.length), r;
 }
-function v0(e, t) {
+function R0(e, t) {
   if (t === "zero-width-break" || t === "soft-hyphen" || t === "hard-break")
     return 0;
   if (t === "tab")
     return 1;
   let n = 0;
-  const r = C0();
+  const r = B0();
   for (const i of r.segment(e))
     n++;
   return n;
 }
-function kt(e) {
+function Ot(e) {
   return e === "-" || e === "֊" || e === "‐" || e === "‒" || e === "–" || e === "—";
 }
-function bt(e) {
+function kt(e) {
   if (!/[-\u058A\u2010\u2012\u2013\u2014]/u.test(e))
     return null;
   const t = [];
   let n = 0;
-  for (const r of C0().segment(e))
-    n++, kt(r.segment) && t.push(n);
+  for (const r of B0().segment(e))
+    n++, Ot(r.segment) && t.push(n);
   return t.length === 0 ? null : t;
 }
-function mt(e, t, n) {
+function bt(e, t, n) {
   return t > 1 ? e + (t - 1) * n : e;
 }
-function wt(e, t, n, r, i) {
-  const x = i0(), { cache: u, emojiCorrection: F } = ot(t, rt(e.normalized)), o = I("-", H("-", u), F) + (i === 0 ? 0 : i * 2), l = I(" ", H(" ", u), F) * 8, c = i !== 0;
+function mt(e, t, n, r, i) {
+  const x = r0(), { cache: u, emojiCorrection: F } = lt(t, xt(e.normalized)), o = I("-", H("-", u), F) + (i === 0 ? 0 : i * 2), l = I(" ", H(" ", u), F) * 8, c = i !== 0;
   if (e.len === 0)
-    return gt(n);
+    return pt(n);
   const N = [], a = [], E = [], g = [];
   let k = e.chunks.length <= 1 && !c;
   const L = n ? [] : null, m = [], w = [], R = [], b = n ? [] : null, f = Array.from({ length: e.len });
@@ -2517,12 +2517,12 @@ function wt(e, t, n, r, i) {
     A !== "text" && A !== "space" && A !== "zero-width-break" && (k = !1), N.push(p), a.push(y), E.push(W), g.push(A), L?.push(B), m.push(C), w.push(S), c && R.push(O), b !== null && b.push(d);
   }
   function G(d, p, y, W, A) {
-    const B = H(d, u), C = c ? v0(d, p) : 0, S = mt(I(d, B, F), C, i), O = p === "space" || p === "preserved-space" || p === "zero-width-break" ? 0 : S, P = O === 0 ? 0 : O + (C > 0 ? i : 0), v = p === "space" || p === "zero-width-break" ? 0 : S;
+    const B = H(d, u), C = c ? R0(d, p) : 0, S = bt(I(d, B, F), C, i), O = p === "space" || p === "preserved-space" || p === "zero-width-break" ? 0 : S, P = O === 0 ? 0 : O + (C > 0 ? i : 0), v = p === "space" || p === "zero-width-break" ? 0 : S;
     if (A && W && d.length > 1) {
       let K = "sum-graphemes";
-      i !== 0 ? K = "segment-prefixes" : e0(d) ? K = "pair-context" : x.preferPrefixWidthsForBreakableRuns && (K = "segment-prefixes");
-      const T = lt(d, B, u, F, K), _ = T === null || r === "keep-all" ? null : bt(d);
-      h(d, S, P, v, p, y, T, _, C);
+      i !== 0 ? K = "segment-prefixes" : Y(d) ? K = "pair-context" : x.preferPrefixWidthsForBreakableRuns && (K = "segment-prefixes");
+      const T = ut(d, B, u, F, K), U = T === null || r === "keep-all" ? null : kt(d);
+      h(d, S, P, v, p, y, T, U, C);
       return;
     }
     h(d, S, P, v, p, y, null, null, C);
@@ -2539,12 +2539,12 @@ function wt(e, t, n, r, i) {
       continue;
     }
     if (W === "tab") {
-      h(p, 0, 0, 0, W, A, null, null, c ? v0(p, W) : 0);
+      h(p, 0, 0, 0, W, A, null, null, c ? R0(p, W) : 0);
       continue;
     }
     const B = H(p, u);
     if (W === "text" && B.containsCJK) {
-      const C = Lt(p, x), S = r === "keep-all" ? Ot(p, C, x.breakKeepAllAfterPunctuation) : C;
+      const C = gt(p, x), S = r === "keep-all" ? Lt(p, C, x.breakKeepAllAfterPunctuation) : C;
       for (let O = 0; O < S.length; O++) {
         const P = S[O];
         G(P.text, "text", A + P.start, y, r === "keep-all" || !z(P.text));
@@ -2553,7 +2553,7 @@ function wt(e, t, n, r, i) {
     }
     G(p, W, A, y, !0);
   }
-  const D = Wt(e.chunks, f, N.length), M = L === null ? null : X0(e.normalized, L);
+  const D = wt(e.chunks, f, N.length), M = L === null ? null : X0(e.normalized, L);
   return b !== null ? {
     widths: N,
     lineEndFitAdvances: a,
@@ -2585,7 +2585,7 @@ function wt(e, t, n, r, i) {
     chunks: D
   };
 }
-function Wt(e, t, n) {
+function wt(e, t, n) {
   const r = [];
   for (let i = 0; i < e.length; i++) {
     const x = e[i], u = x.startSegmentIndex < t.length ? t[x.startSegmentIndex] : n, F = x.endSegmentIndex < t.length ? t[x.endSegmentIndex] : n, o = x.consumedEndSegmentIndex < t.length ? t[x.consumedEndSegmentIndex] : n;
@@ -2597,23 +2597,23 @@ function Wt(e, t, n) {
   }
   return r;
 }
-function H0(e, t, n, r) {
-  const i = r?.wordBreak ?? "normal", x = r?.letterSpacing ?? 0, u = Xe(e, i0(), r?.whiteSpace, i);
-  return wt(u, t, n, i, x);
+function U0(e, t, n, r) {
+  const i = r?.wordBreak ?? "normal", x = r?.letterSpacing ?? 0, u = Xe(e, r0(), r?.whiteSpace, i);
+  return mt(u, t, n, i, x);
+}
+function Wt(e, t, n) {
+  return U0(e, t, !1, n);
 }
 function yt(e, t, n) {
-  return H0(e, t, !1, n);
+  return U0(e, t, !0, n);
 }
 function Rt(e, t, n) {
-  return H0(e, t, !0, n);
-}
-function vt(e, t, n) {
-  const r = Bt(e, t);
+  const r = ht(e, t);
   return { lineCount: r, height: r * n };
 }
-function Tt(e, t, n, r, i, x, u) {
+function vt(e, t, n, r, i, x, u) {
   return {
-    text: pt(e, t, r, i, x, u),
+    text: Dt(e, t, r, i, x, u),
     width: n,
     start: {
       segmentIndex: r,
@@ -2625,47 +2625,47 @@ function Tt(e, t, n, r, i, x, u) {
     }
   };
 }
-function Pt(e, t, n) {
+function Tt(e, t, n) {
   const r = [];
   if (e.widths.length === 0)
     return { lineCount: 0, height: 0, lines: r };
-  const i = Dt(e), x = _0(e, t, (u, F, o, s, l) => {
-    r.push(Tt(e, i, u, F, o, s, l));
+  const i = Mt(e), x = z0(e, t, (u, F, o, s, l) => {
+    r.push(vt(e, i, u, F, o, s, l));
   });
   return { lineCount: x, height: x * n, lines: r };
 }
-const Z = /* @__PURE__ */ new Map(), Y = /* @__PURE__ */ new Map(), Kt = 500;
-function U0(e, t) {
+const V = /* @__PURE__ */ new Map(), Z = /* @__PURE__ */ new Map(), Pt = 500;
+function H0(e, t) {
   return `${t}\0${e}`;
 }
-function I0(e) {
-  if (e.size >= Kt) {
+function J0(e) {
+  if (e.size >= Pt) {
     const t = e.keys().next().value;
     e.delete(t);
   }
 }
-function J0(e, t, n) {
+function I0(e, t, n) {
   return e.delete(t), e.set(t, n), n;
 }
 function Q0(e) {
   return e === 1 ? { whiteSpace: "pre-wrap" } : void 0;
 }
+function Kt(e, t, n = 0) {
+  const r = `${n}\0${H0(e, t)}`;
+  let i = V.get(r);
+  return i ? I0(V, r, i) : (i = Wt(e, t, Q0(n)), J0(V), V.set(r, i), i);
+}
 function Gt(e, t, n = 0) {
-  const r = `${n}\0${U0(e, t)}`;
+  const r = `${n}\0${H0(e, t)}`;
   let i = Z.get(r);
-  return i ? J0(Z, r, i) : (i = yt(e, t, Q0(n)), I0(Z), Z.set(r, i), i);
+  return i ? I0(Z, r, i) : (i = yt(e, t, Q0(n)), J0(Z), Z.set(r, i), i);
 }
-function jt(e, t, n = 0) {
-  const r = `${n}\0${U0(e, t)}`;
-  let i = Y.get(r);
-  return i ? J0(Y, r, i) : (i = Rt(e, t, Q0(n)), I0(Y), Y.set(r, i), i);
-}
-function zt(e, t, n, r, i = 0) {
-  const x = Gt(e, t, i), u = vt(x, n, r), F = new ArrayBuffer(12), o = new DataView(F);
+function jt(e, t, n, r, i = 0) {
+  const x = Kt(e, t, i), u = Rt(x, n, r), F = new ArrayBuffer(12), o = new DataView(F);
   return o.setFloat64(0, u.height, !0), o.setInt32(8, u.lineCount, !0), new Uint8Array(F);
 }
-function _t(e, t, n, r, i = 0) {
-  const x = jt(e, t, i), u = Pt(x, n, r), F = new TextEncoder(), o = u.lines.map((E) => F.encode(E.text));
+function zt(e, t, n, r, i = 0) {
+  const x = Gt(e, t, i), u = Tt(x, n, r), F = new TextEncoder(), o = u.lines.map((E) => F.encode(E.text));
   let s = 16;
   for (const E of o)
     s += 2 + E.length + 8;
@@ -2678,39 +2678,18 @@ function _t(e, t, n, r, i = 0) {
   }
   return new Uint8Array(l, 0, a);
 }
-function q(e) {
-  return globalThis.__voguiRefRegistry?.get(e);
-}
-function Ht(e) {
+function Ut(e) {
   return {
-    host_focus(t, n) {
-      const r = q(e.readString(t, n));
-      r instanceof HTMLElement && r.focus();
-    },
-    host_blur(t, n) {
-      const r = q(e.readString(t, n));
-      r instanceof HTMLElement && r.blur();
-    },
-    host_scroll_to(t, n, r) {
-      q(e.readString(t, n))?.scrollTo({ top: r });
-    },
-    host_scroll_into_view(t, n) {
-      q(e.readString(t, n))?.scrollIntoView();
-    },
-    host_select_text(t, n) {
-      const r = q(e.readString(t, n));
-      (r instanceof HTMLInputElement || r instanceof HTMLTextAreaElement) && r.select();
-    },
     host_measure_text(t, n, r, i, x, u, F, o) {
-      const s = e.readString(t, n), l = e.readString(r, i), c = zt(s, l, x, u, F), N = e.alloc(c.length);
+      const s = e.readString(t, n), l = e.readString(r, i), c = jt(s, l, x, u, F), N = e.alloc(c.length);
       return e.writeBytes(N, c), e.writeU32(o, c.length), N;
     },
     host_measure_text_lines(t, n, r, i, x, u, F, o) {
-      const s = e.readString(t, n), l = e.readString(r, i), c = _t(s, l, x, u, F), N = e.alloc(c.length);
+      const s = e.readString(t, n), l = e.readString(r, i), c = zt(s, l, x, u, F), N = e.alloc(c.length);
       return e.writeBytes(N, c), e.writeU32(o, c.length), N;
     }
   };
 }
 export {
-  Ht as buildImports
+  Ut as buildImports
 };
