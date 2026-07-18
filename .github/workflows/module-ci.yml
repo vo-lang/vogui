@@ -26,7 +26,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')) }}
 
 env:
-  VOLANG_REF: 6c67e9595c4f22f366a2935163658aef4d3fc384
+  VOLANG_REF: fc07de2a7f74d15c30420402e9df770fb0674f6b
 
 jobs:
   validate:
