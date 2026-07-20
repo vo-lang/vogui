@@ -1973,7 +1973,7 @@ checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "vo-analysis"
-version = "0.1.1"
+version = "0.1.4"
 dependencies = [
  "num-bigint",
  "num-rational",
@@ -1987,7 +1987,7 @@ dependencies = [
 
 [[package]]
 name = "vo-common"
-version = "0.1.1"
+version = "0.1.4"
 dependencies = [
  "codespan-reporting",
  "rustc-hash 1.1.0",
@@ -1999,7 +1999,7 @@ dependencies = [
 
 [[package]]
 name = "vo-common-core"
-version = "0.1.1"
+version = "0.1.4"
 dependencies = [
  "hashbrown 0.15.5",
  "icu_casemap",
@@ -2011,7 +2011,7 @@ dependencies = [
 
 [[package]]
 name = "vo-ext"
-version = "0.1.1"
+version = "0.1.4"
 dependencies = [
  "vo-common-core",
  "vo-ffi-macro",
@@ -2020,7 +2020,7 @@ dependencies = [
 
 [[package]]
 name = "vo-ffi-macro"
-version = "0.1.1"
+version = "0.1.4"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2032,11 +2032,12 @@ dependencies = [
  "vo-module",
  "vo-stdlib-source",
  "vo-syntax",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
 name = "vo-module"
-version = "0.1.1"
+version = "0.1.4"
 dependencies = [
  "flate2",
  "icu_casemap",
@@ -2059,7 +2060,7 @@ dependencies = [
 
 [[package]]
 name = "vo-runtime"
-version = "0.1.1"
+version = "0.1.4"
 dependencies = [
  "dirs",
  "hashbrown 0.15.5",
@@ -2076,7 +2077,7 @@ dependencies = [
 
 [[package]]
 name = "vo-stdlib"
-version = "0.1.1"
+version = "0.1.4"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -2104,14 +2105,14 @@ dependencies = [
 
 [[package]]
 name = "vo-stdlib-source"
-version = "0.1.1"
+version = "0.1.4"
 dependencies = [
  "rust-embed",
 ]
 
 [[package]]
 name = "vo-syntax"
-version = "0.1.1"
+version = "0.1.4"
 dependencies = [
  "logos",
  "num-bigint",
@@ -2123,7 +2124,7 @@ dependencies = [
 
 [[package]]
 name = "vo-vm"
-version = "0.1.1"
+version = "0.1.4"
 dependencies = [
  "fastrand",
  "hashbrown 0.15.5",
