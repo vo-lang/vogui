@@ -1,5 +1,3 @@
-pub mod generated {
-    include!(concat!(env!("OUT_DIR"), "/generated.rs"));
-}
+pub mod generated;
 
 pub mod v2;

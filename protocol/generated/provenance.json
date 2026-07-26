@@ -25,6 +25,11 @@
       "digest": "sha256:5b22a704e9708df036228c7e5befd9e1a27e90d2daa0f2b9b11ecab3f85375e1",
       "path": "vogui_protocol.vo",
       "size": 5773
+    },
+    {
+      "digest": "sha256:7260a3534f13f84ac987777dc4857738e6795914d3fbd508b2b732ab26af806e",
+      "path": "rust/protocol/src/generated.rs",
+      "size": 6403
     }
   ],
   "path": "protocol/generated",

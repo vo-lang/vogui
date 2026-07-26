@@ -5,6 +5,3 @@ edition = "2021"
 description = "Schema-generated bounded Vogui V2 protocol"
 
 [dependencies]
-
-[build-dependencies]
-vo-schema-compiler = { path = "../../../volang/lang/crates/vo-schema-compiler" }
