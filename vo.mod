@@ -124,6 +124,15 @@ capabilities = ["transparent-surface"]
 [extension]
 name = "vogui"
 
+[extension.wasm]
+kind = "bindgen"
+wasm = "vogui_extension_bg.wasm"
+js = "vogui_extension.js"
+
+[build.wasm]
+wasm = "rust/pkg-web/vogui_extension_bg.wasm"
+js = "rust/pkg-web/vogui_extension.js"
+
 [extension.web]
 provider_role = "ui-logic"
 provider_roles = ["ui-logic", "ui-renderer", "surface-host", "accessibility", "diagnostics"]
