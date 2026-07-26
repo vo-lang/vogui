@@ -1,0 +1,100 @@
+schema = "vogui.ui"
+schema_format = 1
+payload_major = 1
+payload_minor = 0
+
+[packet]
+endianness = "little"
+header_bytes = 56
+
+[[packet.field]]
+name = "kind"
+type = "message_kind"
+offset = 0
+
+[[packet.field]]
+name = "ui_session"
+type = "handle"
+offset = 4
+
+[[packet.field]]
+name = "ui_root"
+type = "handle"
+offset = 12
+
+[[packet.field]]
+name = "ui_root_epoch"
+type = "u32"
+offset = 20
+
+[[packet.field]]
+name = "app_code_epoch"
+type = "u64"
+offset = 24
+
+[[packet.field]]
+name = "revision"
+type = "u64"
+offset = 32
+
+[[packet.field]]
+name = "sequence"
+type = "u64"
+offset = 40
+
+[[packet.field]]
+name = "payload_len"
+type = "payload_length_u32"
+offset = 52
+
+[limits]
+max_packet_bytes = 1048576
+max_nodes_per_snapshot = 65536
+max_patch_ops = 65536
+max_string_bytes = 262144
+max_event_payload_bytes = 65536
+
+[[message]]
+name = "UiSnapshot"
+kind = 1
+lane = "framework"
+
+[[message]]
+name = "UiPatch"
+kind = 2
+lane = "framework"
+
+[[message]]
+name = "UiEvent"
+kind = 3
+lane = "input"
+
+[[message]]
+name = "UiCommand"
+kind = 4
+lane = "command"
+
+[[message]]
+name = "UiCommandResult"
+kind = 5
+lane = "completion"
+
+[[message]]
+name = "UiApplyAck"
+kind = 6
+lane = "completion"
+
+[[message]]
+name = "UiSurfaceControl"
+kind = 7
+lane = "control"
+
+[[message]]
+name = "UiResourcePublication"
+kind = 8
+lane = "resource"
+
+[[message]]
+name = "UiResourceRetire"
+kind = 9
+lane = "resource"

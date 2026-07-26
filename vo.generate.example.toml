@@ -1,0 +1,18 @@
+format = 1
+
+# Copy this file to vo.generate.toml in an application project. The executable
+# may be absolute or relative to that project root. Published extensions replace
+# this development path with their materialized provider artifact.
+[[generation]]
+provider = "vogui.typed-app"
+version = "4"
+schema_kind = "vogui.app"
+executable = "../vogui/rust/target/debug/vogui-generator-provider"
+schema = "app.schema.toml"
+outputs = [
+  # The typed adapter is a package source; only its manifest is stored under
+  # generated/. Ordinary builds still keep both artifacts outside the worktree.
+  "hello_app_app.vo",
+  "generated/hello_app_app.manifest",
+]
+capabilities = []

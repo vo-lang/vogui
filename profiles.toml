@@ -1,0 +1,76 @@
+format = 1
+default = "web-full"
+
+[profiles.headless]
+capabilities = ["app", "reconciler", "protocol", "semantics-core", "fake-renderer"]
+roles = ["logic", "renderer"]
+
+[profiles.web-minimal]
+capabilities = ["app", "reconciler", "protocol", "semantics-core", "resource-core", "input", "text-ime", "browser-host", "portable-layout", "dom-renderer"]
+roles = ["logic", "renderer", "surface-host"]
+
+[profiles.web-full]
+extends = "web-minimal"
+capabilities = ["portable-controls", "animation", "resource-watch", "advanced-resource-formats", "browser-accessibility"]
+roles = ["logic", "renderer", "surface-host", "accessibility"]
+
+[profiles.web-editor]
+extends = "web-full"
+capabilities = ["virtual-collection", "inspection", "editor-widgets"]
+roles = ["logic", "renderer", "surface-host", "accessibility", "diagnostics"]
+
+[profiles.native-webview-minimal]
+capabilities = ["app", "reconciler", "protocol", "semantics-core", "resource-core", "input", "text-ime", "portable-layout", "dom-renderer", "native-webview-host"]
+roles = ["logic", "renderer", "surface-host"]
+
+[profiles.native-webview-full]
+extends = "native-webview-minimal"
+capabilities = ["portable-controls", "animation", "resource-watch", "advanced-resource-formats", "browser-accessibility"]
+roles = ["logic", "renderer", "surface-host", "accessibility"]
+
+[profiles.native-webview-editor]
+extends = "native-webview-full"
+capabilities = ["virtual-collection", "inspection", "editor-widgets"]
+roles = ["logic", "renderer", "surface-host", "accessibility", "diagnostics"]
+
+[profiles.native-gpu-minimal]
+capabilities = ["app", "reconciler", "protocol", "semantics-core", "resource-core", "input", "text-ime", "portable-layout", "retained-gpu-renderer", "native-accessibility", "gpu-native-host"]
+roles = ["logic", "renderer", "surface-host", "accessibility"]
+
+[profiles.native-gpu-full]
+extends = "native-gpu-minimal"
+capabilities = ["portable-controls", "animation", "resource-watch", "advanced-resource-formats"]
+roles = ["logic", "renderer", "surface-host", "accessibility"]
+
+[profiles.native-gpu-editor]
+extends = "native-gpu-full"
+capabilities = ["virtual-collection", "inspection", "editor-widgets"]
+roles = ["logic", "renderer", "surface-host", "accessibility", "diagnostics"]
+
+[profiles.web-overlay-minimal]
+extends = "web-minimal"
+capabilities = ["transparent-surface"]
+roles = ["logic", "renderer", "surface-host"]
+
+[profiles.native-webview-overlay-minimal]
+extends = "native-webview-minimal"
+capabilities = ["transparent-surface"]
+roles = ["logic", "renderer", "surface-host"]
+
+[profiles.native-gpu-overlay-minimal]
+extends = "native-gpu-minimal"
+capabilities = ["transparent-surface"]
+roles = ["logic", "renderer", "surface-host", "accessibility"]
+
+[capabilities.dom-unsafe]
+requires = ["dom-renderer"]
+packages = ["vo/domunsafe"]
+
+[rules.headless]
+forbid = ["dom", "gpu", "advanced-widgets", "editor-widgets", "audio", "voplay"]
+
+[rules.web-minimal]
+forbid = ["advanced-widgets", "editor-widgets", "native-renderer", "audio", "voplay"]
+
+[rules.overlay-minimal]
+forbid = ["editor-widgets", "audio", "voplay"]

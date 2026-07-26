@@ -1,0 +1,9 @@
+[package]
+name = "vogui-headless-renderer"
+version = "0.1.0"
+edition = "2021"
+description = "Deterministic headless Vogui renderer artifact"
+
+[dependencies]
+vogui-protocol = { path = "../protocol" }
+vogui-runtime = { path = "../runtime" }

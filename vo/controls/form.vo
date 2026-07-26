@@ -1,0 +1,307 @@
+package controls
+
+type FieldId struct {
+	Value uint64
+}
+
+type ValidationKind uint32
+
+const (
+	ValidationRequired ValidationKind = iota + 1
+	ValidationMinimumLength
+	ValidationMaximumLength
+	ValidationNumericRange
+	ValidationCustom
+)
+
+type ValidationRule struct {
+	Id uint64
+	Kind ValidationKind
+	Minimum int64
+	Maximum int64
+	Message string
+}
+
+type FieldDescriptor struct {
+	Id FieldId
+	Name string
+	InitialValue string
+	Rules []ValidationRule
+}
+
+type FieldState struct {
+	Descriptor FieldDescriptor
+	Value string
+	Touched bool
+	Dirty bool
+	EditSequence uint64
+	Errors []string
+}
+
+type FormState struct {
+	Id uint64
+	Revision uint64
+	Fields []FieldState
+	Submitting bool
+	SubmitSequence uint64
+	MaxFields uint32
+	MaxRules uint32
+	MaxValueBytes uint32
+	MaxErrorBytes uint32
+}
+
+type FormSnapshot struct {
+	FormId uint64
+	Revision uint64
+	SubmitSequence uint64
+	Values []FieldValue
+	Valid bool
+}
+
+type FieldValue struct {
+	Field FieldId
+	Name string
+	Value string
+	EditSequence uint64
+}
+
+func NewFormState(id uint64, descriptors []FieldDescriptor,
+	maxFields uint32, maxRules uint32, maxValueBytes uint32,
+	maxErrorBytes uint32) (*FormState, bool) {
+	if id == 0 || len(descriptors) == 0 ||
+		len(descriptors) > int(maxFields) || maxFields == 0 ||
+		maxRules == 0 || maxValueBytes == 0 || maxErrorBytes == 0 {
+		return nil, false
+	}
+	form := &FormState{
+		Id: id, Revision: 1, MaxFields: maxFields, MaxRules: maxRules,
+		MaxValueBytes: maxValueBytes, MaxErrorBytes: maxErrorBytes,
+	}
+	for index, descriptor := range descriptors {
+		if descriptor.Id.Value == 0 || len(descriptor.Name) == 0 ||
+			len([]byte(descriptor.InitialValue)) > int(maxValueBytes) ||
+			len(descriptor.Rules) > int(maxRules) {
+			return nil, false
+		}
+		for previous := 0; previous < index; previous++ {
+			if descriptors[previous].Id == descriptor.Id ||
+				descriptors[previous].Name == descriptor.Name {
+				return nil, false
+			}
+		}
+		if !validRules(descriptor.Rules, maxErrorBytes) {
+			return nil, false
+		}
+		form.Fields = append(form.Fields, FieldState{
+			Descriptor: descriptor, Value: descriptor.InitialValue,
+		})
+	}
+	form.Validate()
+	return form, true
+}
+
+func (form *FormState) Edit(field FieldId, value string,
+	editSequence uint64) bool {
+	if form == nil || form.Submitting || field.Value == 0 ||
+		len([]byte(value)) > int(form.MaxValueBytes) ||
+		form.Revision == 18446744073709551615 {
+		return false
+	}
+	for index, state := range form.Fields {
+		if state.Descriptor.Id != field || editSequence <= state.EditSequence {
+			continue
+		}
+		form.Fields[index].Value = value
+		form.Fields[index].Touched = true
+		form.Fields[index].Dirty =
+			value != state.Descriptor.InitialValue
+		form.Fields[index].EditSequence = editSequence
+		form.validateField(index)
+		form.Revision++
+		return true
+	}
+	return false
+}
+
+func (form *FormState) Touch(field FieldId) bool {
+	if form == nil || form.Submitting ||
+		form.Revision == 18446744073709551615 {
+		return false
+	}
+	for index, state := range form.Fields {
+		if state.Descriptor.Id == field {
+			form.Fields[index].Touched = true
+			form.validateField(index)
+			form.Revision++
+			return true
+		}
+	}
+	return false
+}
+
+func (form *FormState) Validate() bool {
+	if form == nil {
+		return false
+	}
+	valid := true
+	for index := range form.Fields {
+		form.validateField(index)
+		if len(form.Fields[index].Errors) != 0 {
+			valid = false
+		}
+	}
+	return valid
+}
+
+func (form *FormState) BeginSubmit(expectedRevision uint64) (FormSnapshot, bool) {
+	if form == nil || form.Submitting || expectedRevision != form.Revision ||
+		!form.Validate() || form.SubmitSequence == 18446744073709551615 {
+		return FormSnapshot{}, false
+	}
+	form.SubmitSequence++
+	form.Submitting = true
+	snapshot := FormSnapshot{
+		FormId: form.Id, Revision: form.Revision,
+		SubmitSequence: form.SubmitSequence, Valid: true,
+	}
+	for _, field := range form.Fields {
+		snapshot.Values = append(snapshot.Values, FieldValue{
+			Field: field.Descriptor.Id, Name: field.Descriptor.Name,
+			Value: field.Value, EditSequence: field.EditSequence,
+		})
+	}
+	return snapshot, true
+}
+
+func (form *FormState) CompleteSubmit(sequence uint64,
+	reset bool) bool {
+	if form == nil || !form.Submitting || sequence != form.SubmitSequence ||
+		form.Revision == 18446744073709551615 {
+		return false
+	}
+	form.Submitting = false
+	if reset {
+		for index := range form.Fields {
+			form.Fields[index].Value =
+				form.Fields[index].Descriptor.InitialValue
+			form.Fields[index].Touched = false
+			form.Fields[index].Dirty = false
+			form.Fields[index].Errors = nil
+		}
+	}
+	form.Revision++
+	return true
+}
+
+func (form *FormState) FailSubmit(sequence uint64,
+	field FieldId, message string) bool {
+	if form == nil || !form.Submitting || sequence != form.SubmitSequence ||
+		field.Value == 0 || len([]byte(message)) == 0 ||
+		len([]byte(message)) > int(form.MaxErrorBytes) ||
+		form.Revision == 18446744073709551615 {
+		return false
+	}
+	for index, state := range form.Fields {
+		if state.Descriptor.Id == field {
+			form.Submitting = false
+			form.Fields[index].Touched = true
+			form.Fields[index].Errors = append(
+				form.Fields[index].Errors, message)
+			form.Revision++
+			return true
+		}
+	}
+	return false
+}
+
+func (form *FormState) Reset(expectedRevision uint64) bool {
+	if form == nil || form.Submitting || expectedRevision != form.Revision ||
+		form.Revision == 18446744073709551615 {
+		return false
+	}
+	for index := range form.Fields {
+		form.Fields[index].Value =
+			form.Fields[index].Descriptor.InitialValue
+		form.Fields[index].Touched = false
+		form.Fields[index].Dirty = false
+		form.Fields[index].Errors = nil
+		form.Fields[index].EditSequence = 0
+	}
+	form.Revision++
+	return true
+}
+
+func (form *FormState) validateField(index int) {
+	state := &form.Fields[index]
+	state.Errors = nil
+	for _, rule := range state.Descriptor.Rules {
+		failed := false
+		switch rule.Kind {
+		case ValidationRequired:
+			failed = len([]byte(state.Value)) == 0
+		case ValidationMinimumLength:
+			failed = int64(len([]byte(state.Value))) < rule.Minimum
+		case ValidationMaximumLength:
+			failed = int64(len([]byte(state.Value))) > rule.Maximum
+		case ValidationNumericRange:
+			value, ok := parseFormInt(state.Value)
+			failed = !ok || value < rule.Minimum || value > rule.Maximum
+		case ValidationCustom:
+			continue
+		}
+		if failed {
+			state.Errors = append(state.Errors, rule.Message)
+		}
+	}
+}
+
+func validRules(rules []ValidationRule, maxErrorBytes uint32) bool {
+	for index, rule := range rules {
+		if rule.Id == 0 || rule.Kind < ValidationRequired ||
+			rule.Kind > ValidationCustom || len([]byte(rule.Message)) == 0 ||
+			len([]byte(rule.Message)) > int(maxErrorBytes) ||
+			rule.Kind == ValidationMinimumLength && rule.Minimum < 0 ||
+			rule.Kind == ValidationMaximumLength && rule.Maximum < 0 ||
+			(rule.Kind == ValidationNumericRange ||
+				rule.Kind == ValidationMaximumLength) &&
+				rule.Maximum < rule.Minimum {
+			return false
+		}
+		for previous := 0; previous < index; previous++ {
+			if rules[previous].Id == rule.Id {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func parseFormInt(value string) (int64, bool) {
+	bytes := []byte(value)
+	if len(bytes) == 0 {
+		return 0, false
+	}
+	negative := bytes[0] == '-'
+	start := 0
+	if negative {
+		start = 1
+		if len(bytes) == 1 {
+			return 0, false
+		}
+	}
+	result := int64(0)
+	for index := start; index < len(bytes); index++ {
+		if bytes[index] < '0' || bytes[index] > '9' {
+			return 0, false
+		}
+		digit := int64(bytes[index] - '0')
+		if result > (9223372036854775807-digit)/10 {
+			return 0, false
+		}
+		result = result*10 + digit
+	}
+	if negative {
+		result = -result
+	}
+	return result, true
+}

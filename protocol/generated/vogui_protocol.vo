@@ -1,0 +1,158 @@
+// Code generated from framework schema. DO NOT EDIT.
+package voguiprotocol
+
+const (
+	SchemaID = "vogui.ui"
+	ProtocolMajor = 1
+	ProtocolMinor = 0
+	MaxEventPayloadBytes = 65536
+	MaxNodesPerSnapshot = 65536
+	MaxPacketBytes = 1048576
+	MaxPatchOps = 65536
+	MaxStringBytes = 262144
+	MessageKindUiSnapshot uint16 = 1
+	MessageKindUiPatch uint16 = 2
+	MessageKindUiEvent uint16 = 3
+	MessageKindUiCommand uint16 = 4
+	MessageKindUiCommandResult uint16 = 5
+	MessageKindUiApplyAck uint16 = 6
+	MessageKindUiSurfaceControl uint16 = 7
+	MessageKindUiResourcePublication uint16 = 8
+	MessageKindUiResourceRetire uint16 = 9
+	HeaderBytes = 56
+)
+
+func SchemaIdentity() [16]byte {
+	return [16]byte{170, 77, 1, 40, 73, 81, 15, 167, 46, 145, 6, 79, 113, 43, 133, 209}
+}
+
+func MajorCompatFingerprint() [32]byte {
+	return [32]byte{181, 26, 19, 162, 79, 63, 168, 175, 167, 128, 105, 18, 33, 50, 111, 184, 246, 83, 238, 6, 168, 79, 143, 249, 54, 63, 17, 246, 108, 114, 45, 199}
+}
+
+func ExactSchemaFingerprint() [32]byte {
+	return [32]byte{85, 106, 224, 27, 73, 227, 12, 130, 248, 134, 115, 46, 117, 88, 51, 35, 40, 204, 22, 3, 131, 71, 161, 21, 123, 41, 214, 165, 207, 8, 240, 19}
+}
+
+type GenerationalHandle struct {
+	Index uint32
+	Generation uint32
+}
+
+type FrameworkPacketHeader struct {
+	Kind uint16
+	UiSession GenerationalHandle
+	UiRoot GenerationalHandle
+	UiRootEpoch uint32
+	AppCodeEpoch uint64
+	Revision uint64
+	Sequence uint64
+	PayloadLen uint32
+}
+
+type FrameworkPacketResult struct {
+	OK bool
+	Header FrameworkPacketHeader
+	Payload []byte
+}
+
+func IsMessageKind(value uint16) bool {
+	if value == MessageKindUiSnapshot { return true }
+	if value == MessageKindUiPatch { return true }
+	if value == MessageKindUiEvent { return true }
+	if value == MessageKindUiCommand { return true }
+	if value == MessageKindUiCommandResult { return true }
+	if value == MessageKindUiApplyAck { return true }
+	if value == MessageKindUiSurfaceControl { return true }
+	if value == MessageKindUiResourcePublication { return true }
+	if value == MessageKindUiResourceRetire { return true }
+	return false
+}
+
+func IsGenerationalHandleValid(value GenerationalHandle) bool {
+	return value.Index != 4294967295 && value.Generation != 0
+}
+
+func DecodeFrameworkPacket(input []byte) FrameworkPacketResult {
+	if len(input) < HeaderBytes || len(input) > MaxPacketBytes {
+		return FrameworkPacketResult{}
+	}
+	header := FrameworkPacketHeader{}
+	header.Kind = readFrameworkU16(input, 0)
+	if !IsMessageKind(header.Kind) { return FrameworkPacketResult{} }
+	header.UiSession = GenerationalHandle{Index: readFrameworkU32(input, 4), Generation: readFrameworkU32(input, 8)}
+	if !IsGenerationalHandleValid(header.UiSession) { return FrameworkPacketResult{} }
+	header.UiRoot = GenerationalHandle{Index: readFrameworkU32(input, 12), Generation: readFrameworkU32(input, 16)}
+	if !IsGenerationalHandleValid(header.UiRoot) { return FrameworkPacketResult{} }
+	header.UiRootEpoch = readFrameworkU32(input, 20)
+	header.AppCodeEpoch = readFrameworkU64(input, 24)
+	header.Revision = readFrameworkU64(input, 32)
+	header.Sequence = readFrameworkU64(input, 40)
+	header.PayloadLen = readFrameworkU32(input, 52)
+	if int(header.PayloadLen) > MaxPacketBytes - HeaderBytes || len(input) != HeaderBytes + int(header.PayloadLen) {
+		return FrameworkPacketResult{}
+	}
+	return FrameworkPacketResult{OK: true, Header: header, Payload: input[HeaderBytes:]}
+}
+
+func EncodeFrameworkPacket(header FrameworkPacketHeader, payload []byte) ([]byte, bool) {
+	if len(payload) > MaxPacketBytes - HeaderBytes {
+		return nil, false
+	}
+	if header.PayloadLen != uint32(len(payload)) { return nil, false }
+	if !IsGenerationalHandleValid(header.UiSession) { return nil, false }
+	if !IsGenerationalHandleValid(header.UiRoot) { return nil, false }
+	result := make([]byte, HeaderBytes + len(payload))
+	if !IsMessageKind(header.Kind) { return nil, false }
+	putFrameworkU16(result, 0, header.Kind)
+	putFrameworkU32(result, 4, header.UiSession.Index)
+	putFrameworkU32(result, 8, header.UiSession.Generation)
+	putFrameworkU32(result, 12, header.UiRoot.Index)
+	putFrameworkU32(result, 16, header.UiRoot.Generation)
+	putFrameworkU32(result, 20, header.UiRootEpoch)
+	putFrameworkU64(result, 24, header.AppCodeEpoch)
+	putFrameworkU64(result, 32, header.Revision)
+	putFrameworkU64(result, 40, header.Sequence)
+	putFrameworkU32(result, 52, header.PayloadLen)
+	copy(result[HeaderBytes:], payload)
+	return result, true
+}
+
+func readFrameworkU16(input []byte, offset int) uint16 {
+	return uint16(input[offset]) | uint16(input[offset + 1]) << 8
+}
+
+func readFrameworkU32(input []byte, offset int) uint32 {
+	return uint32(input[offset]) | uint32(input[offset + 1]) << 8 |
+		uint32(input[offset + 2]) << 16 | uint32(input[offset + 3]) << 24
+}
+
+func readFrameworkU64(input []byte, offset int) uint64 {
+	return uint64(input[offset]) | uint64(input[offset + 1]) << 8 |
+		uint64(input[offset + 2]) << 16 | uint64(input[offset + 3]) << 24 |
+		uint64(input[offset + 4]) << 32 | uint64(input[offset + 5]) << 40 |
+		uint64(input[offset + 6]) << 48 | uint64(input[offset + 7]) << 56
+}
+
+func putFrameworkU16(output []byte, offset int, value uint16) {
+	output[offset] = byte(value)
+	output[offset + 1] = byte(value >> 8)
+}
+
+func putFrameworkU32(output []byte, offset int, value uint32) {
+	output[offset] = byte(value)
+	output[offset + 1] = byte(value >> 8)
+	output[offset + 2] = byte(value >> 16)
+	output[offset + 3] = byte(value >> 24)
+}
+
+func putFrameworkU64(output []byte, offset int, value uint64) {
+	output[offset] = byte(value)
+	output[offset + 1] = byte(value >> 8)
+	output[offset + 2] = byte(value >> 16)
+	output[offset + 3] = byte(value >> 24)
+	output[offset + 4] = byte(value >> 32)
+	output[offset + 5] = byte(value >> 40)
+	output[offset + 6] = byte(value >> 48)
+	output[offset + 7] = byte(value >> 56)
+}

@@ -1,24 +1,14 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2022",
     "module": "ESNext",
-    "moduleResolution": "bundler",
-    "lib": ["ES2020", "DOM"],
-    "jsx": "react-jsx",
-    "jsxImportSource": "preact",
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "strict": true,
-    "skipLibCheck": true,
-    "paths": {
-      "react": ["./node_modules/preact/compat"],
-      "react-dom": ["./node_modules/preact/compat"],
-      "react/jsx-runtime": ["./node_modules/preact/jsx-runtime"]
-    }
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "useDefineForClassFields": true,
+    "skipLibCheck": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*.ts"]
 }

@@ -1,0 +1,362 @@
+package style
+
+type LengthUnit uint8
+
+const (
+	LengthAuto LengthUnit = iota + 1
+	LengthPixel
+	LengthPercent
+	LengthFraction
+	LengthMinContent
+	LengthMaxContent
+	LengthFitContent
+)
+
+type Length struct {
+	Unit LengthUnit
+	Milli int32
+}
+
+type Edges struct {
+	Top Length
+	Right Length
+	Bottom Length
+	Left Length
+}
+
+type LayoutMode uint8
+
+const (
+	LayoutBlock LayoutMode = iota + 1
+	LayoutFlexRow
+	LayoutFlexColumn
+	LayoutGrid
+	LayoutStack
+	LayoutAbsolute
+)
+
+type Alignment uint8
+
+const (
+	AlignStart Alignment = iota + 1
+	AlignCenter
+	AlignEnd
+	AlignStretch
+	AlignBaseline
+	AlignSpaceBetween
+	AlignSpaceAround
+	AlignSpaceEvenly
+)
+
+type Overflow uint8
+
+const (
+	OverflowVisible Overflow = iota + 1
+	OverflowClip
+	OverflowScroll
+	OverflowAuto
+)
+
+type Layout struct {
+	Mode LayoutMode
+	Width Length
+	Height Length
+	MinWidth Length
+	MinHeight Length
+	MaxWidth Length
+	MaxHeight Length
+	Margin Edges
+	Padding Edges
+	Inset Edges
+	Gap Length
+	AlignItems Alignment
+	JustifyContent Alignment
+	AlignSelf Alignment
+	GridColumns uint16
+	Wrap bool
+	OverflowX Overflow
+	OverflowY Overflow
+	AspectWidth uint32
+	AspectHeight uint32
+}
+
+type Cursor uint8
+
+const (
+	CursorDefault Cursor = iota + 1
+	CursorPointer
+	CursorText
+	CursorMove
+	CursorResizeHorizontal
+	CursorResizeVertical
+	CursorHidden
+)
+
+type TextDirection uint8
+
+const (
+	DirectionLocale TextDirection = iota + 1
+	DirectionLeftToRight
+	DirectionRightToLeft
+)
+
+type FontWeight uint16
+
+const (
+	FontLight FontWeight = 300
+	FontNormal FontWeight = 400
+	FontMedium FontWeight = 500
+	FontSemibold FontWeight = 600
+	FontBold FontWeight = 700
+)
+
+type Visual struct {
+	Foreground uint32
+	Background uint32
+	BorderColor uint32
+	BorderWidthMilli int32
+	CornerRadiusMilli int32
+	OpacityMilli uint16
+	Cursor Cursor
+	FontFamily string
+	FontSizeMilli int32
+	FontWeight FontWeight
+	LineHeightMilli int32
+	Direction TextDirection
+}
+
+type Style struct {
+	Layout Layout
+	Visual Visual
+	Hover Visual
+	Focus Visual
+	Pressed Visual
+	Disabled Visual
+}
+
+type ThemeMode uint8
+
+const (
+	ThemeLight ThemeMode = iota + 1
+	ThemeDark
+)
+
+type Contrast uint8
+
+const (
+	ContrastNormal Contrast = iota + 1
+	ContrastHigh
+)
+
+type Motion uint8
+
+const (
+	MotionFull Motion = iota + 1
+	MotionReduced
+)
+
+type Density uint8
+
+const (
+	DensityCompact Density = iota + 1
+	DensityStandard
+	DensityComfortable
+)
+
+type ThemeEnvironment struct {
+	Revision uint64
+	Mode ThemeMode
+	Contrast Contrast
+	Motion Motion
+	Density Density
+	TypographyScaleMilli uint16
+	Locale string
+	Direction TextDirection
+}
+
+type ThemeToken struct {
+	Name string
+	Style Style
+}
+
+func Px(milli int32) Length {
+	return Length{Unit: LengthPixel, Milli: milli}
+}
+
+func Percent(milli int32) Length {
+	return Length{Unit: LengthPercent, Milli: milli}
+}
+
+func Fraction(value uint16) Length {
+	return Length{Unit: LengthFraction, Milli: int32(value)}
+}
+
+func Auto() Length {
+	return Length{Unit: LengthAuto}
+}
+
+func EncodeStyle(style Style) []byte {
+	if !validLayout(style.Layout) || !validVisual(style.Visual) ||
+		!validVisual(style.Hover) || !validVisual(style.Focus) ||
+		!validVisual(style.Pressed) || !validVisual(style.Disabled) {
+		return nil
+	}
+	bytes := []byte{'V', 'G', 'Y', '1'}
+	bytes = appendLayout(bytes, style.Layout)
+	bytes = appendVisual(bytes, style.Visual)
+	bytes = appendVisual(bytes, style.Hover)
+	bytes = appendVisual(bytes, style.Focus)
+	bytes = appendVisual(bytes, style.Pressed)
+	return appendVisual(bytes, style.Disabled)
+}
+
+func EncodeTheme(environment ThemeEnvironment, tokens []ThemeToken) []byte {
+	if environment.Revision == 0 || environment.Mode < ThemeLight ||
+		environment.Mode > ThemeDark || environment.Contrast < ContrastNormal ||
+		environment.Contrast > ContrastHigh || environment.Motion < MotionFull ||
+		environment.Motion > MotionReduced || environment.Density < DensityCompact ||
+		environment.Density > DensityComfortable ||
+		environment.TypographyScaleMilli == 0 || len(environment.Locale) == 0 ||
+		len(environment.Locale) > 65535 || environment.Direction < DirectionLocale ||
+		environment.Direction > DirectionRightToLeft || len(tokens) > 65535 {
+		return nil
+	}
+	bytes := []byte{'V', 'G', 'T', '1'}
+	bytes = appendStyleU64(bytes, environment.Revision)
+	bytes = append(bytes, byte(environment.Mode), byte(environment.Contrast),
+		byte(environment.Motion), byte(environment.Density))
+	bytes = appendStyleU16(bytes, environment.TypographyScaleMilli)
+	bytes = append(bytes, byte(environment.Direction), 0)
+	bytes = appendStyleU16(bytes, uint16(len(environment.Locale)))
+	bytes = appendStyleU16(bytes, uint16(len(tokens)))
+	bytes = append(bytes, []byte(environment.Locale)...)
+	for index, token := range tokens {
+		if len(token.Name) == 0 || len(token.Name) > 65535 {
+			return nil
+		}
+		for previous := 0; previous < index; previous++ {
+			if tokens[previous].Name == token.Name {
+				return nil
+			}
+		}
+		encoded := EncodeStyle(token.Style)
+		if encoded == nil {
+			return nil
+		}
+		bytes = appendStyleU16(bytes, uint16(len(token.Name)))
+		bytes = appendStyleU32(bytes, uint32(len(encoded)))
+		bytes = append(bytes, []byte(token.Name)...)
+		bytes = append(bytes, encoded...)
+	}
+	return bytes
+}
+
+func appendLayout(bytes []byte, layout Layout) []byte {
+	bytes = append(bytes, byte(layout.Mode), byte(layout.AlignItems),
+		byte(layout.JustifyContent), byte(layout.AlignSelf))
+	if layout.Wrap {
+		bytes = append(bytes, 1)
+	} else {
+		bytes = append(bytes, 0)
+	}
+	bytes = append(bytes, byte(layout.OverflowX), byte(layout.OverflowY), 0)
+	bytes = appendStyleU16(bytes, layout.GridColumns)
+	bytes = appendStyleU16(bytes, 0)
+	bytes = appendLength(bytes, layout.Width)
+	bytes = appendLength(bytes, layout.Height)
+	bytes = appendLength(bytes, layout.MinWidth)
+	bytes = appendLength(bytes, layout.MinHeight)
+	bytes = appendLength(bytes, layout.MaxWidth)
+	bytes = appendLength(bytes, layout.MaxHeight)
+	bytes = appendEdges(bytes, layout.Margin)
+	bytes = appendEdges(bytes, layout.Padding)
+	bytes = appendEdges(bytes, layout.Inset)
+	bytes = appendLength(bytes, layout.Gap)
+	bytes = appendStyleU32(bytes, layout.AspectWidth)
+	return appendStyleU32(bytes, layout.AspectHeight)
+}
+
+func appendVisual(bytes []byte, visual Visual) []byte {
+	bytes = appendStyleU32(bytes, visual.Foreground)
+	bytes = appendStyleU32(bytes, visual.Background)
+	bytes = appendStyleU32(bytes, visual.BorderColor)
+	bytes = appendStyleU32(bytes, uint32(visual.BorderWidthMilli))
+	bytes = appendStyleU32(bytes, uint32(visual.CornerRadiusMilli))
+	bytes = appendStyleU16(bytes, visual.OpacityMilli)
+	bytes = append(bytes, byte(visual.Cursor), byte(visual.Direction))
+	bytes = appendStyleU16(bytes, uint16(visual.FontWeight))
+	bytes = appendStyleU16(bytes, uint16(len(visual.FontFamily)))
+	bytes = appendStyleU32(bytes, uint32(visual.FontSizeMilli))
+	bytes = appendStyleU32(bytes, uint32(visual.LineHeightMilli))
+	return append(bytes, []byte(visual.FontFamily)...)
+}
+
+func appendEdges(bytes []byte, edges Edges) []byte {
+	bytes = appendLength(bytes, edges.Top)
+	bytes = appendLength(bytes, edges.Right)
+	bytes = appendLength(bytes, edges.Bottom)
+	return appendLength(bytes, edges.Left)
+}
+
+func appendLength(bytes []byte, length Length) []byte {
+	bytes = append(bytes, byte(length.Unit), 0, 0, 0)
+	return appendStyleU32(bytes, uint32(length.Milli))
+}
+
+func validLayout(layout Layout) bool {
+	if layout.Mode < LayoutBlock || layout.Mode > LayoutAbsolute ||
+		layout.AlignItems < AlignStart || layout.AlignItems > AlignBaseline ||
+		!validJustify(layout.JustifyContent) ||
+		layout.AlignSelf > AlignBaseline ||
+		layout.OverflowX < OverflowVisible || layout.OverflowX > OverflowAuto ||
+		layout.OverflowY < OverflowVisible || layout.OverflowY > OverflowAuto ||
+		layout.Mode == LayoutGrid && layout.GridColumns == 0 ||
+		(layout.AspectWidth == 0) != (layout.AspectHeight == 0) {
+		return false
+	}
+	return validLength(layout.Width) && validLength(layout.Height) &&
+		validLength(layout.MinWidth) && validLength(layout.MinHeight) &&
+		validLength(layout.MaxWidth) && validLength(layout.MaxHeight) &&
+		validEdges(layout.Margin) && validEdges(layout.Padding) &&
+		validEdges(layout.Inset) && validLength(layout.Gap)
+}
+
+func validVisual(visual Visual) bool {
+	return visual.BorderWidthMilli >= 0 && visual.CornerRadiusMilli >= 0 &&
+		visual.FontSizeMilli >= 0 && visual.LineHeightMilli >= 0 &&
+		visual.OpacityMilli <= 1000 && visual.Cursor <= CursorHidden &&
+		visual.Direction <= DirectionRightToLeft &&
+		(visual.FontWeight == 0 || visual.FontWeight == FontLight ||
+			visual.FontWeight == FontNormal || visual.FontWeight == FontMedium ||
+			visual.FontWeight == FontSemibold || visual.FontWeight == FontBold) &&
+		len(visual.FontFamily) <= 65535
+}
+
+func validEdges(edges Edges) bool {
+	return validLength(edges.Top) && validLength(edges.Right) &&
+		validLength(edges.Bottom) && validLength(edges.Left)
+}
+
+func validLength(length Length) bool {
+	return length.Unit >= LengthAuto && length.Unit <= LengthFitContent &&
+		(length.Unit != LengthFraction || (length.Milli > 0 && length.Milli <= 65535))
+}
+
+func validJustify(value Alignment) bool {
+	return value == AlignStart || value == AlignCenter || value == AlignEnd ||
+		value == AlignSpaceBetween || value == AlignSpaceAround ||
+		value == AlignSpaceEvenly
+}
+
+func appendStyleU16(bytes []byte, value uint16) []byte {
+	return append(bytes, byte(value), byte(value >> 8))
+}
+
+func appendStyleU32(bytes []byte, value uint32) []byte {
+	return append(bytes, byte(value), byte(value >> 8), byte(value >> 16), byte(value >> 24))
+}
+
+func appendStyleU64(bytes []byte, value uint64) []byte {
+	return append(bytes, byte(value), byte(value >> 8), byte(value >> 16), byte(value >> 24),
+		byte(value >> 32), byte(value >> 40), byte(value >> 48), byte(value >> 56))
+}

@@ -2,6 +2,9 @@
 name = "vogui-protocol"
 version = "0.1.0"
 edition = "2021"
-description = "Binary render protocol decoder for VoGUI"
+description = "Schema-generated bounded Vogui V2 protocol"
 
 [dependencies]
+
+[build-dependencies]
+vo-schema-compiler = { path = "../../../volang/lang/crates/vo-schema-compiler" }

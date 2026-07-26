@@ -1,0 +1,39 @@
+{
+  "artifact": "vogui-protocol.generated",
+  "generator": {
+    "command": [
+      "cargo",
+      "run",
+      "-q",
+      "-p",
+      "vo-dev",
+      "--locked",
+      "--",
+      "generate",
+      "vogui-protocol",
+      "--write"
+    ],
+    "version": 1
+  },
+  "outputs": [
+    {
+      "digest": "sha256:cf503273a9a9b16ece30c24c944d34ee638d603ac2930896df8689a5c3b88138",
+      "path": "vogui_protocol.ts",
+      "size": 6023
+    },
+    {
+      "digest": "sha256:5b22a704e9708df036228c7e5befd9e1a27e90d2daa0f2b9b11ecab3f85375e1",
+      "path": "vogui_protocol.vo",
+      "size": 5773
+    }
+  ],
+  "path": "protocol/generated",
+  "schemaVersion": 2,
+  "sourceDigests": {
+    "external:volang/lang/crates/vo-schema-compiler/src/lib.rs": "sha256:a5be3cf508b567f6735c12da6a12d581efd12226106379b836f641fe14726331",
+    "protocol/vogui.schema.toml": "sha256:01cc1b71bada0886e00022b76fb2b0fd9152885f0a3b0825a29b0489f11b2b70"
+  },
+  "toolchain": {
+    "rust": "workspace-1.94.0"
+  }
+}

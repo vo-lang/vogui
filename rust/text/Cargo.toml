@@ -1,0 +1,12 @@
+[package]
+name = "vogui-text"
+version = "0.1.0"
+edition = "2021"
+description = "Portable Vogui text layout cache and platform font boundary"
+
+[dependencies]
+vogui-protocol = { path = "../protocol" }
+
+[features]
+default = []
+macos-coretext = []

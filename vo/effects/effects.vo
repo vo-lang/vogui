@@ -1,0 +1,304 @@
+package effects
+
+type Scope uint8
+
+const (
+	ScopeApp Scope = iota + 1
+	ScopeUiRoot
+	ScopeNode
+)
+
+type Effect struct {
+	Kind string
+	Scope Scope
+	LogicalRoot uint64
+	LogicalRef uint64
+	SuccessMapper uint32
+	FailureMapper uint32
+	DeadlineMillis uint64
+	TransferableAcrossReload bool
+	Payload []byte
+}
+
+type DocumentHeadAttribute struct {
+	Name string
+	Value string
+}
+
+type DocumentHeadEntry struct {
+	Key string
+	Tag byte
+	Attributes []DocumentHeadAttribute
+	Text string
+}
+
+type DocumentHead struct {
+	Revision uint64
+	Title string
+	Language string
+	Direction string
+	Entries []DocumentHeadEntry
+}
+
+func ForRoot(effect Effect, logicalRoot uint64) Effect {
+	effect.LogicalRoot = logicalRoot
+	return effect
+}
+
+func Delay(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, delayMillis uint64) Effect {
+	return Effect{
+		Kind: "delay", Scope: scope, LogicalRef: logicalRef, SuccessMapper: successMapper,
+		FailureMapper: failureMapper, DeadlineMillis: deadlineMillis,
+		Payload: appendU64(nil, delayMillis),
+	}
+}
+
+func Background(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, delayMillis uint64, completionPayload []byte) Effect {
+	payload := appendU64(nil, delayMillis)
+	payload = append(payload, completionPayload...)
+	return Effect{
+		Kind: "background", Scope: scope, LogicalRef: logicalRef, SuccessMapper: successMapper,
+		FailureMapper: failureMapper, DeadlineMillis: deadlineMillis, Payload: payload,
+	}
+}
+
+func ClipboardRead(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64) Effect {
+	return platform("clipboard.read", scope, logicalRef, successMapper, failureMapper, deadlineMillis, nil)
+}
+
+func ClipboardWrite(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, text string) Effect {
+	return platform("clipboard.write", scope, logicalRef, successMapper, failureMapper, deadlineMillis, []byte(text))
+}
+
+func FileOpen(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, descriptor []byte) Effect {
+	return platform("file.open", scope, logicalRef, successMapper, failureMapper, deadlineMillis, descriptor)
+}
+
+func FileSave(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, descriptor []byte) Effect {
+	return platform("file.save", scope, logicalRef, successMapper, failureMapper, deadlineMillis, descriptor)
+}
+
+func Navigation(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, descriptor []byte) Effect {
+	return platform("navigation", scope, logicalRef, successMapper, failureMapper, deadlineMillis, descriptor)
+}
+
+func WindowCommand(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, command []byte) Effect {
+	return platform("window.command", scope, logicalRef, successMapper, failureMapper, deadlineMillis, command)
+}
+
+func ViewCommand(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, command []byte) Effect {
+	return platform("view.command", scope, logicalRef, successMapper, failureMapper, deadlineMillis, command)
+}
+
+func BeginAnimation(logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, command []byte) Effect {
+	return Effect{
+		Kind: "animation.begin", Scope: ScopeNode, LogicalRef: logicalRef, SuccessMapper: successMapper,
+		FailureMapper: failureMapper, DeadlineMillis: deadlineMillis, Payload: command,
+	}
+}
+
+func CancelAnimation(logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, animation []byte) Effect {
+	return Effect{
+		Kind: "animation.cancel", Scope: ScopeNode, LogicalRef: logicalRef, SuccessMapper: successMapper,
+		FailureMapper: failureMapper, DeadlineMillis: deadlineMillis, Payload: animation,
+	}
+}
+
+func VfsRead(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, path string) Effect {
+	return platform("vfs", scope, logicalRef, successMapper, failureMapper, deadlineMillis, vfsRequest(1, path, nil))
+}
+
+func VfsWrite(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, path string, data []byte) Effect {
+	return platform("vfs", scope, logicalRef, successMapper, failureMapper, deadlineMillis, vfsRequest(2, path, data))
+}
+
+func VfsStat(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, path string) Effect {
+	return platform("vfs", scope, logicalRef, successMapper, failureMapper, deadlineMillis, vfsRequest(3, path, nil))
+}
+
+func VfsList(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, path string) Effect {
+	return platform("vfs", scope, logicalRef, successMapper, failureMapper, deadlineMillis, vfsRequest(4, path, nil))
+}
+
+func Capability(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, name string) Effect {
+	return platform("capability", scope, logicalRef, successMapper, failureMapper, deadlineMillis, []byte(name))
+}
+
+func AudioActivation(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64) Effect {
+	return platform("audio.activation", scope, logicalRef, successMapper, failureMapper, deadlineMillis, nil)
+}
+
+func Haptics(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, request []byte) Effect {
+	return platform("haptics.rumble", scope, logicalRef, successMapper, failureMapper, deadlineMillis, request)
+}
+
+func SetWindowTitle(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, title string) Effect {
+	return WindowCommand(scope, logicalRef, successMapper, failureMapper, deadlineMillis,
+		commandWithArgument("title", title))
+}
+
+func FocusWindow(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64) Effect {
+	return WindowCommand(scope, logicalRef, successMapper, failureMapper, deadlineMillis, []byte("focus"))
+}
+
+func BlurWindow(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64) Effect {
+	return WindowCommand(scope, logicalRef, successMapper, failureMapper, deadlineMillis, []byte("blur"))
+}
+
+func SetWindowCursor(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, cursor string) Effect {
+	return WindowCommand(scope, logicalRef, successMapper, failureMapper, deadlineMillis,
+		commandWithArgument("cursor", cursor))
+}
+
+func RequestFullscreen(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64) Effect {
+	return WindowCommand(scope, logicalRef, successMapper, failureMapper, deadlineMillis, []byte("fullscreen"))
+}
+
+func ExitFullscreen(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64) Effect {
+	return WindowCommand(scope, logicalRef, successMapper, failureMapper, deadlineMillis, []byte("exit-fullscreen"))
+}
+
+func SetDocumentHead(scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, descriptor []byte) Effect {
+	return WindowCommand(scope, logicalRef, successMapper, failureMapper, deadlineMillis,
+		commandWithBytes("document-head", descriptor))
+}
+
+func EncodeDocumentHead(head DocumentHead) []byte {
+	if head.Revision == 0 || len(head.Entries) > 65535 || !validDirection(head.Direction) {
+		return nil
+	}
+	bytes := []byte{'V', 'D', 'H', '1'}
+	bytes = appendU64(bytes, head.Revision)
+	bytes = appendString32(bytes, head.Title)
+	bytes = appendString32(bytes, head.Language)
+	bytes = appendString32(bytes, head.Direction)
+	bytes = appendU16(bytes, uint16(len(head.Entries)))
+	totalStrings := len(head.Title) + len(head.Language) + len(head.Direction)
+	for _, entry := range head.Entries {
+		if len(entry.Key) == 0 || len(entry.Key) > 65535 ||
+			entry.Tag < 1 || entry.Tag > 4 || len(entry.Attributes) > 65535 {
+			return nil
+		}
+		bytes = appendU16(bytes, uint16(len(entry.Key)))
+		bytes = append(bytes, []byte(entry.Key)...)
+		bytes = append(bytes, entry.Tag)
+		bytes = appendU16(bytes, uint16(len(entry.Attributes)))
+		totalStrings += len(entry.Key) + len(entry.Text)
+		for _, attribute := range entry.Attributes {
+			if len(attribute.Name) == 0 || len(attribute.Name) > 65535 {
+				return nil
+			}
+			bytes = appendU16(bytes, uint16(len(attribute.Name)))
+			bytes = append(bytes, []byte(attribute.Name)...)
+			bytes = appendString32(bytes, attribute.Value)
+			totalStrings += len(attribute.Name) + len(attribute.Value)
+		}
+		bytes = appendString32(bytes, entry.Text)
+		if totalStrings > 1048576 || len(bytes) > 2097152 {
+			return nil
+		}
+	}
+	return bytes
+}
+
+func platform(kind string, scope Scope, logicalRef uint64, successMapper uint32, failureMapper uint32, deadlineMillis uint64, payload []byte) Effect {
+	return Effect{
+		Kind: kind, Scope: scope, LogicalRef: logicalRef, SuccessMapper: successMapper,
+		FailureMapper: failureMapper, DeadlineMillis: deadlineMillis, Payload: payload,
+	}
+}
+
+func vfsRequest(operation byte, path string, data []byte) []byte {
+	bytes := []byte{'V', 'F', 'S', '1', operation, 0, 0, 0}
+	bytes = appendU32(bytes, uint32(len(path)))
+	bytes = appendU32(bytes, uint32(len(data)))
+	bytes = append(bytes, []byte(path)...)
+	return append(bytes, data...)
+}
+
+func commandWithArgument(command string, argument string) []byte {
+	return commandWithBytes(command, []byte(argument))
+}
+
+func commandWithBytes(command string, argument []byte) []byte {
+	if len(command) == 0 || len(command) > 65535 || len(argument) > 1048576 {
+		return nil
+	}
+	bytes := []byte{'V', 'W', 'C', '1'}
+	bytes = appendU16(bytes, uint16(len(command)))
+	bytes = appendU32(bytes, uint32(len(argument)))
+	bytes = append(bytes, []byte(command)...)
+	return append(bytes, argument...)
+}
+
+func appendString32(bytes []byte, value string) []byte {
+	bytes = appendU32(bytes, uint32(len(value)))
+	return append(bytes, []byte(value)...)
+}
+
+func validDirection(direction string) bool {
+	return direction == "" || direction == "ltr" || direction == "rtl" || direction == "auto"
+}
+
+func Encode(records []Effect) []byte {
+	if len(records) > 4096 {
+		return nil
+	}
+	bytes := []byte{'V', 'G', 'E', '2'}
+	bytes = appendU32(bytes, uint32(len(records)))
+	for _, record := range records {
+		if record.Scope != ScopeApp && record.LogicalRoot == 0 {
+			record.LogicalRoot = 1
+		}
+		if !valid(record) {
+			return nil
+		}
+		flags := byte(0)
+		if record.TransferableAcrossReload {
+			flags = 1
+		}
+		bytes = appendU16(bytes, uint16(len(record.Kind)))
+		bytes = append(bytes, byte(record.Scope), flags)
+		bytes = appendU32(bytes, record.SuccessMapper)
+		bytes = appendU32(bytes, record.FailureMapper)
+		bytes = appendU64(bytes, record.DeadlineMillis)
+		bytes = appendU64(bytes, record.LogicalRoot)
+		bytes = appendU64(bytes, record.LogicalRef)
+		bytes = appendU32(bytes, uint32(len(record.Payload)))
+		bytes = append(bytes, []byte(record.Kind)...)
+		bytes = append(bytes, record.Payload...)
+		if len(bytes) > 16777216 {
+			return nil
+		}
+	}
+	return bytes
+}
+
+func valid(record Effect) bool {
+	if len(record.Kind) == 0 || len(record.Kind) > 256 || len(record.Payload) > 1048576 {
+		return false
+	}
+	if record.SuccessMapper == 0 || record.FailureMapper == 0 || record.DeadlineMillis == 0 {
+		return false
+	}
+	if record.Scope == ScopeApp {
+		return record.LogicalRoot == 0 && record.LogicalRef == 0
+	}
+	if record.Scope == ScopeUiRoot {
+		return record.LogicalRoot != 0 && record.LogicalRef == 0
+	}
+	return record.Scope == ScopeNode && record.LogicalRoot != 0 && record.LogicalRef != 0
+}
+
+func appendU16(bytes []byte, value uint16) []byte {
+	return append(bytes, byte(value), byte(value >> 8))
+}
+
+func appendU32(bytes []byte, value uint32) []byte {
+	return append(bytes, byte(value), byte(value >> 8), byte(value >> 16), byte(value >> 24))
+}
+
+func appendU64(bytes []byte, value uint64) []byte {
+	return append(bytes, byte(value), byte(value >> 8), byte(value >> 16), byte(value >> 24), byte(value >>
+		32), byte(value >> 40), byte(value >> 48), byte(value >> 56))
+}

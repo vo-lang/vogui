@@ -1,27 +1,12 @@
-// VoGUI v4 JavaScript Runtime — Public API
-// Preact + Radix UI + Tailwind CSS renderer
-
-import './vogui.css';
-
-export type {
-    VoNode,
-    VoHandler,
-    RenderMessage,
-    RefAction,
-    EventCallback,
-    RendererConfig,
-    WidgetFactory,
-    WidgetInstance,
-    CanvasCommand,
-    CanvasBatch,
-} from './types';
-
-export { render, voNodeToVNode, registerWidget, destroyWidgets } from './renderer';
-export { injectStyles, applyTheme, injectDynamicStyles, toggleDarkMode, setDarkMode, isDarkMode } from './styles';
-export { executeCanvasBatch } from './canvas';
-export { decodeBinaryRender } from './decoder';
-export { findHostWidgetHandlerId, findHostWidgetHandlerIdInBytes } from './query';
-export { executeRefAction, getRef } from './refs';
-export { emit, setRenderContext, setupKeyHandler } from './events';
-export { installAudioBridge } from './audio';
-export { measureText, measureTextLines, fillTextWrap } from './text';
+export * from "./dom_renderer.js";
+export * from "./dom_host.js";
+export * from "./interaction_bridge.js";
+export * from "./return_codec.js";
+export * from "./command_codec.js";
+export * from "./ui_return_lane.js";
+export * from "./transaction_codec.js";
+export * from "./resource_codec.js";
+export * from "./document_host.js";
+export * from "./overlay_host.js";
+export * from "./navigation_host.js";
+export * from "./accessibility_dom.js";

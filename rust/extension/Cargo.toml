@@ -1,0 +1,102 @@
+[package]
+name = "vogui-extension"
+version = "0.1.0"
+edition = "2021"
+description = "Exact Vogui profile provider artifact"
+build = "build.rs"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+sha2 = "0.10"
+vogui-protocol = { path = "../protocol" }
+vogui-runtime = { path = "../runtime" }
+vo-app-host-native = { path = "../../../volang/lang/crates/vo-app-host-native", optional = true }
+vogui-layout = { path = "../layout", optional = true }
+vogui-text = { path = "../text", optional = true }
+vogui-native-renderer = { path = "../native-renderer", optional = true }
+vogui-native-accessibility = { path = "../native-accessibility", optional = true }
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+vo-app-runtime = { path = "../../../volang/lang/crates/vo-app-runtime", features = ["std"] }
+vo-ext = { path = "../../../volang/lang/crates/vo-ext", features = ["native"] }
+vo-runtime = { path = "../../../volang/lang/crates/vo-runtime", features = ["std"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+vo-app-runtime = { path = "../../../volang/lang/crates/vo-app-runtime", default-features = false }
+vo-ext = { path = "../../../volang/lang/crates/vo-ext", default-features = false, features = ["wasm"] }
+vo-runtime = { path = "../../../volang/lang/crates/vo-runtime", default-features = false }
+
+[build-dependencies]
+vo-module = { path = "../../../volang/lang/crates/vo-module" }
+
+[features]
+default = ["profile-native-gpu-full"]
+profile-headless = []
+profile-web-minimal = []
+profile-web-full = []
+profile-web-editor = []
+profile-web-overlay-minimal = []
+profile-native-webview-minimal = [
+    "dep:vo-app-host-native",
+    "vo-app-host-native/macos-appkit",
+]
+profile-native-webview-full = [
+    "dep:vo-app-host-native",
+    "vo-app-host-native/macos-appkit",
+]
+profile-native-webview-editor = [
+    "dep:vo-app-host-native",
+    "vo-app-host-native/macos-appkit",
+]
+profile-native-webview-overlay-minimal = [
+    "dep:vo-app-host-native",
+    "vo-app-host-native/macos-appkit",
+]
+profile-native-gpu-minimal = [
+    "dep:vo-app-host-native",
+    "dep:vogui-layout",
+    "dep:vogui-native-accessibility",
+    "dep:vogui-native-renderer",
+    "dep:vogui-text",
+    "vo-app-host-native/macos-gpu",
+    "vogui-native-accessibility/macos-appkit",
+    "vogui-native-renderer/native-wgpu",
+    "vogui-text/macos-coretext",
+]
+profile-native-gpu-full = [
+    "dep:vo-app-host-native",
+    "dep:vogui-layout",
+    "dep:vogui-native-accessibility",
+    "dep:vogui-native-renderer",
+    "dep:vogui-text",
+    "vo-app-host-native/macos-gpu",
+    "vogui-native-accessibility/macos-appkit",
+    "vogui-native-renderer/native-wgpu",
+    "vogui-text/macos-coretext",
+]
+profile-native-gpu-editor = [
+    "dep:vo-app-host-native",
+    "dep:vogui-layout",
+    "dep:vogui-native-accessibility",
+    "dep:vogui-native-renderer",
+    "dep:vogui-text",
+    "vo-app-host-native/macos-gpu",
+    "vogui-native-accessibility/macos-appkit",
+    "vogui-native-renderer/native-wgpu",
+    "vogui-text/macos-coretext",
+]
+profile-native-gpu-overlay-minimal = [
+    "dep:vo-app-host-native",
+    "dep:vogui-layout",
+    "dep:vogui-native-accessibility",
+    "dep:vogui-native-renderer",
+    "dep:vogui-text",
+    "vo-app-host-native/macos-gpu",
+    "vogui-native-accessibility/macos-appkit",
+    "vogui-native-renderer/native-wgpu",
+    "vogui-text/macos-coretext",
+]
+
+[package.metadata.vo]
+vomod = "../../vo.mod"

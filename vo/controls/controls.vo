@@ -1,0 +1,976 @@
+package controls
+
+type NodeKind uint64
+
+const (
+	NodeText NodeKind = iota + 1
+	NodeImage
+	NodeButton
+	NodeTextField
+	NodeToggle
+	NodeSlider
+	NodeList
+	NodeGrid
+	NodeRichText
+	NodeIcon
+	NodeLink
+	NodePasswordField
+	NodeTextArea
+	NodeCheckbox
+	NodeSwitch
+	NodeRadioGroup
+	NodeSelect
+	NodeListBox
+	NodeCombobox
+	NodeForm
+	NodeLabel
+	NodeHelp
+	NodeError
+	NodeProgress
+	NodeSpinner
+	NodeTabs
+	NodeDisclosure
+	NodeAccordion
+	NodeDialog
+	NodeDrawer
+	NodeTooltip
+	NodePopover
+	NodeMenu
+	NodeContextMenu
+	NodeTable
+	NodeTree
+	NodeScrollView
+	NodeVirtualCollection
+	NodePortal
+	NodeOverlay
+	NodeToast
+	NodeFocusScope
+	NodeLiveRegion
+)
+
+type SemanticRole uint32
+
+const (
+	RoleNone SemanticRole = iota
+	RoleText
+	RoleImage
+	RoleButton
+	RoleTextField
+	RoleCheckbox
+	RoleSlider
+	RoleList
+	RoleGrid
+	RoleLink
+	RoleSwitch
+	RoleRadio
+	RoleRadioGroup
+	RoleListBox
+	RoleOption
+	RoleCombobox
+	RoleForm
+	RoleLabel
+	RoleProgress
+	RoleTab
+	RoleTabList
+	RoleTabPanel
+	RoleDialog
+	RoleTooltip
+	RoleMenu
+	RoleMenuItem
+	RoleTable
+	RoleRow
+	RoleCell
+	RoleTree
+	RoleTreeItem
+	RoleStatus
+	RoleAlert
+)
+
+type EventKind uint64
+
+const (
+	EventPress EventKind = iota + 1
+	EventTextEdit
+	EventKeyDown
+	EventKeyUp
+	EventFocusIn
+	EventFocusOut
+	EventPointerDown
+	EventPointerUp
+	EventDragEnter
+	EventDragOver
+	EventDragLeave
+	EventDrop
+	EventChange
+	EventInput
+	EventSubmit
+	EventDismiss
+	EventSelect
+	EventToggle
+	EventOpen
+	EventClose
+	EventPointerMove
+	EventPointerCancel
+	EventWheel
+	EventContextMenu
+	EventCompositionStart
+	EventCompositionUpdate
+	EventCompositionCommit
+	EventCompositionCancel
+)
+
+type ButtonProps struct {
+	Label string
+	Disabled bool
+	DefaultAction bool
+}
+
+type CommonProps struct {
+	AccessibleName string
+	AccessibleDescription string
+	Disabled bool
+	Hidden bool
+	TabIndex int32
+	Role SemanticRole
+	ThemeTokens []string
+	Style uint64
+	Class uint64
+}
+
+type TextProps struct {
+	Text string
+	Locale string
+	Direction uint32
+	Selectable bool
+	Live uint32
+}
+
+type ImageProps struct {
+	Resource uint64
+	Alt string
+	Fit uint32
+	WidthMilli uint32
+	HeightMilli uint32
+}
+
+type LinkProps struct {
+	Label string
+	Route uint64
+	ExternalUrl string
+	Target uint32
+	Disabled bool
+}
+
+type ToggleProps struct {
+	Label string
+	Checked bool
+	Indeterminate bool
+	Disabled bool
+	Required bool
+}
+
+type SliderProps struct {
+	Label string
+	ValueMilli int64
+	MinimumMilli int64
+	MaximumMilli int64
+	StepMilli uint64
+	Orientation uint32
+	Disabled bool
+}
+
+type Option struct {
+	Id uint64
+	Label string
+	Description string
+	Disabled bool
+}
+
+type SelectionProps struct {
+	Label string
+	Options []Option
+	Selected []uint64
+	Active uint64
+	Multiple bool
+	Expanded bool
+	Required bool
+	Disabled bool
+}
+
+type FormProps struct {
+	Id uint64
+	ValidationRevision uint64
+	Valid bool
+	Submitting bool
+	Autocomplete bool
+}
+
+type ProgressProps struct {
+	Label string
+	ValueMilli uint64
+	MaximumMilli uint64
+	Indeterminate bool
+}
+
+type TabsProps struct {
+	Selected uint64
+	Activation uint32
+	Orientation uint32
+	LoopFocus bool
+}
+
+type DisclosureProps struct {
+	Expanded bool
+	Disabled bool
+	Controls uint64
+}
+
+type DialogProps struct {
+	Open bool
+	Modal bool
+	DismissOnEscape bool
+	DismissOnBackdrop bool
+	InitialFocus uint64
+	ReturnFocus uint64
+	Label string
+	Description string
+}
+
+type OverlayProps struct {
+	Open bool
+	Anchor uint64
+	Placement uint32
+	OffsetMilli int32
+	Flip bool
+	Shift bool
+	TrapFocus bool
+}
+
+type VirtualCollectionProps struct {
+	ItemCount uint64
+	FirstVisible uint64
+	VisibleCount uint32
+	Overscan uint32
+	EstimatedItemSizeMilli uint32
+	Axis uint32
+	Revision uint64
+}
+
+type TableProps struct {
+	RowCount uint64
+	ColumnCount uint32
+	SelectionMode uint32
+	SortColumn uint32
+	SortDirection uint32
+	Virtualized bool
+}
+
+type LiveRegionProps struct {
+	Politeness uint32
+	Atomic bool
+	Relevant uint32
+	Message string
+	Revision uint64
+}
+
+type Property struct {
+	Name string
+	Value string
+}
+
+func EncodeButtonProps(props ButtonProps, common CommonProps) []byte {
+	if len(props.Label) == 0 || props.Disabled != common.Disabled {
+		return nil
+	}
+	properties := commonProperties(common)
+	properties = append(properties,
+		Property{Name: "label", Value: props.Label},
+		Property{Name: "defaultAction", Value: boolProperty(props.DefaultAction)})
+	return EncodeProperties(properties)
+}
+
+func EncodeTextProps(props TextProps, common CommonProps) []byte {
+	if props.Direction > 2 || props.Live > 3 {
+		return nil
+	}
+	properties := commonProperties(common)
+	properties = append(properties,
+		Property{Name: "text", Value: props.Text},
+		Property{Name: "locale", Value: props.Locale},
+		Property{Name: "direction", Value: decimalU64(uint64(props.Direction))},
+		Property{Name: "selectable", Value: boolProperty(props.Selectable)},
+		Property{Name: "live", Value: decimalU64(uint64(props.Live))})
+	return EncodeProperties(properties)
+}
+
+func EncodeImageProps(props ImageProps, common CommonProps) []byte {
+	if props.Resource == 0 || props.Fit > 4 {
+		return nil
+	}
+	properties := commonProperties(common)
+	properties = append(properties,
+		Property{Name: "resource", Value: decimalU64(props.Resource)},
+		Property{Name: "alt", Value: props.Alt},
+		Property{Name: "fit", Value: decimalU64(uint64(props.Fit))},
+		Property{Name: "widthMilli", Value: decimalU64(uint64(props.WidthMilli))},
+		Property{Name: "heightMilli", Value: decimalU64(uint64(props.HeightMilli))})
+	return EncodeProperties(properties)
+}
+
+func EncodeLinkProps(props LinkProps, common CommonProps) []byte {
+	if len(props.Label) == 0 || props.Route == 0 && len(props.ExternalUrl) == 0 ||
+		props.Route != 0 && len(props.ExternalUrl) != 0 || props.Target > 3 ||
+		props.Disabled != common.Disabled {
+		return nil
+	}
+	properties := commonProperties(common)
+	properties = append(properties,
+		Property{Name: "label", Value: props.Label},
+		Property{Name: "route", Value: decimalU64(props.Route)},
+		Property{Name: "externalUrl", Value: props.ExternalUrl},
+		Property{Name: "target", Value: decimalU64(uint64(props.Target))})
+	return EncodeProperties(properties)
+}
+
+func EncodeTextFieldProps(props TextFieldProps, common CommonProps) []byte {
+	if props.EditRevision == 0 ||
+		props.Multiline && props.ReadOnly && props.Disabled {
+		return nil
+	}
+	properties := commonProperties(common)
+	properties = append(properties,
+		Property{Name: "value", Value: props.Value},
+		Property{Name: "placeholder", Value: props.Placeholder},
+		Property{Name: "readOnly", Value: boolProperty(props.ReadOnly)},
+		Property{Name: "multiline", Value: boolProperty(props.Multiline)},
+		Property{Name: "editRevision", Value: decimalU64(props.EditRevision)},
+		Property{Name: "confirmedEditSequence",
+			Value: decimalU64(props.ConfirmedEditSequence)})
+	return EncodeProperties(properties)
+}
+
+func EncodeToggleProps(props ToggleProps, common CommonProps) []byte {
+	if len(props.Label) == 0 || props.Indeterminate && props.Checked {
+		return nil
+	}
+	properties := commonProperties(common)
+	properties = append(properties,
+		Property{Name: "label", Value: props.Label},
+		Property{Name: "checked", Value: boolProperty(props.Checked)},
+		Property{Name: "indeterminate", Value: boolProperty(props.Indeterminate)},
+		Property{Name: "required", Value: boolProperty(props.Required)})
+	return EncodeProperties(properties)
+}
+
+func EncodeSliderProps(props SliderProps, common CommonProps) []byte {
+	if len(props.Label) == 0 || props.MinimumMilli > props.MaximumMilli ||
+		props.ValueMilli < props.MinimumMilli || props.ValueMilli > props.MaximumMilli ||
+		props.StepMilli == 0 || props.Orientation > 1 ||
+		props.Disabled != common.Disabled {
+		return nil
+	}
+	properties := commonProperties(common)
+	properties = append(properties,
+		Property{Name: "label", Value: props.Label},
+		Property{Name: "valueMilli", Value: decimalI64(props.ValueMilli)},
+		Property{Name: "minimumMilli", Value: decimalI64(props.MinimumMilli)},
+		Property{Name: "maximumMilli", Value: decimalI64(props.MaximumMilli)},
+		Property{Name: "stepMilli", Value: decimalU64(props.StepMilli)},
+		Property{Name: "orientation", Value: decimalU64(uint64(props.Orientation))})
+	return EncodeProperties(properties)
+}
+
+func EncodeSelectionProps(props SelectionProps, common CommonProps) []byte {
+	if len(props.Label) == 0 || len(props.Options) > 48 ||
+		len(props.Selected) > 48 || !props.Multiple && len(props.Selected) > 1 {
+		return nil
+	}
+	properties := commonProperties(common)
+	properties = append(properties,
+		Property{Name: "label", Value: props.Label},
+		Property{Name: "multiple", Value: boolProperty(props.Multiple)},
+		Property{Name: "expanded", Value: boolProperty(props.Expanded)},
+		Property{Name: "required", Value: boolProperty(props.Required)},
+		Property{Name: "active", Value: decimalU64(props.Active)})
+	for index, option := range props.Options {
+		if option.Id == 0 || len(option.Label) == 0 {
+			return nil
+		}
+		for previous := 0; previous < index; previous++ {
+			if props.Options[previous].Id == option.Id {
+				return nil
+			}
+		}
+		prefix := "option." + decimalU64(option.Id) + "."
+		properties = append(properties,
+			Property{
+				Name: "optionOrder." + decimalU64(uint64(index)),
+				Value: decimalU64(option.Id),
+			},
+			Property{Name: prefix + "label", Value: option.Label},
+			Property{Name: prefix + "description", Value: option.Description},
+			Property{Name: prefix + "disabled",
+				Value: boolProperty(option.Disabled)})
+	}
+	for index, selected := range props.Selected {
+		if selected == 0 || index > 0 && props.Selected[index-1] >= selected {
+			return nil
+		}
+		properties = append(properties, Property{
+			Name: "selected." + decimalU64(uint64(index)),
+			Value: decimalU64(selected),
+		})
+	}
+	return EncodeProperties(properties)
+}
+
+func EncodeDialogProps(props DialogProps, common CommonProps) []byte {
+	if props.Open && len(props.Label) == 0 {
+		return nil
+	}
+	properties := commonProperties(common)
+	properties = append(properties,
+		Property{Name: "open", Value: boolProperty(props.Open)},
+		Property{Name: "modal", Value: boolProperty(props.Modal)},
+		Property{Name: "dismissOnEscape",
+			Value: boolProperty(props.DismissOnEscape)},
+		Property{Name: "dismissOnBackdrop",
+			Value: boolProperty(props.DismissOnBackdrop)},
+		Property{Name: "initialFocus", Value: decimalU64(props.InitialFocus)},
+		Property{Name: "returnFocus", Value: decimalU64(props.ReturnFocus)},
+		Property{Name: "label", Value: props.Label},
+		Property{Name: "description", Value: props.Description})
+	return EncodeProperties(properties)
+}
+
+func EncodeFormProps(props FormProps, common CommonProps) []byte {
+	if props.Id == 0 || props.ValidationRevision == 0 {
+		return nil
+	}
+	properties := commonProperties(common)
+	properties = append(properties,
+		Property{Name: "formId", Value: decimalU64(props.Id)},
+		Property{Name: "validationRevision", Value: decimalU64(props.ValidationRevision)},
+		Property{Name: "valid", Value: boolProperty(props.Valid)},
+		Property{Name: "submitting", Value: boolProperty(props.Submitting)},
+		Property{Name: "autocomplete", Value: boolProperty(props.Autocomplete)})
+	return EncodeProperties(properties)
+}
+
+func EncodeProgressProps(props ProgressProps, common CommonProps) []byte {
+	if len(props.Label) == 0 || !props.Indeterminate &&
+		(props.MaximumMilli == 0 || props.ValueMilli > props.MaximumMilli) {
+		return nil
+	}
+	properties := commonProperties(common)
+	properties = append(properties,
+		Property{Name: "label", Value: props.Label},
+		Property{Name: "valueMilli", Value: decimalU64(props.ValueMilli)},
+		Property{Name: "maximumMilli", Value: decimalU64(props.MaximumMilli)},
+		Property{Name: "indeterminate", Value: boolProperty(props.Indeterminate)})
+	return EncodeProperties(properties)
+}
+
+func EncodeTabsProps(props TabsProps, common CommonProps) []byte {
+	if props.Selected == 0 || props.Activation > 1 || props.Orientation > 1 {
+		return nil
+	}
+	properties := commonProperties(common)
+	properties = append(properties,
+		Property{Name: "selected", Value: decimalU64(props.Selected)},
+		Property{Name: "activation", Value: decimalU64(uint64(props.Activation))},
+		Property{Name: "orientation", Value: decimalU64(uint64(props.Orientation))},
+		Property{Name: "loopFocus", Value: boolProperty(props.LoopFocus)})
+	return EncodeProperties(properties)
+}
+
+func EncodeDisclosureProps(props DisclosureProps, common CommonProps) []byte {
+	if props.Controls == 0 || props.Disabled != common.Disabled {
+		return nil
+	}
+	properties := commonProperties(common)
+	properties = append(properties,
+		Property{Name: "expanded", Value: boolProperty(props.Expanded)},
+		Property{Name: "controls", Value: decimalU64(props.Controls)})
+	return EncodeProperties(properties)
+}
+
+func EncodeOverlayProps(props OverlayProps, common CommonProps) []byte {
+	if props.Open && props.Anchor == 0 || props.Placement > 11 {
+		return nil
+	}
+	properties := commonProperties(common)
+	properties = append(properties,
+		Property{Name: "open", Value: boolProperty(props.Open)},
+		Property{Name: "anchor", Value: decimalU64(props.Anchor)},
+		Property{Name: "placement", Value: decimalU64(uint64(props.Placement))},
+		Property{Name: "offsetMilli", Value: decimalI64(int64(props.OffsetMilli))},
+		Property{Name: "flip", Value: boolProperty(props.Flip)},
+		Property{Name: "shift", Value: boolProperty(props.Shift)},
+		Property{Name: "trapFocus", Value: boolProperty(props.TrapFocus)})
+	return EncodeProperties(properties)
+}
+
+func EncodeVirtualCollectionProps(props VirtualCollectionProps,
+	common CommonProps) []byte {
+	if props.ItemCount == 0 || props.VisibleCount == 0 ||
+		props.FirstVisible >= props.ItemCount ||
+		uint64(props.VisibleCount) > props.ItemCount-props.FirstVisible ||
+		props.EstimatedItemSizeMilli == 0 || props.Axis > 1 ||
+		props.Revision == 0 {
+		return nil
+	}
+	properties := commonProperties(common)
+	properties = append(properties,
+		Property{Name: "itemCount", Value: decimalU64(props.ItemCount)},
+		Property{Name: "firstVisible", Value: decimalU64(props.FirstVisible)},
+		Property{Name: "visibleCount",
+			Value: decimalU64(uint64(props.VisibleCount))},
+		Property{Name: "overscan", Value: decimalU64(uint64(props.Overscan))},
+		Property{Name: "estimatedItemSizeMilli",
+			Value: decimalU64(uint64(props.EstimatedItemSizeMilli))},
+		Property{Name: "axis", Value: decimalU64(uint64(props.Axis))},
+		Property{Name: "revision", Value: decimalU64(props.Revision)})
+	return EncodeProperties(properties)
+}
+
+func EncodeTableProps(props TableProps, common CommonProps) []byte {
+	if props.RowCount == 0 || props.ColumnCount == 0 ||
+		props.SelectionMode > 3 || props.SortDirection > 2 ||
+		props.SortColumn > props.ColumnCount {
+		return nil
+	}
+	properties := commonProperties(common)
+	properties = append(properties,
+		Property{Name: "rowCount", Value: decimalU64(props.RowCount)},
+		Property{Name: "columnCount", Value: decimalU64(uint64(props.ColumnCount))},
+		Property{Name: "selectionMode", Value: decimalU64(uint64(props.SelectionMode))},
+		Property{Name: "sortColumn", Value: decimalU64(uint64(props.SortColumn))},
+		Property{Name: "sortDirection", Value: decimalU64(uint64(props.SortDirection))},
+		Property{Name: "virtualized", Value: boolProperty(props.Virtualized)})
+	return EncodeProperties(properties)
+}
+
+func EncodeLiveRegionProps(props LiveRegionProps, common CommonProps) []byte {
+	if props.Politeness > 2 || props.Relevant > 15 || props.Revision == 0 {
+		return nil
+	}
+	properties := commonProperties(common)
+	properties = append(properties,
+		Property{Name: "politeness", Value: decimalU64(uint64(props.Politeness))},
+		Property{Name: "atomic", Value: boolProperty(props.Atomic)},
+		Property{Name: "relevant", Value: decimalU64(uint64(props.Relevant))},
+		Property{Name: "message", Value: props.Message},
+		Property{Name: "revision", Value: decimalU64(props.Revision)})
+	return EncodeProperties(properties)
+}
+
+func EncodeRichTextProps(props TextProps, common CommonProps) []byte {
+	return EncodeTextProps(props, common)
+}
+
+func EncodeIconProps(props ImageProps, common CommonProps) []byte {
+	return EncodeImageProps(props, common)
+}
+
+func EncodePasswordFieldProps(props TextFieldProps, common CommonProps) []byte {
+	return EncodeTextFieldProps(props, common)
+}
+
+func EncodeTextAreaProps(props TextFieldProps, common CommonProps) []byte {
+	if !props.Multiline {
+		return nil
+	}
+	return EncodeTextFieldProps(props, common)
+}
+
+func EncodeCheckboxProps(props ToggleProps, common CommonProps) []byte {
+	return EncodeToggleProps(props, common)
+}
+
+func EncodeSwitchProps(props ToggleProps, common CommonProps) []byte {
+	if props.Indeterminate {
+		return nil
+	}
+	return EncodeToggleProps(props, common)
+}
+
+func EncodeRadioGroupProps(props SelectionProps, common CommonProps) []byte {
+	if props.Multiple {
+		return nil
+	}
+	return EncodeSelectionProps(props, common)
+}
+
+func EncodeSelectProps(props SelectionProps, common CommonProps) []byte {
+	return EncodeSelectionProps(props, common)
+}
+
+func EncodeListBoxProps(props SelectionProps, common CommonProps) []byte {
+	return EncodeSelectionProps(props, common)
+}
+
+func EncodeComboboxProps(props SelectionProps, common CommonProps) []byte {
+	return EncodeSelectionProps(props, common)
+}
+
+func EncodeLabelProps(props TextProps, common CommonProps) []byte {
+	return EncodeTextProps(props, common)
+}
+
+func EncodeHelpProps(props TextProps, common CommonProps) []byte {
+	return EncodeTextProps(props, common)
+}
+
+func EncodeErrorProps(props TextProps, common CommonProps) []byte {
+	return EncodeTextProps(props, common)
+}
+
+func EncodeSpinnerProps(props ProgressProps, common CommonProps) []byte {
+	if !props.Indeterminate {
+		return nil
+	}
+	return EncodeProgressProps(props, common)
+}
+
+func EncodeAccordionProps(props DisclosureProps, common CommonProps) []byte {
+	return EncodeDisclosureProps(props, common)
+}
+
+func EncodeDrawerProps(props DialogProps, common CommonProps) []byte {
+	return EncodeDialogProps(props, common)
+}
+
+func EncodeTooltipProps(props OverlayProps, common CommonProps) []byte {
+	if props.TrapFocus {
+		return nil
+	}
+	return EncodeOverlayProps(props, common)
+}
+
+func EncodePopoverProps(props OverlayProps, common CommonProps) []byte {
+	return EncodeOverlayProps(props, common)
+}
+
+func EncodeMenuProps(props SelectionProps, common CommonProps) []byte {
+	return EncodeSelectionProps(props, common)
+}
+
+func EncodeContextMenuProps(props SelectionProps, common CommonProps) []byte {
+	return EncodeSelectionProps(props, common)
+}
+
+func EncodeListProps(common CommonProps) []byte {
+	return EncodeCommonProps(common)
+}
+
+func EncodeGridProps(common CommonProps) []byte {
+	return EncodeCommonProps(common)
+}
+
+func EncodeTreeProps(common CommonProps) []byte {
+	return EncodeCommonProps(common)
+}
+
+func EncodeScrollViewProps(common CommonProps) []byte {
+	return EncodeCommonProps(common)
+}
+
+func EncodePortalProps(common CommonProps) []byte {
+	return EncodeCommonProps(common)
+}
+
+func EncodeToastProps(props LiveRegionProps, common CommonProps) []byte {
+	return EncodeLiveRegionProps(props, common)
+}
+
+func EncodeFocusScopeProps(common CommonProps) []byte {
+	return EncodeCommonProps(common)
+}
+
+func EncodeCommonProps(common CommonProps) []byte {
+	return EncodeProperties(commonProperties(common))
+}
+
+func commonProperties(common CommonProps) []Property {
+	properties := []Property{
+		Property{Name: "accessibleName", Value: common.AccessibleName},
+		Property{Name: "accessibleDescription",
+			Value: common.AccessibleDescription},
+		Property{Name: "disabled", Value: boolProperty(common.Disabled)},
+		Property{Name: "hidden", Value: boolProperty(common.Hidden)},
+		Property{Name: "tabIndex", Value: decimalI64(int64(common.TabIndex))},
+		Property{Name: "role", Value: semanticRoleName(common.Role)},
+		Property{Name: "style", Value: decimalU64(common.Style)},
+		Property{Name: "class", Value: decimalU64(common.Class)},
+	}
+	for index, token := range common.ThemeTokens {
+		properties = append(properties, Property{
+			Name: "themeToken." + decimalU64(uint64(index)),
+			Value: token,
+		})
+	}
+	return properties
+}
+
+func semanticRoleName(role SemanticRole) string {
+	switch role {
+	case RoleNone:
+		return ""
+	case RoleText:
+		return "text"
+	case RoleImage:
+		return "img"
+	case RoleButton:
+		return "button"
+	case RoleTextField:
+		return "textbox"
+	case RoleCheckbox:
+		return "checkbox"
+	case RoleSlider:
+		return "slider"
+	case RoleList:
+		return "list"
+	case RoleGrid:
+		return "grid"
+	case RoleLink:
+		return "link"
+	case RoleSwitch:
+		return "switch"
+	case RoleRadio:
+		return "radio"
+	case RoleRadioGroup:
+		return "radiogroup"
+	case RoleListBox:
+		return "listbox"
+	case RoleOption:
+		return "option"
+	case RoleCombobox:
+		return "combobox"
+	case RoleForm:
+		return "form"
+	case RoleLabel:
+		return "label"
+	case RoleProgress:
+		return "progressbar"
+	case RoleTab:
+		return "tab"
+	case RoleTabList:
+		return "tablist"
+	case RoleTabPanel:
+		return "tabpanel"
+	case RoleDialog:
+		return "dialog"
+	case RoleTooltip:
+		return "tooltip"
+	case RoleMenu:
+		return "menu"
+	case RoleMenuItem:
+		return "menuitem"
+	case RoleTable:
+		return "table"
+	case RoleRow:
+		return "row"
+	case RoleCell:
+		return "cell"
+	case RoleTree:
+		return "tree"
+	case RoleTreeItem:
+		return "treeitem"
+	case RoleStatus:
+		return "status"
+	case RoleAlert:
+		return "alert"
+	}
+	return ""
+}
+
+func boolProperty(value bool) string {
+	if value {
+		return "true"
+	}
+	return "false"
+}
+
+func decimalI64(value int64) string {
+	if value >= 0 {
+		return decimalU64(uint64(value))
+	}
+	return "-" + decimalU64(uint64(-(value + 1)) + 1)
+}
+
+func decimalU64(value uint64) string {
+	if value == 0 {
+		return "0"
+	}
+	digits := make([]byte, 0, 20)
+	for value != 0 {
+		digits = append(digits, byte('0' + value%10))
+		value /= 10
+	}
+	for left, right := 0, len(digits)-1; left < right; left, right = left+1, right-1 {
+		digits[left], digits[right] = digits[right], digits[left]
+	}
+	return string(digits)
+}
+
+func EncodeProperties(properties []Property) []byte {
+	if len(properties) > 4294967295 {
+		return nil
+	}
+	bytes := []byte{'V', 'G', 'P', '1'}
+	bytes = appendPropertyU32(bytes, uint32(len(properties)))
+	for _, property := range properties {
+		if len(property.Name) == 0 || len(property.Name) > 65535 || len(property.Value) > 4294967295 {
+			return nil
+		}
+		bytes = appendPropertyU16(bytes, uint16(len(property.Name)))
+		bytes = appendPropertyU32(bytes, uint32(len(property.Value)))
+		bytes = append(bytes, []byte(property.Name)...)
+		bytes = append(bytes, []byte(property.Value)...)
+	}
+	return bytes
+}
+
+func appendPropertyU16(bytes []byte, value uint16) []byte {
+	return append(bytes, byte(value), byte(value >> 8))
+}
+
+func appendPropertyU32(bytes []byte, value uint32) []byte {
+	return append(bytes, byte(value), byte(value >> 8), byte(value >> 16), byte(value >> 24))
+}
+
+type TextFieldProps struct {
+	Value string
+	Placeholder string
+	Disabled bool
+	ReadOnly bool
+	Multiline bool
+	EditRevision uint64
+	ConfirmedEditSequence uint64
+}
+
+type CompositionState uint8
+
+const (
+	CompositionInactive CompositionState = iota
+	CompositionStarted
+	CompositionUpdating
+	CompositionCommitted
+	CompositionCancelled
+)
+
+type TextEditEvent struct {
+	Value string
+	SelectionStart uint32
+	SelectionEnd uint32
+	Composing bool
+	EditRevision uint64
+	EditSequence uint64
+	Composition CompositionState
+	HasReplacement bool
+	ReplacementStart uint32
+	ReplacementEnd uint32
+}
+
+type FocusRequest struct {
+	RootIndex uint32
+	RootGeneration uint32
+	NodeIndex uint32
+	NodeGeneration uint32
+	BindingGeneration uint32
+	MinAppliedRevision uint64
+	DeadlineMillis uint64
+	PreventScroll bool
+}
+
+func EncodeTextEditEvent(event TextEditEvent) []byte {
+	if !ValidTextEditEvent(event) {
+		return nil
+	}
+	text := []byte(event.Value)
+	bytes := []byte{'V', 'G', 'T', '1'}
+	bytes = appendPropertyU64(bytes, event.EditSequence)
+	bytes = appendPropertyU64(bytes, event.EditRevision)
+	bytes = appendPropertyU32(bytes, event.SelectionStart)
+	bytes = appendPropertyU32(bytes, event.SelectionEnd)
+	bytes = appendPropertyU32(bytes, event.ReplacementStart)
+	bytes = appendPropertyU32(bytes, event.ReplacementEnd)
+	bytes = append(bytes, byte(event.Composition))
+	flags := byte(0)
+	if event.HasReplacement {
+		flags |= 1
+	}
+	bytes = append(bytes, flags, 0, 0)
+	bytes = appendPropertyU32(bytes, uint32(len(text)))
+	return append(bytes, text...)
+}
+
+func DecodeTextEditEvent(bytes []byte) (TextEditEvent, bool) {
+	if len(bytes) < 44 || bytes[0] != 'V' || bytes[1] != 'G' || bytes[2] != 'T' || bytes[3] != '1' ||
+		bytes[37] > 1 ||
+		bytes[38] != 0 ||
+		bytes[39] != 0 {
+		return TextEditEvent{}, false
+	}
+	textLength := int(readPropertyU32(bytes, 40))
+	if textLength != len(bytes) - 44 {
+		return TextEditEvent{}, false
+	}
+	composition := CompositionState(bytes[36])
+	event := TextEditEvent{
+		Value: string(bytes[44:]), SelectionStart: readPropertyU32(bytes, 20),
+		SelectionEnd: readPropertyU32(bytes, 24),
+		Composing: composition == CompositionStarted || composition == CompositionUpdating,
+		EditRevision: readPropertyU64(bytes, 12), EditSequence: readPropertyU64(bytes, 4),
+		Composition: composition, HasReplacement: bytes[37] == 1,
+		ReplacementStart: readPropertyU32(bytes, 28), ReplacementEnd: readPropertyU32(bytes, 32),
+	}
+	return event, ValidTextEditEvent(event)
+}
+
+func ValidTextEditEvent(event TextEditEvent) bool {
+	text := []byte(event.Value)
+	if event.EditSequence == 0 || event.Composition > CompositionCancelled ||
+		event.SelectionStart > event.SelectionEnd ||
+		uint64(event.SelectionEnd) > uint64(len(text)) ||
+		!textByteBoundary(text, event.SelectionStart) ||
+		!textByteBoundary(text, event.SelectionEnd) {
+		return false
+	}
+	composing := event.Composition == CompositionStarted || event.Composition == CompositionUpdating
+	if event.Composing != composing {
+		return false
+	}
+	if !event.HasReplacement {
+		return event.ReplacementStart == 0 && event.ReplacementEnd == 0
+	}
+	return event.ReplacementStart <= event.ReplacementEnd &&
+		uint64(event.ReplacementEnd) <= uint64(len(text)) &&
+		textByteBoundary(text, event.ReplacementStart) &&
+		textByteBoundary(text, event.ReplacementEnd)
+}
+
+func textByteBoundary(text []byte, offset uint32) bool {
+	if uint64(offset) > uint64(len(text)) {
+		return false
+	}
+	if int(offset) == len(text) || offset == 0 {
+		return true
+	}
+	return text[offset] & 0xc0 != 0x80
+}
+
+func appendPropertyU64(bytes []byte, value uint64) []byte {
+	return append(bytes, byte(value), byte(value >> 8), byte(value >> 16), byte(value >> 24), byte(value >>
+		32), byte(value >> 40), byte(value >> 48), byte(value >> 56))
+}
+
+func readPropertyU32(bytes []byte, offset int) uint32 {
+	return uint32(bytes[offset]) | uint32(bytes[offset + 1]) << 8 | uint32(bytes[offset + 2]) << 16 |
+		uint32(bytes[offset + 3]) << 24
+}
+
+func readPropertyU64(bytes []byte, offset int) uint64 {
+	return uint64(readPropertyU32(bytes, offset)) | uint64(readPropertyU32(bytes, offset + 4)) << 32
+}

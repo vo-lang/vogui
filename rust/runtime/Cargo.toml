@@ -1,0 +1,17 @@
+[package]
+name = "vogui-runtime"
+version = "0.1.0"
+edition = "2021"
+description = "Instance-owned Vogui UiSession runtime"
+
+[dependencies]
+vogui-protocol = { path = "../protocol" }
+vo-app-runtime = { path = "../../../volang/lang/crates/vo-app-runtime", features = ["std"], optional = true }
+
+[features]
+default = []
+app-runtime = ["dep:vo-app-runtime"]
+
+[[bench]]
+name = "stable_ui"
+harness = false

@@ -1,0 +1,16 @@
+[package]
+name = "vogui-native-renderer"
+version = "0.1.0"
+edition = "2021"
+description = "Retained native GPU renderer pipeline for Vogui"
+
+[dependencies]
+vogui-layout = { path = "../layout" }
+vogui-protocol = { path = "../protocol" }
+vogui-runtime = { path = "../runtime" }
+vogui-text = { path = "../text" }
+wgpu = { version = "=24.0.5", optional = true }
+
+[features]
+default = []
+native-wgpu = ["dep:wgpu"]

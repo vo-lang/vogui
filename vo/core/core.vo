@@ -1,0 +1,60 @@
+package core
+
+type Handle struct {
+	Index uint32
+	Generation uint32
+}
+
+type Revision struct {
+	Value uint64
+}
+
+type UiSessionRef struct {
+	Handle Handle
+	Epoch uint64
+}
+
+type UiRootRef struct {
+	Session UiSessionRef
+	Root Handle
+}
+
+type ScopeRef struct {
+	Root UiRootRef
+	Scope Handle
+}
+
+type NodeRef struct {
+	Root UiRootRef
+	Node Handle
+	BindingGeneration uint32
+}
+
+type EventToken struct {
+	Root UiRootRef
+	AppCodeEpoch uint64
+	Token uint64
+}
+
+type EffectRef struct {
+	Scope ScopeRef
+	Effect Handle
+}
+
+type ResourceRef struct {
+	Session UiSessionRef
+	Resource Handle
+}
+
+type Recovery uint32
+
+const (
+	RecoveryContinue Recovery = iota
+	RecoveryRebuildScope
+	RecoveryRebuildUiRoot
+	RecoveryRestartRenderer
+	RecoveryRestartSession
+	RecoveryCloseUiRoot
+	RecoveryCloseAppView
+	RecoveryExitApp
+)

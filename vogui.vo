@@ -1,0 +1,193 @@
+// Public Vogui entrypoints. Run and NewSession are compiler/generator
+// intrinsics that lower a source App into a descriptor and owned init bytes.
+package vogui
+
+type Handle struct {
+	Index uint32
+	Generation uint32
+}
+
+type UiSessionRef struct {
+	Handle Handle
+	Epoch uint64
+}
+
+type UiRootRef struct {
+	Session UiSessionRef
+	Root Handle
+}
+
+type AppViewRef struct {
+	Session UiSessionRef
+	View Handle
+}
+
+type SurfaceRef struct {
+	Index uint32
+	Generation uint32
+}
+
+type OwnedInitData struct {
+	Bytes []byte
+}
+
+type InitContext interface {
+	Session() UiSessionRef
+	Capabilities() []byte
+}
+
+type UpdateContext interface {
+	Session() UiSessionRef
+	SourceRoot() UiRootRef
+	SourceView() AppViewRef
+	SourceSurface() SurfaceRef
+	EventSequence() uint64
+	EventRevision() uint64
+	MonotonicMillis() uint64
+	Capabilities() []byte
+}
+
+type RootContext interface {
+	Session() UiSessionRef
+	Root() UiRootRef
+	View() AppViewRef
+	Surface() SurfaceRef
+	MetricsRevision() uint64
+	ThemeRevision() uint64
+	LocaleRevision() uint64
+}
+
+type ViewBuilder interface {
+	Node(kind uint64, key string, properties []byte, children []uint64) uint64
+	Scope(builderId uint64, key string, child uint64) uint64
+	Style(descriptor []byte) uint64
+	Theme(descriptor []byte) error
+	BindEvent(node uint64, eventKind uint64, mapperId uint64) error
+	BindRef(node uint64, refId uint64) error
+	BindResource(node uint64, resourceId uint64, descriptor []byte) error
+}
+
+type SubscriptionsBuilder interface {
+	Subscribe(key string, kind string, descriptor []byte, mapperId uint64) error
+	SubscribeOwned(owner SubscriptionOwner, ownerRef uint64, key string, kind string, descriptor []byte, mapperId uint64) error
+}
+
+type SubscriptionOwner uint8
+
+const (
+	SubscriptionOwnerApp SubscriptionOwner = iota + 1
+	SubscriptionOwnerUiRoot
+	SubscriptionOwnerScope
+)
+
+func SubscribeTimerOnce(builder SubscriptionsBuilder, key string, delayMillis uint64, mapperId uint64) error {
+	return builder.Subscribe(key, "timer.once", subscriptionU64(delayMillis), mapperId)
+}
+
+func SubscribeTimerInterval(builder SubscriptionsBuilder, key string, intervalMillis uint64, mapperId uint64) error {
+	return builder.Subscribe(key, "timer.interval", subscriptionU64(intervalMillis), mapperId)
+}
+
+func SubscribeAnimationClock(builder SubscriptionsBuilder, key string, mapperId uint64) error {
+	return builder.Subscribe(key, "animation.clock", nil, mapperId)
+}
+
+func SubscribeResize(builder SubscriptionsBuilder, key string, mapperId uint64) error {
+	return builder.Subscribe(key, "resize", nil, mapperId)
+}
+
+func SubscribeVisibility(builder SubscriptionsBuilder, key string, mapperId uint64) error {
+	return builder.Subscribe(key, "visibility", nil, mapperId)
+}
+
+func SubscribeRouteLocation(builder SubscriptionsBuilder, key string, mapperId uint64) error {
+	return builder.Subscribe(key, "route.location", nil, mapperId)
+}
+
+func SubscribeGlobalShortcut(builder SubscriptionsBuilder, key string, accelerator string, mapperId uint64) error {
+	return builder.Subscribe(key, "global.shortcut", []byte(accelerator), mapperId)
+}
+
+func SubscribePointerStream(builder SubscriptionsBuilder, key string, mapperId uint64) error {
+	return builder.Subscribe(key, "pointer.stream", nil, mapperId)
+}
+
+func SubscribeFileDrop(builder SubscriptionsBuilder, key string, mapperId uint64) error {
+	return builder.Subscribe(key, "file.drop", nil, mapperId)
+}
+
+func SubscribeResourceWatch(builder SubscriptionsBuilder, key string, resource string, mapperId uint64) error {
+	return builder.Subscribe(key, "resource.watch", []byte(resource), mapperId)
+}
+
+func SubscribePlatformLifecycle(builder SubscriptionsBuilder, key string, mapperId uint64) error {
+	return builder.Subscribe(key, "platform.lifecycle", nil, mapperId)
+}
+
+func SubscribeOwned(builder SubscriptionsBuilder, owner SubscriptionOwner, ownerRef uint64, key string, kind string, descriptor []byte, mapperId uint64) error {
+	return builder.SubscribeOwned(owner, ownerRef, key, kind, descriptor, mapperId)
+}
+
+func subscriptionU64(value uint64) []byte {
+	return []byte{
+		byte(value), byte(value >> 8), byte(value >> 16), byte(value >> 24), byte(value >> 32),
+		byte(value >> 40), byte(value >> 48), byte(value >> 56),
+	}
+}
+
+type App interface {
+	Init(context InitContext) ([]byte, []byte, error)
+	Update(model []byte, message []byte, context UpdateContext) ([]byte, []byte, []byte, error)
+	View(model []byte, context RootContext, builder ViewBuilder) (uint64, error)
+	Subscriptions(model []byte, builder SubscriptionsBuilder) error
+	OnError(context []byte) uint32
+}
+
+type AppEntryDescriptor struct {
+	ArtifactId [32]byte
+	FactoryId uint64
+	AppBuildId [32]byte
+	ModelFingerprint [32]byte
+	MessageFingerprint [32]byte
+	RoleArtifactSetFingerprint [32]byte
+	TransactionMode uint32
+}
+
+type SessionDesc struct {
+	Profile string
+	MaxPendingMessages uint32
+	MaxPatchBytes uint64
+	MaxResourceBytes uint64
+}
+
+func Run(app App) error
+
+// RunEntry is the descriptor-only target of compiler-generated Run lowering.
+func RunEntry(descriptor []byte, init []byte) error
+
+// TargetSession returns the immutable App Runtime identity bound to the
+// current target-island extern invocation.
+func TargetSession() UiSessionRef
+
+// TargetIdentity returns the provider-owned endpoint identity for target-local
+// root, view and surface namespaces.
+func TargetIdentity() Handle
+
+// TargetInit transfers the generated initial model and staged Init effects to
+// the ui.logic provider that owns the current target island.
+func TargetInit(model []byte, effects []byte, presentation []byte, subscriptions []byte) error
+
+// TargetNextTurn waits for the next provider-owned UI message turn.
+func TargetNextTurn() ([]byte, error)
+
+// TargetCommit atomically replaces the provider-owned model and stages the
+// generated Update result/effects for reconciliation and effect dispatch.
+func TargetCommit(model []byte, updateResult []byte, effects []byte, presentation []byte, subscriptions []byte) error
+
+func NewSession(desc AppEntryDescriptor, init OwnedInitData, config SessionDesc) (UiSessionRef, error)
+
+func AttachRoot(session UiSessionRef, view AppViewRef, surface SurfaceRef) (UiRootRef, error)
+
+func DetachRoot(root UiRootRef) error
+
+func Shutdown(session UiSessionRef) error

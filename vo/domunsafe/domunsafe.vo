@@ -1,0 +1,17 @@
+package domunsafe
+
+type TrustedHtml struct {
+	Policy string
+	Html string
+}
+
+type TrustedCss struct {
+	Policy string
+	Css string
+}
+
+type RawDomProps struct {
+	Html TrustedHtml
+	Css TrustedCss
+	Isolated bool
+}

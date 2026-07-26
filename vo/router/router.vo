@@ -1,0 +1,250 @@
+package router
+
+type RouteRef struct {
+	Index uint32
+	Generation uint32
+}
+
+type Handle struct {
+	Index uint32
+	Generation uint32
+}
+
+type NavigationMode uint8
+
+const (
+	NavigationPrimaryUrl NavigationMode = iota + 1
+	NavigationMemory
+	NavigationNamespace
+)
+
+type NavigationLease struct {
+	Window Handle
+	Owner Handle
+	OwnerEpoch uint64
+	Generation uint32
+	Mode NavigationMode
+	Namespace string
+}
+
+type Route struct {
+	Path string
+	Query string
+	Fragment string
+	State []byte
+}
+
+type NavigationRequest struct {
+	Lease NavigationLease
+	Route Route
+	Replace bool
+}
+
+type NavigationEvent struct {
+	Route Route
+	Sequence uint64
+}
+
+func EncodeRoute(route Route) []byte {
+	if !ValidRoute(route) {
+		return nil
+	}
+	path := []byte(route.Path)
+	query := []byte(route.Query)
+	fragment := []byte(route.Fragment)
+	if len(path) > 65535 || len(query) > 65535 || len(fragment) > 65535 || len(route.State) > 1048576 {
+		return nil
+	}
+	bytes := []byte{'V', 'G', 'R', '1'}
+	bytes = appendRouterU16(bytes, uint16(len(path)))
+	bytes = appendRouterU16(bytes, uint16(len(query)))
+	bytes = appendRouterU16(bytes, uint16(len(fragment)))
+	bytes = appendRouterU16(bytes, 0)
+	bytes = appendRouterU32(bytes, uint32(len(route.State)))
+	bytes = append(bytes, path...)
+	bytes = append(bytes, query...)
+	bytes = append(bytes, fragment...)
+	bytes = append(bytes, route.State...)
+	return bytes
+}
+
+func DecodeRoute(bytes []byte) (Route, bool) {
+	if len(bytes) < 16 || bytes[0] != 'V' || bytes[1] != 'G' || bytes[2] != 'R' || bytes[3] != '1' {
+		return Route{}, false
+	}
+	pathLength := int(readRouterU16(bytes, 4))
+	queryLength := int(readRouterU16(bytes, 6))
+	fragmentLength := int(readRouterU16(bytes, 8))
+	if readRouterU16(bytes, 10) != 0 {
+		return Route{}, false
+	}
+	stateLength := int(readRouterU32(bytes, 12))
+	pathEnd := 16 + pathLength
+	queryEnd := pathEnd + queryLength
+	fragmentEnd := queryEnd + fragmentLength
+	stateEnd := fragmentEnd + stateLength
+	if pathEnd < 16 || queryEnd < pathEnd || fragmentEnd < queryEnd || stateEnd < fragmentEnd ||
+		stateEnd != len(bytes) {
+		return Route{}, false
+	}
+	route := Route{
+		Path: string(bytes[16:pathEnd]), Query: string(bytes[pathEnd:queryEnd]),
+		Fragment: string(bytes[queryEnd:fragmentEnd]),
+		State: append([]byte{}, bytes[fragmentEnd:stateEnd]...),
+	}
+	return route, ValidRoute(route)
+}
+
+func ValidRoute(route Route) bool {
+	if len(route.Path) == 0 || len(route.Path) > 65535 || route.Path[0] != '/' ||
+		len(route.Query) > 65535 ||
+		len(route.Fragment) > 65535 ||
+		len(route.State) > 1048576 {
+		return false
+	}
+	for index := 1; index < len(route.Path); index++ {
+		if route.Path[index] == '/' && route.Path[index - 1] == '/' {
+			return false
+		}
+	}
+	return true
+}
+
+func EncodeNavigationRequest(request NavigationRequest) []byte {
+	if !ValidNavigationLease(request.Lease) {
+		return nil
+	}
+	route := EncodeRoute(request.Route)
+	if route == nil {
+		return nil
+	}
+	namespace := []byte(request.Lease.Namespace)
+	if len(namespace) > 65535 {
+		return nil
+	}
+	bytes := []byte{'V', 'G', 'N', '1'}
+	bytes = appendRouterU32(bytes, request.Lease.Window.Index)
+	bytes = appendRouterU32(bytes, request.Lease.Window.Generation)
+	bytes = appendRouterU32(bytes, request.Lease.Owner.Index)
+	bytes = appendRouterU32(bytes, request.Lease.Owner.Generation)
+	bytes = appendRouterU64(bytes, request.Lease.OwnerEpoch)
+	bytes = appendRouterU32(bytes, request.Lease.Generation)
+	bytes = append(bytes, byte(request.Lease.Mode))
+	if request.Replace {
+		bytes = append(bytes, 1)
+	} else {
+		bytes = append(bytes, 0)
+	}
+	bytes = appendRouterU16(bytes, uint16(len(namespace)))
+	bytes = appendRouterU32(bytes, uint32(len(route)))
+	bytes = append(bytes, namespace...)
+	bytes = append(bytes, route...)
+	return bytes
+}
+
+func DecodeNavigationRequest(bytes []byte) (NavigationRequest, bool) {
+	if len(bytes) < 40 || bytes[0] != 'V' || bytes[1] != 'G' || bytes[2] != 'N' || bytes[3] != '1' {
+		return NavigationRequest{}, false
+	}
+	mode := NavigationMode(bytes[32])
+	replace := bytes[33]
+	namespaceLength := int(readRouterU16(bytes, 34))
+	routeLength := int(readRouterU32(bytes, 36))
+	namespaceEnd := 40 + namespaceLength
+	routeEnd := namespaceEnd + routeLength
+	if replace > 1 || namespaceEnd < 40 || routeEnd < namespaceEnd || routeEnd != len(bytes) {
+		return NavigationRequest{}, false
+	}
+	route, ok := DecodeRoute(bytes[namespaceEnd:routeEnd])
+	if !ok {
+		return NavigationRequest{}, false
+	}
+	request := NavigationRequest{
+		Lease: NavigationLease{
+			Window: Handle{Index: readRouterU32(bytes, 4), Generation: readRouterU32(bytes, 8)},
+			Owner: Handle{Index: readRouterU32(bytes, 12), Generation: readRouterU32(bytes, 16)},
+			OwnerEpoch: readRouterU64(bytes, 20), Generation: readRouterU32(bytes, 28), Mode: mode,
+			Namespace: string(bytes[40:namespaceEnd]),
+		},
+		Route: route, Replace: replace == 1,
+	}
+	return request, ValidNavigationLease(request.Lease)
+}
+
+func ValidNavigationLease(lease NavigationLease) bool {
+	if lease.Window.Generation == 0 || lease.Owner.Generation == 0 || lease.OwnerEpoch == 0 ||
+		lease.Generation == 0 {
+		return false
+	}
+	if lease.Mode == NavigationPrimaryUrl || lease.Mode == NavigationMemory {
+		return len(lease.Namespace) == 0
+	}
+	if lease.Mode != NavigationNamespace || len(lease.Namespace) == 0 || len(lease.Namespace) > 65535 {
+		return false
+	}
+	if lease.Namespace[0] == '/' || lease.Namespace[len(lease.Namespace) - 1] == '/' {
+		return false
+	}
+	for index := 1; index < len(lease.Namespace); index++ {
+		if lease.Namespace[index] == '/' && lease.Namespace[index - 1] == '/' {
+			return false
+		}
+	}
+	return true
+}
+
+func EncodeNavigationEvent(event NavigationEvent) []byte {
+	if event.Sequence == 0 {
+		return nil
+	}
+	route := EncodeRoute(event.Route)
+	if route == nil {
+		return nil
+	}
+	bytes := []byte{'V', 'G', 'L', '1'}
+	bytes = appendRouterU64(bytes, event.Sequence)
+	bytes = appendRouterU32(bytes, uint32(len(route)))
+	return append(bytes, route...)
+}
+
+func DecodeNavigationEvent(bytes []byte) (NavigationEvent, bool) {
+	if len(bytes) < 16 || bytes[0] != 'V' || bytes[1] != 'G' || bytes[2] != 'L' || bytes[3] != '1' {
+		return NavigationEvent{}, false
+	}
+	sequence := readRouterU64(bytes, 4)
+	routeLength := int(readRouterU32(bytes, 12))
+	if sequence == 0 || routeLength != len(bytes) - 16 {
+		return NavigationEvent{}, false
+	}
+	route, ok := DecodeRoute(bytes[16:])
+	if !ok {
+		return NavigationEvent{}, false
+	}
+	return NavigationEvent{Route: route, Sequence: sequence}, true
+}
+
+func appendRouterU16(bytes []byte, value uint16) []byte {
+	return append(bytes, byte(value), byte(value >> 8))
+}
+
+func appendRouterU32(bytes []byte, value uint32) []byte {
+	return append(bytes, byte(value), byte(value >> 8), byte(value >> 16), byte(value >> 24))
+}
+
+func appendRouterU64(bytes []byte, value uint64) []byte {
+	return append(bytes, byte(value), byte(value >> 8), byte(value >> 16), byte(value >> 24), byte(value >>
+		32), byte(value >> 40), byte(value >> 48), byte(value >> 56))
+}
+
+func readRouterU16(bytes []byte, offset int) uint16 {
+	return uint16(bytes[offset]) | uint16(bytes[offset + 1]) << 8
+}
+
+func readRouterU32(bytes []byte, offset int) uint32 {
+	return uint32(bytes[offset]) | uint32(bytes[offset + 1]) << 8 | uint32(bytes[offset + 2]) << 16 |
+		uint32(bytes[offset + 3]) << 24
+}
+
+func readRouterU64(bytes []byte, offset int) uint64 {
+	return uint64(readRouterU32(bytes, offset)) | uint64(readRouterU32(bytes, offset + 4)) << 32
+}

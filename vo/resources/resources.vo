@@ -1,0 +1,175 @@
+package resources
+
+type ResourceRef struct {
+	SessionIndex uint32
+	SessionGeneration uint32
+	SessionEpoch uint64
+	ResourceIndex uint32
+	ResourceGeneration uint32
+}
+
+type ResourceKind uint32
+
+const (
+	ResourceImage ResourceKind = iota + 1
+	ResourceFont
+	ResourceIcon
+	ResourceCursor
+	ResourceLocalizedText
+	ResourceCanvasPaint
+)
+
+type ResourceDescriptor struct {
+	Kind ResourceKind
+	CanonicalUri string
+	ExpectedHash [32]byte
+	Options []byte
+}
+
+type ResourceState struct {
+	Resource ResourceRef
+	SourceRevision uint64
+	JobIndex uint32
+	JobGeneration uint32
+	ContentHash [32]byte
+	Ready bool
+}
+
+type ResourceLease struct {
+	Resource ResourceRef
+	RootIndex uint32
+	RootGeneration uint32
+	LeaseIndex uint32
+	LeaseGeneration uint32
+}
+
+func EncodeDescriptor(descriptor ResourceDescriptor) []byte {
+	uri := []byte(descriptor.CanonicalUri)
+	if descriptor.Kind < ResourceImage || descriptor.Kind > ResourceCanvasPaint || len(uri) == 0 ||
+		len(uri) > 65535 ||
+		len(descriptor.Options) > 1048576 {
+		return nil
+	}
+	bytes := []byte{'V', 'G', 'D', '1'}
+	bytes = appendResourceU32(bytes, uint32(descriptor.Kind))
+	bytes = appendResourceU16(bytes, uint16(len(uri)))
+	bytes = appendResourceU16(bytes, 0)
+	bytes = appendResourceU32(bytes, uint32(len(descriptor.Options)))
+	bytes = append(bytes, descriptor.ExpectedHash[:]...)
+	bytes = append(bytes, uri...)
+	return append(bytes, descriptor.Options...)
+}
+
+func DecodeDescriptor(bytes []byte) (ResourceDescriptor, bool) {
+	if len(bytes) < 48 || bytes[0] != 'V' || bytes[1] != 'G' || bytes[2] != 'D' || bytes[3] != '1' ||
+		readResourceU16(bytes, 10) != 0 {
+		return ResourceDescriptor{}, false
+	}
+	kind := ResourceKind(readResourceU32(bytes, 4))
+	uriLength := int(readResourceU16(bytes, 8))
+	optionsLength := int(readResourceU32(bytes, 12))
+	uriEnd := 48 + uriLength
+	optionsEnd := uriEnd + optionsLength
+	if kind < ResourceImage || kind > ResourceCanvasPaint || uriLength == 0 || uriEnd < 48 ||
+		optionsEnd < uriEnd ||
+		optionsEnd != len(bytes) {
+		return ResourceDescriptor{}, false
+	}
+	descriptor := ResourceDescriptor{
+		Kind: kind, CanonicalUri: string(bytes[48:uriEnd]),
+		Options: append([]byte{}, bytes[uriEnd:optionsEnd]...),
+	}
+	for index := 0; index < 32; index++ {
+		descriptor.ExpectedHash[index] = bytes[16 + index]
+	}
+	return descriptor, true
+}
+
+func EncodeState(state ResourceState) []byte {
+	if !ValidResourceRef(state.Resource) || state.SourceRevision == 0 || state.JobGeneration == 0 ||
+		state.JobIndex != state.Resource.ResourceIndex {
+		return nil
+	}
+	bytes := []byte{'V', 'G', 'S', '1'}
+	bytes = appendResourceRef(bytes, state.Resource)
+	bytes = appendResourceU64(bytes, state.SourceRevision)
+	bytes = appendResourceU32(bytes, state.JobIndex)
+	bytes = appendResourceU32(bytes, state.JobGeneration)
+	if state.Ready {
+		bytes = append(bytes, 1)
+	} else {
+		bytes = append(bytes, 0)
+	}
+	bytes = append(bytes, 0, 0, 0)
+	return append(bytes, state.ContentHash[:]...)
+}
+
+func DecodeState(bytes []byte) (ResourceState, bool) {
+	if len(bytes) != 80 || bytes[0] != 'V' || bytes[1] != 'G' || bytes[2] != 'S' || bytes[3] != '1' ||
+		bytes[44] > 1 ||
+		bytes[45] != 0 ||
+		bytes[46] != 0 ||
+		bytes[47] != 0 {
+		return ResourceState{}, false
+	}
+	state := ResourceState{
+		Resource: readResourceRef(bytes, 4), SourceRevision: readResourceU64(bytes, 28),
+		JobIndex: readResourceU32(bytes, 36), JobGeneration: readResourceU32(bytes, 40),
+		Ready: bytes[44] == 1,
+	}
+	for index := 0; index < 32; index++ {
+		state.ContentHash[index] = bytes[48 + index]
+	}
+	return state, ValidResourceRef(state.Resource) && state.SourceRevision != 0 &&
+		state.JobGeneration != 0 &&
+		state.JobIndex == state.Resource.ResourceIndex
+}
+
+func ValidResourceRef(resource ResourceRef) bool {
+	return resource.SessionGeneration != 0 && resource.SessionEpoch != 0 &&
+		resource.ResourceGeneration != 0
+}
+
+func appendResourceRef(bytes []byte, resource ResourceRef) []byte {
+	bytes = appendResourceU32(bytes, resource.SessionIndex)
+	bytes = appendResourceU32(bytes, resource.SessionGeneration)
+	bytes = appendResourceU64(bytes, resource.SessionEpoch)
+	bytes = appendResourceU32(bytes, resource.ResourceIndex)
+	return appendResourceU32(bytes, resource.ResourceGeneration)
+}
+
+func readResourceRef(bytes []byte, offset int) ResourceRef {
+	return ResourceRef{
+		SessionIndex: readResourceU32(bytes, offset),
+		SessionGeneration: readResourceU32(bytes, offset + 4),
+		SessionEpoch: readResourceU64(bytes, offset + 8),
+		ResourceIndex: readResourceU32(bytes, offset + 16),
+		ResourceGeneration: readResourceU32(bytes, offset + 20),
+	}
+}
+
+func appendResourceU16(bytes []byte, value uint16) []byte {
+	return append(bytes, byte(value), byte(value >> 8))
+}
+
+func appendResourceU32(bytes []byte, value uint32) []byte {
+	return append(bytes, byte(value), byte(value >> 8), byte(value >> 16), byte(value >> 24))
+}
+
+func appendResourceU64(bytes []byte, value uint64) []byte {
+	return append(bytes, byte(value), byte(value >> 8), byte(value >> 16), byte(value >> 24), byte(value >>
+		32), byte(value >> 40), byte(value >> 48), byte(value >> 56))
+}
+
+func readResourceU16(bytes []byte, offset int) uint16 {
+	return uint16(bytes[offset]) | uint16(bytes[offset + 1]) << 8
+}
+
+func readResourceU32(bytes []byte, offset int) uint32 {
+	return uint32(bytes[offset]) | uint32(bytes[offset + 1]) << 8 | uint32(bytes[offset + 2]) << 16 |
+		uint32(bytes[offset + 3]) << 24
+}
+
+func readResourceU64(bytes []byte, offset int) uint64 {
+	return uint64(readResourceU32(bytes, offset)) | uint64(readResourceU32(bytes, offset + 4)) << 32
+}

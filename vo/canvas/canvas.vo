@@ -1,0 +1,28 @@
+package canvas
+
+type PaintAssetRef struct {
+	Index uint32
+	Generation uint32
+}
+
+type CanvasCommandBuffer struct {
+	ExpectedRevision uint64
+	Width uint32
+	Height uint32
+	Bytes []byte
+}
+
+type CanvasHitRegion struct {
+	Id uint64
+	XMilli int64
+	YMilli int64
+	WidthMilli int64
+	HeightMilli int64
+	Cursor uint32
+}
+
+type CanvasSnapshot struct {
+	Revision uint64
+	Commands CanvasCommandBuffer
+	HitRegions []CanvasHitRegion
+}

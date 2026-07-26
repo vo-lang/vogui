@@ -1,0 +1,31 @@
+[package]
+name = "vogui-native-accessibility"
+version = "0.1.0"
+edition = "2021"
+description = "Native accessibility adapter boundary for retained Vogui renderers"
+
+[features]
+default = []
+macos-appkit = [
+  "dep:objc2",
+  "dep:objc2-app-kit",
+  "dep:objc2-foundation",
+]
+
+[dependencies]
+vogui-protocol = { path = "../protocol" }
+vogui-runtime = { path = "../runtime" }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = { version = "=0.6.4", optional = true, default-features = false, features = ["std"] }
+objc2-app-kit = { version = "=0.3.2", optional = true, default-features = false, features = [
+  "NSAccessibilityConstants",
+  "NSAccessibilityElement",
+  "NSAccessibilityProtocols",
+] }
+objc2-foundation = { version = "=0.3.2", optional = true, default-features = false, features = [
+  "NSArray",
+  "NSGeometry",
+  "NSObject",
+  "NSString",
+] }

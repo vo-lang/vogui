@@ -1,0 +1,86 @@
+package update
+
+type SubscriptionOwner uint8
+
+const (
+	OwnerApp SubscriptionOwner = iota + 1
+	OwnerUiRoot
+	OwnerScope
+)
+
+type SubscriptionBuildRequest struct {
+	Owner SubscriptionOwner
+	LogicalRoot uint64
+	OwnerRef uint64
+	BuilderId uint32
+}
+
+func SubscriptionsUnchanged() []byte {
+	return encode(0, nil)
+}
+
+func SubscriptionsReplaceAll() []byte {
+	return encode(1, nil)
+}
+
+func SubscriptionsDirty(requests []SubscriptionBuildRequest) []byte {
+	if len(requests) == 0 || len(requests) > 4096 {
+		return nil
+	}
+	for index := range requests {
+		request := requests[index]
+		if request.Owner != OwnerApp && request.LogicalRoot == 0 {
+			request.LogicalRoot = 1
+			requests[index] = request
+		}
+		if !valid(request) {
+			return nil
+		}
+		for previous := 0; previous < index; previous++ {
+			if requests[previous].Owner == request.Owner &&
+				requests[previous].LogicalRoot == request.LogicalRoot &&
+				requests[previous].OwnerRef == request.OwnerRef {
+				return nil
+			}
+		}
+	}
+	return encode(2, requests)
+}
+
+func valid(request SubscriptionBuildRequest) bool {
+	if request.BuilderId == 0 {
+		return false
+	}
+	if request.Owner == OwnerApp || request.Owner == OwnerUiRoot {
+		if request.Owner == OwnerApp {
+			return request.LogicalRoot == 0 && request.OwnerRef == 0
+		}
+		return request.LogicalRoot != 0 && request.OwnerRef == 0
+	}
+	return request.Owner == OwnerScope && request.LogicalRoot != 0 && request.OwnerRef != 0
+}
+
+func encode(mode byte, requests []SubscriptionBuildRequest) []byte {
+	bytes := []byte{'V', 'G', 'U', '2', mode, 0}
+	bytes = appendU16(bytes, uint16(len(requests)))
+	for _, request := range requests {
+		bytes = append(bytes, byte(request.Owner), 0, 0, 0)
+		bytes = appendU32(bytes, request.BuilderId)
+		bytes = appendU64(bytes, request.OwnerRef)
+		bytes = appendU64(bytes, request.LogicalRoot)
+	}
+	return bytes
+}
+
+func appendU16(bytes []byte, value uint16) []byte {
+	return append(bytes, byte(value), byte(value >> 8))
+}
+
+func appendU32(bytes []byte, value uint32) []byte {
+	return append(bytes, byte(value), byte(value >> 8), byte(value >> 16), byte(value >> 24))
+}
+
+func appendU64(bytes []byte, value uint64) []byte {
+	return append(bytes, byte(value), byte(value >> 8), byte(value >> 16), byte(value >> 24), byte(value >>
+		32), byte(value >> 40), byte(value >> 48), byte(value >> 56))
+}

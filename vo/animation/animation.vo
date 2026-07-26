@@ -1,0 +1,305 @@
+package animation
+
+type AnimationRef struct {
+	RootIndex uint32
+	RootGeneration uint32
+	NodeIndex uint32
+	NodeGeneration uint32
+	Index uint32
+	Generation uint32
+}
+
+type AnimatedProperty uint32
+
+const (
+	PropertyOpacity AnimatedProperty = iota + 1
+	PropertyTranslationX
+	PropertyTranslationY
+	PropertyScaleX
+	PropertyScaleY
+	PropertyRotation
+	PropertyWidth
+	PropertyHeight
+	PropertyScrollX
+	PropertyScrollY
+	PropertyColor
+)
+
+type Easing uint32
+
+const (
+	EasingLinear Easing = iota + 1
+	EasingEaseIn
+	EasingEaseOut
+	EasingEaseInOut
+)
+
+type CurveKind uint8
+
+const (
+	CurveTransition CurveKind = iota + 1
+	CurveKeyframes
+	CurveSpring
+)
+
+type Keyframe struct {
+	OffsetMilli uint16
+	ValueMilli int64
+}
+
+type AnimationSpec struct {
+	Property AnimatedProperty
+	FromMilli int64
+	ToMilli int64
+	DurationMillis uint64
+	DelayMillis uint64
+	Easing Easing
+}
+
+type AdvancedAnimationSpec struct {
+	Property AnimatedProperty
+	Curve CurveKind
+	FromMilli int64
+	ToMilli int64
+	DurationMillis uint64
+	DelayMillis uint64
+	Easing Easing
+	Keyframes []Keyframe
+	StiffnessMilli uint32
+	DampingMilli uint32
+	MassMilli uint32
+}
+
+type AdvancedAnimationCommand struct {
+	Animation AnimationRef
+	BindingGeneration uint32
+	MinAppliedRevision uint64
+	DeadlineMillis uint64
+	Spec AdvancedAnimationSpec
+}
+
+type AnimationCommand struct {
+	Animation AnimationRef
+	BindingGeneration uint32
+	MinAppliedRevision uint64
+	DeadlineMillis uint64
+	Spec AnimationSpec
+}
+
+type AnimationTerminal uint8
+
+const (
+	AnimationCompleted AnimationTerminal = iota + 1
+	AnimationCancelled
+	AnimationReplaced
+	AnimationNodeRemoved
+	AnimationRootClosed
+)
+
+type AnimationCompletion struct {
+	Animation AnimationRef
+	Terminal AnimationTerminal
+	Revision uint64
+}
+
+func EncodeRef(reference AnimationRef) []byte {
+	if reference.RootGeneration == 0 || reference.NodeGeneration == 0 || reference.Generation == 0 {
+		return nil
+	}
+	return appendAnimationRef([]byte{'V', 'G', 'I', '1'}, reference)
+}
+
+func DecodeRef(bytes []byte) (AnimationRef, bool) {
+	if len(bytes) != 28 || bytes[0] != 'V' || bytes[1] != 'G' || bytes[2] != 'I' || bytes[3] != '1' {
+		return AnimationRef{}, false
+	}
+	reference := readAnimationRef(bytes, 4)
+	return reference, reference.RootGeneration != 0 && reference.NodeGeneration != 0 &&
+		reference.Generation != 0
+}
+
+func EncodeCommand(command AnimationCommand) []byte {
+	if !ValidCommand(command) {
+		return nil
+	}
+	bytes := []byte{'V', 'G', 'A', '1'}
+	bytes = appendAnimationRef(bytes, command.Animation)
+	bytes = appendAnimationU32(bytes, command.BindingGeneration)
+	bytes = appendAnimationU64(bytes, command.MinAppliedRevision)
+	bytes = appendAnimationU64(bytes, command.DeadlineMillis)
+	bytes = appendAnimationU32(bytes, uint32(command.Spec.Property))
+	bytes = appendAnimationU64(bytes, uint64(command.Spec.FromMilli))
+	bytes = appendAnimationU64(bytes, uint64(command.Spec.ToMilli))
+	bytes = appendAnimationU64(bytes, command.Spec.DurationMillis)
+	bytes = appendAnimationU64(bytes, command.Spec.DelayMillis)
+	bytes = appendAnimationU32(bytes, uint32(command.Spec.Easing))
+	return bytes
+}
+
+func DecodeCommand(bytes []byte) (AnimationCommand, bool) {
+	if len(bytes) != 88 || bytes[0] != 'V' || bytes[1] != 'G' || bytes[2] != 'A' || bytes[3] != '1' {
+		return AnimationCommand{}, false
+	}
+	command := AnimationCommand{
+		Animation: readAnimationRef(bytes, 4), BindingGeneration: readAnimationU32(bytes, 28),
+		MinAppliedRevision: readAnimationU64(bytes, 32), DeadlineMillis: readAnimationU64(bytes, 40),
+		Spec: AnimationSpec{
+			Property: AnimatedProperty(readAnimationU32(bytes, 48)),
+			FromMilli: int64(readAnimationU64(bytes, 52)), ToMilli: int64(readAnimationU64(bytes, 60)),
+			DurationMillis: readAnimationU64(bytes, 68), DelayMillis: readAnimationU64(bytes, 76),
+			Easing: Easing(readAnimationU32(bytes, 84)),
+		},
+	}
+	return command, ValidCommand(command)
+}
+
+func ValidCommand(command AnimationCommand) bool {
+	ref := command.Animation
+	return ref.RootGeneration != 0 && ref.NodeGeneration != 0 && ref.Generation != 0 &&
+		command.BindingGeneration != 0 &&
+		command.DeadlineMillis != 0 &&
+		command.Spec.Property >= PropertyOpacity &&
+		command.Spec.Property <= PropertyColor &&
+		command.Spec.DurationMillis != 0 &&
+		command.Spec.Easing >= EasingLinear &&
+		command.Spec.Easing <= EasingEaseInOut
+}
+
+func EncodeAdvancedCommand(command AdvancedAnimationCommand) []byte {
+	if !ValidAdvancedCommand(command) {
+		return nil
+	}
+	spec := command.Spec
+	bytes := []byte{'V', 'G', 'A', '2'}
+	bytes = appendAnimationRef(bytes, command.Animation)
+	bytes = appendAnimationU32(bytes, command.BindingGeneration)
+	bytes = appendAnimationU64(bytes, command.MinAppliedRevision)
+	bytes = appendAnimationU64(bytes, command.DeadlineMillis)
+	bytes = appendAnimationU32(bytes, uint32(spec.Property))
+	bytes = append(bytes, byte(spec.Curve), 0)
+	bytes = appendAnimationU16(bytes, uint16(len(spec.Keyframes)))
+	bytes = appendAnimationU64(bytes, spec.DelayMillis)
+	bytes = appendAnimationU64(bytes, spec.DurationMillis)
+	switch spec.Curve {
+	case CurveTransition:
+		bytes = appendAnimationU64(bytes, uint64(spec.FromMilli))
+		bytes = appendAnimationU64(bytes, uint64(spec.ToMilli))
+		return appendAnimationU32(bytes, uint32(spec.Easing))
+	case CurveKeyframes:
+		for _, frame := range spec.Keyframes {
+			bytes = appendAnimationU16(bytes, frame.OffsetMilli)
+			bytes = appendAnimationU16(bytes, 0)
+			bytes = appendAnimationU64(bytes, uint64(frame.ValueMilli))
+		}
+		return bytes
+	case CurveSpring:
+		bytes = appendAnimationU64(bytes, uint64(spec.FromMilli))
+		bytes = appendAnimationU64(bytes, uint64(spec.ToMilli))
+		bytes = appendAnimationU32(bytes, spec.StiffnessMilli)
+		bytes = appendAnimationU32(bytes, spec.DampingMilli)
+		return appendAnimationU32(bytes, spec.MassMilli)
+	}
+	return nil
+}
+
+func ValidAdvancedCommand(command AdvancedAnimationCommand) bool {
+	ref := command.Animation
+	spec := command.Spec
+	if ref.RootGeneration == 0 || ref.NodeGeneration == 0 ||
+		ref.Generation == 0 || command.BindingGeneration == 0 ||
+		command.DeadlineMillis == 0 || spec.Property < PropertyOpacity ||
+		spec.Property > PropertyColor || spec.DurationMillis == 0 {
+		return false
+	}
+	switch spec.Curve {
+	case CurveTransition:
+		return len(spec.Keyframes) == 0 && spec.Easing >= EasingLinear &&
+			spec.Easing <= EasingEaseInOut
+	case CurveKeyframes:
+		if len(spec.Keyframes) < 2 || len(spec.Keyframes) > 256 ||
+			spec.Keyframes[0].OffsetMilli != 0 ||
+			spec.Keyframes[len(spec.Keyframes)-1].OffsetMilli != 1000 {
+			return false
+		}
+		for index := 1; index < len(spec.Keyframes); index++ {
+			if spec.Keyframes[index-1].OffsetMilli >=
+				spec.Keyframes[index].OffsetMilli {
+				return false
+			}
+		}
+		return true
+	case CurveSpring:
+		return len(spec.Keyframes) == 0 && spec.StiffnessMilli != 0 &&
+			spec.DampingMilli != 0 && spec.MassMilli != 0
+	}
+	return false
+}
+
+func EncodeCompletion(completion AnimationCompletion) []byte {
+	if completion.Terminal < AnimationCompleted || completion.Terminal > AnimationRootClosed ||
+		completion.Revision == 0 ||
+		completion.Animation.Generation == 0 {
+		return nil
+	}
+	bytes := []byte{'V', 'G', 'C', '1'}
+	bytes = appendAnimationRef(bytes, completion.Animation)
+	bytes = append(bytes, byte(completion.Terminal), 0, 0, 0)
+	return appendAnimationU64(bytes, completion.Revision)
+}
+
+func DecodeCompletion(bytes []byte) (AnimationCompletion, bool) {
+	if len(bytes) != 40 || bytes[0] != 'V' || bytes[1] != 'G' || bytes[2] != 'C' || bytes[3] != '1' ||
+		bytes[29] != 0 ||
+		bytes[30] != 0 ||
+		bytes[31] != 0 {
+		return AnimationCompletion{}, false
+	}
+	completion := AnimationCompletion{
+		Animation: readAnimationRef(bytes, 4), Terminal: AnimationTerminal(bytes[28]),
+		Revision: readAnimationU64(bytes, 32),
+	}
+	return completion, completion.Terminal >= AnimationCompleted &&
+		completion.Terminal <= AnimationRootClosed &&
+		completion.Revision != 0 &&
+		completion.Animation.Generation != 0
+}
+
+func appendAnimationRef(bytes []byte, reference AnimationRef) []byte {
+	bytes = appendAnimationU32(bytes, reference.RootIndex)
+	bytes = appendAnimationU32(bytes, reference.RootGeneration)
+	bytes = appendAnimationU32(bytes, reference.NodeIndex)
+	bytes = appendAnimationU32(bytes, reference.NodeGeneration)
+	bytes = appendAnimationU32(bytes, reference.Index)
+	return appendAnimationU32(bytes, reference.Generation)
+}
+
+func readAnimationRef(bytes []byte, offset int) AnimationRef {
+	return AnimationRef{
+		RootIndex: readAnimationU32(bytes, offset), RootGeneration: readAnimationU32(bytes, offset + 4),
+		NodeIndex: readAnimationU32(bytes, offset + 8),
+		NodeGeneration: readAnimationU32(bytes, offset + 12), Index: readAnimationU32(bytes, offset + 16),
+		Generation: readAnimationU32(bytes, offset + 20),
+	}
+}
+
+func appendAnimationU32(bytes []byte, value uint32) []byte {
+	return append(bytes, byte(value), byte(value >> 8), byte(value >> 16), byte(value >> 24))
+}
+
+func appendAnimationU16(bytes []byte, value uint16) []byte {
+	return append(bytes, byte(value), byte(value >> 8))
+}
+
+func appendAnimationU64(bytes []byte, value uint64) []byte {
+	return append(bytes, byte(value), byte(value >> 8), byte(value >> 16), byte(value >> 24), byte(value >>
+		32), byte(value >> 40), byte(value >> 48), byte(value >> 56))
+}
+
+func readAnimationU32(bytes []byte, offset int) uint32 {
+	return uint32(bytes[offset]) | uint32(bytes[offset + 1]) << 8 | uint32(bytes[offset + 2]) << 16 |
+		uint32(bytes[offset + 3]) << 24
+}
+
+func readAnimationU64(bytes []byte, offset int) uint64 {
+	return uint64(readAnimationU32(bytes, offset)) | uint64(readAnimationU32(bytes, offset + 4)) << 32
+}

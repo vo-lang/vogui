@@ -1,0 +1,9 @@
+[package]
+name = "vogui-layout"
+version = "0.1.0"
+edition = "2021"
+description = "Portable incremental Vogui layout engine"
+
+[dependencies]
+vogui-protocol = { path = "../protocol" }
+vogui-runtime = { path = "../runtime" }
